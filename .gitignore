@@ -18,3 +18,5 @@
 !/.zsh
 !/.zshenv
 !/.zshrc
+.git
+.svn
