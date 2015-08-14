@@ -1,0 +1,234 @@
+XTerm*utf8: 1
+XTerm*Locale: UTF-8
+XTerm*VT100*utf8Fonts:  True
+XTerm*toolBar: false
+XTerm*alwaysHighlight:	false
+XTerm*AutoRaise:	True
+XTerm*IconFont:	nil2
+XTerm*JumpScroll:	true
+XTerm*ScrollBar:	on
+XTerm*Scrollbar:	on
+XTerm*SimpleMenu*BackingStore:	NotUseful
+XTerm*SimpleMenu*Cursor:	left_ptr
+XTerm*SimpleMenu*HorizontalMargins:	16
+XTerm*SimpleMenu*Sme.height:	16
+XTerm*SimpleMenu*menuLabel.font:	-adobe-helvetica-bold-r-normal--*-120-*-*-*-*-iso8859-*
+XTerm*SimpleMenu*menuLabel.vertSpace:	100
+XTerm*VT100*boldColors:	on
+XTerm*VT100*color0:	#222222
+XTerm*VT100*color10:	green
+XTerm*VT100*color11:	yellow
+XTerm*VT100*color12:	blue
+XTerm*VT100*color13:	magenta
+XTerm*VT100*color14:	cyan
+XTerm*VT100*color15:	white
+XTerm*VT100*color1:	red3
+XTerm*VT100*color2:	green3
+XTerm*VT100*color3:	brown4
+XTerm*VT100*color4:	blue3
+XTerm*VT100*color5:	magenta3
+XTerm*VT100*color6:	cyan3
+XTerm*VT100*color7:	gray90
+XTerm*VT100*color8:	gray30
+XTerm*VT100*color9:	red
+XTerm*VT100*colorBD:	white
+XTerm*VT100*colorMode:	on
+XTerm*VT100*colorUL:	yellow
+XTerm*VT100*dynamicColors:	on
+XTerm*VT100*font1:	nil2
+XTerm*VT100*font2:	5x7
+XTerm*VT100*font3:	6x10
+XTerm*VT100*font4:	7x13
+XTerm*VT100*font5:	9x15
+XTerm*VT100*font6:	10x20
+XTerm*activeIcon:	true
+XTerm*backarrowKeyIsErase:	false
+XTerm*foreground:	black
+XTerm*background:	bisque
+XTerm*borderColor:	black
+XTerm*bottomShadowContrast:	-90 
+XTerm*cursorColor:	Black
+XTerm*deleteIsDEL:	on
+XTerm*fontMenu*font-doublesize*Label:	Doublesized Characters
+XTerm*fontMenu*font-linedrawing*Label:	Line-Drawing Characters
+XTerm*fontMenu*font-loadable*Label:	VT220 Soft Fonts
+XTerm*fontMenu*font1*Label:	Unreadable
+XTerm*fontMenu*font2*Label:	Tiny
+XTerm*fontMenu*font3*Label:	Small
+XTerm*fontMenu*font4*Label:	Medium
+XTerm*fontMenu*font5*Label:	Large
+XTerm*fontMenu*font6*Label:	Huge
+XTerm*fontMenu*fontdefault*Label:	Default
+XTerm*fontMenu*fontescape*Label:	Escape Sequence
+XTerm*fontMenu*fontsel*Label:	Selection
+XTerm*fontMenu.Label:	VT Fonts
+XTerm*horizontal.background:	navajowhite2
+XTerm*horizontal.shadowWidth:	3
+XTerm*horizontal.thickness:	20
+XTerm*lprCommand:	lpr
+XTerm*mainMenu*8-bit control*Label:	8-Bit Controls
+XTerm*mainMenu*allowsends*Label:	Allow SendEvents
+XTerm*mainMenu*backarrow key*Label:	Backarrow Key
+XTerm*mainMenu*continue*Label:	Send CONT Signal
+XTerm*mainMenu*delete-is-del*Label:	Delete is DEL
+XTerm*mainMenu*hangup*Label:	Send HUP Signal
+XTerm*mainMenu*hpFunctionKeys*Label:	HP Function-Keys
+XTerm*mainMenu*interrupt*Label:	Send INT Signal
+XTerm*mainMenu*kill*Label:	Send KILL Signal
+XTerm*mainMenu*logging*Label:	Log to File
+XTerm*mainMenu*meta-esc*Label:	Meta Sends Escape
+XTerm*mainMenu*num-lock*Label:	Alt/NumLock Modifiers
+XTerm*mainMenu*oldFunctionKeys*Label:	Old Function-Keys
+XTerm*mainMenu*print*Label:	Print Window
+XTerm*mainMenu*quit*Label:	Quit
+XTerm*mainMenu*redraw*Label:	Redraw Window
+XTerm*mainMenu*scoFunctionKeys*Label:	SCO Function-Keys
+XTerm*mainMenu*securekbd*Label:	Secure Keyboard
+XTerm*mainMenu*sun function-keys*Label:	Sun Function-Keys
+XTerm*mainMenu*sun keyboard*Label:	Sun/PC Keyboard
+XTerm*mainMenu*sunFunctionKeys*Label:	Sun Function-Keys
+XTerm*mainMenu*sunKeyboard*Label:	VT220 Keyboard
+XTerm*mainMenu*suspend*Label:	Send STOP Signal
+XTerm*mainMenu*terminate*Label:	Send TERM Signal
+XTerm*mainMenu.Label:	Main Options
+XTerm*moveOpaque:	False
+XTerm*panel*Command*Background:	navajowhite2
+XTerm*panel*background:	navajowhite1
+XTerm*panel*borderColor:	navajowhite1
+XTerm*panel*borderWidth:	0
+XTerm*panel*highlightthickness:	5
+XTerm*panel*shadowWidth:	2
+XTerm*panel.quit.Background:	Pink
+XTerm*pointerColor:	Black
+XTerm*pointerMode:	1
+XTerm*ptyInitialErase:	true
+XTerm*saveLines:	1000
+XTerm*scrollBar*background:	gray
+XTerm*scrollBar*foreground:	black
+XTerm*scrollBar:	on
+XTerm*scrollKey:	1
+XTerm*scrollTtyOutput:	0
+XTerm*scrollbar*background:	gray
+XTerm*scrollbar*foreground:	black
+XTerm*scrollbar:	on
+XTerm*tek4014*font2:	8x13
+XTerm*tek4014*font3:	6x13
+XTerm*tek4014*fontLarge:	9x15
+XTerm*tek4014*fontSmall:	6x10
+XTerm*tekMenu*tekcopy*Label:	COPY
+XTerm*tekMenu*tekhide*Label:	Hide Tek Window
+XTerm*tekMenu*tekpage*Label:	PAGE
+XTerm*tekMenu*tekreset*Label:	RESET
+XTerm*tekMenu*tektext2*Label:	#2 Size Characters
+XTerm*tekMenu*tektext3*Label:	#3 Size Characters
+XTerm*tekMenu*tektextlarge*Label:	Large Characters
+XTerm*tekMenu*tektextsmall*Label:	Small Characters
+XTerm*tekMenu*vtmode*Label:	Switch to VT Mode
+XTerm*tekMenu*vtshow*Label:	Show VT Window
+XTerm*tekMenu.Label:	Tek Options
+XTerm*topShadowContrast:	10
+XTerm*vertical.background:	navajowhite2
+XTerm*vertical.shadowWidth:	3
+XTerm*vertical.thickness:	20
+XTerm*visualBell:	off
+XTerm*vtMenu*activeicon*Label:	Enable Active Icon
+XTerm*vtMenu*allow132*Label:	Allow 80/132 Column Switching
+XTerm*vtMenu*altscreen*Label:	Show Alternate Screen
+XTerm*vtMenu*appcursor*Label:	Enable Application Cursor Keys
+XTerm*vtMenu*appkeypad*Label:	Enable Application Keypad
+XTerm*vtMenu*autolinefeed*Label:	Enable Auto Linefeed
+XTerm*vtMenu*autowrap*Label:	Enable Auto Wraparound
+XTerm*vtMenu*clearsavedlines*Label:	Reset and Clear Saved Lines
+XTerm*vtMenu*cursesemul*Label:	Enable Curses Emulation
+XTerm*vtMenu*cursorblink*Label:	Enable Blinking Cursor
+XTerm*vtMenu*hardreset*Label:	Do Full Reset
+XTerm*vtMenu*jumpscroll*Label:	Enable Jump Scroll
+XTerm*vtMenu*marginbell*Label:	Enable Margin Bell
+XTerm*vtMenu*poponbell*Label:	Enable Pop on Bell
+XTerm*vtMenu*reversevideo*Label:	Enable Reverse Video
+XTerm*vtMenu*reversewrap*Label:	Enable Reverse Wraparound
+XTerm*vtMenu*scrollbar*Label:	Enable Scrollbar
+XTerm*vtMenu*scrollkey*Label:	Scroll to Bottom on Key Press
+XTerm*vtMenu*scrollttyoutput*Label:	Scroll to Bottom on Tty Output
+XTerm*vtMenu*softreset*Label:	Do Soft Reset
+XTerm*vtMenu*tekmode*Label:	Switch to Tek Mode
+XTerm*vtMenu*tekshow*Label:	Show Tek Window
+XTerm*vtMenu*titeInhibit*Label:	Enable Alternate Screen Switching
+XTerm*vtMenu*visualbell*Label:	Enable Visual Bell
+XTerm*vtMenu*vthide*Label:	Hide VT Window
+XTerm*vtMenu.Label:	VT Options
+XTerm.JoinSession:	False
+XTerm.vt100.translations:	#override \n\
+        None<Key>SunAgain:    string(.) \n\
+        None<Key>SunUndo:    string(u) \n\
+        None<Key>SunStop:    string(\032) \n\
+        None<Key>SunCut:     select-set(CLIPBOARD) \n\
+        None<Key>SunCopy:    select-set(CLIPBOARD) \n\
+        None<Key>SunPaste:   insert-selection(CLIPBOARD) \n\
+        None<Key>F11:    select-start() select-end(SECONDARY, CUT_BUFFER1) \n\
+	None<Key>F12:    start-extend() select-end(SECONDARY, CUT_BUFFER1) \n\
+        Shift<Key>F11:    select-start() select-end(SECONDARY, CUT_BUFFER2) \n\
+	Shift<Key>F12:    start-extend() select-end(SECONDARY, CUT_BUFFER2) \n\
+        Ctrl<Key>F11:    insert-selection(CUT_BUFFER1) \n\
+        Ctrl<Key>F12:    insert-selection(CUT_BUFFER2) \n\
+        Shift<Key>Help:    insert-selection(CUT_BUFFER0) \n\
+        None<Key>Help:    insert-selection(CUT_BUFFER1) \n\
+        Ctrl<Key>Help:    insert-selection(CUT_BUFFER2) \n\
+	Ctrl<Key>KP_F1:	secure() \n\
+        Ctrl<Key>KP_F2:	set-scrollbar(toggle) \n\
+        Ctrl<Key>KP_F3:	clear-saved-lines() \n\
+        None<Btn4Down>:	scroll-back(1 , line) \n\
+        None<Btn5Down>:	scroll-forw(1 , line) \n\
+        None<Key>SunPageUp:	scroll-back(1 , page) \n\
+        None<Key>SunPageDown:	scroll-forw(1 , page) \n\
+        None<Key>Prior:	scroll-back(1 , page) \n\
+        None<Key>Next:	scroll-forw(1 , page) \n\
+        None<Key>Home:	scroll-back(99 , page) \n\
+        None<Key>End:	scroll-forw(99 , page) \n
+mutt.vt100.translations: #merge \n\
+        None<Btn4Down>:	string(<) \n\
+        None<Btn5Down>:	string(>) \n
+XTerm*tek4014.Translations:	#override               @Num_Lock<Key>KP_0: string(0)\n\
+        @Num_Lock<Key>KP_1: string(1)\n\
+        @Num_Lock<Key>KP_2: string(2)\n\
+        @Num_Lock<Key>KP_3: string(3)\n\
+        @Num_Lock<Key>KP_4: string(4)\n\
+        @Num_Lock<Key>KP_5: string(5)\n\
+        @Num_Lock<Key>KP_6: string(6)\n\
+        @Num_Lock<Key>KP_7: string(7)\n\
+        @Num_Lock<Key>KP_8: string(8)\n\
+        @Num_Lock<Key>KP_9: string(9)\n\
+        @Num_Lock<Key>KP_Add: string(+)\n\
+        @Num_Lock<Key>KP_Decimal: string(.)\n\
+        @Num_Lock<Key>KP_Divide: string(/)\n\
+        @Num_Lock<Key>KP_Enter: string(\015)\n\
+        @Num_Lock<Key>KP_Equal: string(=)\n\
+        @Num_Lock<Key>KP_Multiply: string(*)\n\
+        @Num_Lock<Key>KP_Subtract: string(-)\n
+XTerm*VT100.Translations:	#override         @Num_Lock<Key>KP_0: string(0)\n\
+        @Num_Lock<Key>KP_1: string(1)\n\
+        @Num_Lock<Key>KP_2: string(2)\n\
+        @Num_Lock<Key>KP_3: string(3)\n\
+        @Num_Lock<Key>KP_4: string(4)\n\
+        @Num_Lock<Key>KP_5: string(5)\n\
+        @Num_Lock<Key>KP_6: string(6)\n\
+        @Num_Lock<Key>KP_7: string(7)\n\
+        @Num_Lock<Key>KP_8: string(8)\n\
+        @Num_Lock<Key>KP_9: string(9)\n\
+        @Num_Lock<Key>KP_Add: string(+)\n\
+        @Num_Lock<Key>KP_Decimal: string(.)\n\
+        @Num_Lock<Key>KP_Divide: string(/)\n\
+        @Num_Lock<Key>KP_Enter: string(\015)\n\
+        @Num_Lock<Key>KP_Equal: string(=)\n\
+        @Num_Lock<Key>KP_Multiply: string(*)\n\
+        @Num_Lock<Key>KP_Subtract: string(-)\n\
+        <Key>Prior:scroll-back(1,page)\n\
+        <Key>Next:scroll-forw(1,page)\n\
+	<Key>F16: start-extend() select-end(PRIMARY, CUT_BUFFER0, CLIPBOARD) \n\
+	<Key>F18: insert-selection(PRIMARY, CLIPBOARD) \n\
+	<Key>F27: scroll-back(100,page) \n\
+	<Key>R13: scroll-forw(100,page) \n\
+        None<Btn4Down>:	scroll-back(1 , line) \n\
+        None<Btn5Down>:	scroll-forw(1 , line) \n\
+	<Key>Home: scroll-back(100,page) \n\
+	<Key>End: scroll-forw(100,page) \n

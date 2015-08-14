@@ -1,0 +1,5 @@
+alias open=cygstart
+function pg () {
+	ps -efa | grep "$@"
+}
+unsetopt SHARE_HISTORY

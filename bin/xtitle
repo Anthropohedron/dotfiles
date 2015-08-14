@@ -1,0 +1,18 @@
+#!/bin/sh
+
+NUM=0
+if test $# -gt 2
+then
+	echo "Usage: $0 [string [number] ]" >&2
+	exit 1
+elif test $# -eq 2
+then
+	NUM=$2
+elif test $# -eq 0
+then
+	STR="`hostname | cut -d. -f1`: `pwd | sed s,$HOME,\~,g`"
+else
+	STR="$1"
+fi
+
+echon "]$NUM;$STR"

@@ -1,0 +1,394 @@
+#!/usr/bin/ruby
+
+ENV['GEM_HOME'] = '/usr/local/lib/site_ruby/gems/'
+
+require 'uri'
+require 'net/http'
+require 'net/https'
+require 'date'
+require 'rubygems'
+require 'vpim'
+
+module Preferences
+  CertFile = Dir[File.join(File.dirname(__FILE__), 'certs', '*.crt')].first
+  def self.ssl_ca_cert_file
+    return CertFile
+  end
+end
+
+class Date
+  def convert_to_time(end_of_day = false)
+    time = Time.mktime(year, month, mday)
+    end_of_day ? time.end_of_day : time
+  end
+
+  def convert_to_date
+    self
+  end
+end
+
+class Time
+  def convert_to_date
+    Date.civil(year, month, mday)
+  end
+
+  def convert_to_time(waste = nil)
+    self
+  end
+
+  def end_of_day
+    Time.mktime(year, month, mday, 23, 59, 59)
+  end
+end
+
+class Range
+  def intersect?(range)
+    match = range.include?(first) || self.include?(range.first)
+    if match
+      match = (range.first != last) && (range.last != first)
+    end
+    match
+  end
+end
+
+module Vpim::Icalendar::Property::Recurrence
+  def occurs_during(range)
+    catch :past_end do
+      dur = duration
+      end_time = range.last
+      occurences.inject([]) { |found,t|
+        throw :past_end, found if t > end_time
+        span = t..(t + dur)
+        found << t if range.intersect? span
+        found
+      }
+    end
+  end
+end
+
+class IcalEvents
+  attr_reader :load_stamp
+
+  class << self
+    private :new
+  end
+
+  def self.new_from_files(*paths)
+    urls = paths.map { |path|
+      url = URI.parse(path)
+      url.scheme = 'file'
+      url
+    }
+    new(urls, *paths.map { |path| File.read(path) })
+  end
+
+  # This should be passed a block to prompt for a password. The block will
+  # be passed an argument for the URL (as a URI object) and the username.
+  # If username is nil then the block should prompt the user for username
+  # and password, otherwise just password. It should return a two-element
+  # array with the username and password.
+  def self.new_from_urls(*urls, &block)
+    urls.map! { |url| (URI === url) ? url.dup : URI.parse(url) }
+    new urls, *data_from_urls(urls, &block)
+  end
+
+  # NOTE: this can and will modify URL objects passed into it
+  def self.data_from_urls(urls, &block)
+    urls.map { |url|
+      case (url.scheme ||= 'file')
+      when 'file'
+        File.read(url.path)
+      when 'http','https'
+        get_http(url, block)
+      else
+        raise ArgumentError.new("Don't know how to deal with #{url}")
+      end
+    }
+  end
+
+  def initialize(urls = [], *data)
+    @urls = urls
+    load_data data
+  end
+
+  def reload!
+    data = IcalEvents.data_from_urls(@urls) { |url,user|
+      fail "Authorization failure on #{url} for #{user}"
+    }
+    load_data data
+  end
+
+  DayInSeconds = 24*60*60
+
+  def events_by_day_for_month(month, year)
+    first,last = Date.civil(year, month, 1),Date.civil(year, month, -1)
+    first = first.convert_to_time
+    last = last.convert_to_time(true)
+    mrange = first..last
+    @calendars.inject({}) { |day_hash,ical|
+      ical.events.each do |event|
+        if event.occurs_in?(first, last)
+          event.occurences.each_until(last).each do |efirst|
+            elast = efirst + (event.duration - 1)
+            erange = efirst..elast.end_of_day
+            if erange.intersect?(mrange)
+              day = ((first > efirst) ? first : efirst).end_of_day
+              while erange.include?(day)
+                (day_hash[day.mday] ||= []).push(event) if mrange.include?(day)
+                day += DayInSeconds
+              end
+            end
+          end
+        end
+      end
+      day_hash
+    }.each { |day,events| events.replace(events.sort_by { |e| e.dtstart }) }
+  end
+
+  def events_for_range(first, last)
+    first = first.convert_to_time
+    last = last.convert_to_time(true)
+    range = first..last
+    evt_hash = Hash.new { |h,k| h[k] = [] }
+    @calendars.each do |ical|
+      ical.events.each do |e|
+        e.occurs_during(range).each do |t|
+          evt_hash[t] << e
+        end
+      end
+    end
+    evt_hash
+  end
+
+  private
+
+  def load_data(data)
+    @calendars = data.inject([]) { |cals,d|
+      cals.push *Vpim::Icalendar.decode(d)
+    }
+    @load_stamp = Time.now.freeze
+  end
+
+  # NOTE: this can and will modify URL objects passed into it
+  def self.get_http(url, block)
+    http = Net::HTTP.new(url.host, url.port)
+    http.use_ssl = (url.scheme == 'https')
+    if Preferences.ssl_ca_cert_file
+      http.ca_file = Preferences.ssl_ca_cert_file
+      http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      http.verify_depth = 5
+    else
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
+    request,response = nil
+    if url.user
+      request = Net::HTTP::Get.new(url.path)
+      unless url.password
+        url.user,url.password = block.call(url, url.user)
+      end
+      request.basic_auth url.user, url.password
+    else
+      case response = http.get(url.path)
+      when Net::HTTPSuccess
+        #NOOP: success!
+      when Net::HTTPUnauthorized
+        request = Net::HTTP::Get.new(url.path)
+        url.user,url.password = block.call(url, url.user)
+        request.basic_auth url.user, url.password
+      else
+        fail "HTTP request failure on #{url}: #{response.inspect}"
+      end
+    end
+    if request
+      case response = http.request(request)
+      when Net::HTTPSuccess
+        #NOOP: success!
+      else
+        fail "HTTP request failure on #{url}: #{response.inspect}"
+      end
+    end
+    (Net::HTTPSuccess === response) && response.body
+  end
+
+  public
+
+  module EventFormatter
+    def format_event(evt, opts = { :desc => true, :date => true })
+      lines = [
+        start_finish(evt.dtstart, evt.dtend, opts[:date]),
+        evt.summary
+      ]
+      if evt.location
+        lines << evt.location
+      end
+      if opts[:desc] && evt.description
+        lines << ""
+        lines << evt.description
+      end
+      lines.join("\n")
+    end
+
+    private
+
+    DateFmt = '%m/%d'
+    TimeFmt = '%H:%M'
+    DateTimeFmt = "#{DateFmt} #{TimeFmt}"
+
+    def start_finish(start, finish, with_date = true)
+      seconds = (finish - start).round
+      sfmt = DateTimeFmt
+      ffmt = DateTimeFmt
+      if (((start.hour + start.min + start.sec) == 0) &&
+          ((seconds % DayInSeconds) == 0))
+        if (seconds / DayInSeconds) > 1
+          sfmt = DateFmt
+          ffmt = DateFmt
+          # formatting correction
+          finish -= DayInSeconds
+        else
+          #the only early return
+          return with_date ? start.strftime(DateFmt) : "All day"
+        end
+      elsif (seconds < DayInSeconds) && (start.day == finish.day)
+        sfmt = with_date ? DateTimeFmt : TimeFmt
+        ffmt = TimeFmt
+      end
+      "#{start.strftime(sfmt)} - #{finish.strftime(ffmt)}"
+    end
+
+  end
+
+end
+
+module DailyCalendar
+  FileURLPrefix = "file://"
+  CalPrefix = "/mnt/ical"
+  CalDirs = {
+    "Carrie"    => "C75DF27A-94D8-42D6-AAE3-FE084C3C5ADF",
+    "Greg"      => "40265F01-842B-46C1-8C90-9C15FEF2080C",
+    "Recurring" => "478A7DF7-710C-4F04-A7A1-8D1EB99BB9E9",
+    "Shared"    => "4DB2BE05-B412-46F4-ABE8-AE99E11FD935",
+    "Gwendolyn" => "35609553-46EA-4D85-84AD-8FCB37F1E5AF",
+    "Avery"     => "CB977F0F-3E6D-4FB4-A60A-53527E5CABAD",
+    #"Birthdays" => "MMEBirthdays"
+  }
+  Holidays = "http://files.apple.com/calendars/US32Holidays.ics"
+
+  def usage(msg = nil)
+    STDERR.puts msg if msg
+    STDERR.puts "Usage: #{$PROGRAM_NAME} [ -start date ] [ -end date ] [ -length days ] [All|calendars...]"
+    STDERR.puts "       -length can be used with -start or -end, but not both"
+    STDERR.puts "Known calendars:"
+    STDERR.puts("\t" + CalDirs.keys.sort.join("\n\t"))
+    exit -1
+  end
+
+  def parse_args(args)
+    start_date = end_date = span = nil
+    need_opt_arg = false
+    cal_dirs = args.inject([]) { |dirs,arg|
+      if need_opt_arg
+        begin
+          case need_opt_arg
+          when :start
+            start_date = Date.parse(arg)
+            if end_date && (end_date < start_date)
+              usage("-start date must not be later than -end date")
+            end
+            need_opt_arg = nil
+          when :end
+            end_date = Date.parse(arg)
+            if start_date && (end_date < start_date)
+              usage("-start date must not be later than -end date")
+            end
+            need_opt_arg = nil
+          when :span
+            span = Integer(arg)
+            span -= 1
+            usage("-length span must be positive") if span < 0
+            need_opt_arg = nil
+          end
+        rescue e
+          usage(e)
+        end
+      else
+        case arg
+        when /^--?l(|e|en|eng|engt|ength)$/
+          usage("-length can only be specified once") if span
+          if start_date && end_date
+            usage("cannot specify -start, -end, and -span")
+          end
+          need_opt_arg = :span
+        when /^--?s(|t|ta|tar|tart)$/
+          usage("-start can only be specified once") if start_date
+          if end_date && span
+            usage("cannot specify -start, -end, and -span")
+          end
+          need_opt_arg = :start
+        when /^--?e(|n|nd)$/
+          usage("-end can only be specified once") if end_date
+          if start_date && span
+            usage("cannot specify -start, -end, and -span")
+          end
+          need_opt_arg = :end
+        when /^-/
+          usage("unrecognized option: #{arg}")
+        when "All"
+          dirs = CalDirs.keys.sort
+        else
+          usage "Unknown calendar: '#{arg}'" unless CalDirs.include? arg
+          dirs << arg
+        end
+      end
+
+      dirs
+    }
+
+    usage("Missing option argument") if need_opt_arg
+    usage if cal_dirs.empty?
+
+    if span
+      if end_date
+        start_date = end_date - span
+      else
+        start_date ||= Date.today
+        end_date = start_date + span
+      end
+    else
+      start_date ||= (end_date || Date.today)
+      end_date ||= start_date
+    end
+
+    cal_files = cal_dirs.uniq.map { |dir|
+      Dir[File.join(CalPrefix, CalDirs[dir], '*.ics')]
+    }.flatten.map { |file|
+      FileURLPrefix + file
+    }
+    cal_files << Holidays
+    [ IcalEvents.new_from_urls(*cal_files), start_date, end_date ]
+  end
+
+  extend self
+end
+
+if $PROGRAM_NAME == __FILE__
+  include IcalEvents::EventFormatter
+  ical,start_date,end_date = DailyCalendar.parse_args(ARGV)
+  is_one_day = (start_date == end_date)
+  is_today = is_one_day && (start_date == Date.today)
+  date_string = is_one_day ?
+    (is_today ? "today" : start_date.to_s) : "#{start_date} - #{end_date}"
+  events = ical.events_for_range(start_date, end_date)
+  events = events.sort_by { |time,list| time }.transpose.last.flatten rescue []
+
+  if events.empty?
+    puts "\nNo events for #{date_string}\n\n"
+  else
+    puts ""
+    puts "Events for #{date_string}:"
+    puts ""
+    puts events.map { |evt| format_event(evt, :desc => true, :date => !is_one_day) }.join("\n\n")
+    puts ""
+  end
+end
+

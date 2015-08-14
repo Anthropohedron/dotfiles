@@ -1,0 +1,33 @@
+#!/bin/sh
+
+if test $# -eq 0
+then
+	echo "Usage: $0 <-a|-h|-s>" >&2
+	exit 1
+fi
+
+case "$1" in
+	-a)
+		shift
+		find $HOME/Maildir -type d -name cur -maxdepth 2 -mindepth 2 |\
+			grep -v spam | grep -iv work | grep -v ' ' |\
+			tr '\012' '\000' |\
+			xargs -0 -tr -l1 sa-learn "$@" --ham --dir
+		;;
+	-h)
+		shift
+		sa-learn "$@" --ham --dir $HOME/Maildir/.spamham/cur
+		;;
+	-s)
+		shift
+		sa-learn "$@" --spam --dir $HOME/Maildir/.spam/cur
+		;;
+	-m)
+		shift
+		sa-learn --spam --mbox "$@"
+		;;
+	*)
+		echo "Usage: $0 <-a|-s>" >&2
+		exit 1
+		;;
+esac

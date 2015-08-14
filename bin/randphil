@@ -1,0 +1,25 @@
+#!/bin/sh
+philfile=${philfile-$HOME/Humor/philosophy}
+
+if test ! -f $philfile
+then
+	echo "Quotes file not found: $philfile" >&2
+	exit 1
+fi
+
+if test $# -ge 1; then
+	req=`nawk 'BEGIN {found=0; nn=0;}
+		/^$/ {nn++}
+		/'"$1"'/ && !found {print nn;found=1} ' $philfile | head -1`
+	if test "$req" = ""; then
+		echo "$1 not found in quotes"
+		exit 1
+	fi
+else
+	nq=`grep -c '^$' $philfile`
+	req=`echo | nawk 'BEGIN {srand(); rq = int('$nq' * rand())}
+		END {print rq}'`
+fi
+nawk '/^$/ {nn++}
+	nn == req
+END {print ""}' req="$req" $philfile

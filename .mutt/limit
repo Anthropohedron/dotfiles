@@ -1,0 +1,3 @@
+macro index q ":source ~/.mutt/unlimit\n"
+macro index Q ":source ~/.mutt/unlimit\n"
+macro pager Q "q:source ~/.mutt/unlimit\n"

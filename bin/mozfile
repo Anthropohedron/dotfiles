@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if test $# -ne 1
+then
+	echo "Usage: $0 <filename>" >&2
+	exit 1
+fi
+
+if test "`echo $1 | cut -c1`" = /
+then
+	exec firefox -remote 'openURL('"file://$1"', new-window)'
+else
+	exec firefox -remote 'openURL('"file://`pwd`/$1"', new-window)' 
+fi

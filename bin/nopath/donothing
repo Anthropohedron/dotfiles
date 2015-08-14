@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if test $# -eq 0
+then
+	while true
+	do
+		sleep 3600
+	done
+elif test "$1" -gt 0
+then
+	delay=$1
+	char='.'
+	if test ! -z "$2"
+	then
+		char="$2"
+	fi
+	while true
+	do
+		sleep $delay
+		echo -n "$char"
+	done
+else
+	echo "Usage: $0 [sleep time]" >&2
+	exit 1
+fi

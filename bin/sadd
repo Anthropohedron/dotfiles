@@ -1,0 +1,52 @@
+#!/bin/sh
+
+eval `$HOME/bin/agent -s`
+
+SSHID=
+for id in $HOME/.ssh/id_{r,d}sa
+do
+	if test -r $id
+	then
+		if ssh-add -l | grep $id >/dev/null
+		then
+			false
+		else
+			SSHID="$SSHID $id"
+		fi
+	fi
+done
+
+test -z "$SSHID" && exit 0
+
+if test ! -z "$SSH_ASKPASS"
+then
+	echo > /dev/null
+	#NOOP
+elif test -z "$SSH_CLIENT" -a -x $HOME/Applications/SSHAskPassword.app/Contents/MacOS/SSHAskPassword
+then
+	SSH_ASKPASS=$HOME/Applications/SSHAskPassword.app/Contents/MacOS/SSHAskPassword
+	unset DISPLAY
+	export SSH_ASKPASS
+elif test -z "$SSH_CLIENT" -a -x /Applications/SSHAskPassword.app/Contents/MacOS/SSHAskPassword
+then
+	SSH_ASKPASS=/Applications/SSHAskPassword.app/Contents/MacOS/SSHAskPassword
+	unset DISPLAY
+	export SSH_ASKPASS
+elif test ! -z "$DISPLAY"
+then
+	if test -x /usr/libexec/openssh/x11-ssh-askpass
+	then
+		SSH_ASKPASS=/usr/libexec/openssh/x11-ssh-askpass
+	elif test -x /usr/bin/ssh-askpass
+	then
+		SSH_ASKPASS=/usr/bin/ssh-askpass
+	elif test -x /usr/libexec/openssh/ssh-askpass
+	then
+		SSH_ASKPASS=/usr/libexec/openssh/ssh-askpass
+	elif test -x /usr/bin/razor-openssh-askpass
+	then
+		SSH_ASKPASS=/usr/bin/razor-openssh-askpass
+	fi
+fi
+
+exec ssh-add $SSHID

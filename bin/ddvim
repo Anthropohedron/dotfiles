@@ -1,0 +1,62 @@
+#!/bin/sh
+
+MacVim=/Applications/MacPorts/MacVim.app
+MacVimBin=$MacVim/Contents/MacOS/MacVim
+
+isf=false
+for arg in "$@"
+do
+	if test x"$arg" = x-f
+	then
+		isf=true
+	fi
+done
+
+ssh_from=`echo "$SSH_CLIENT" | cut -d\  -f1`
+UI=term
+if test "$TERM_PROGRAM" = Apple_Terminal \
+	-a -z "$ssh_from" \
+	-a -x $MacVimBin && ( \
+	test -z $DISPLAY || \
+	expr "$DISPLAY" : '.*/launch.*' >/dev/null )
+then
+	UI=mac
+elif test ! -z "$DISPLAY" && ( \
+	test -z "$ssh_from" || \
+	expr "$ssh_from" : \
+		'^192\.168\.11\.\([02-9][0-9]*\|1[0-9]\+\)$' > /dev/null )
+then
+	UI=X
+fi
+
+case $UI in
+	X)
+		exec 0</dev/null
+		exec 1>/dev/null
+		exec 2>&1
+		if test `uname` = Darwin && ! $isf
+		then
+			gvim "$@" &
+		else
+			exec gvim "$@"
+		fi
+		;;
+	mac)
+		unset DISPLAY
+		exec 0</dev/null
+		exec 1>/dev/null
+		exec 2>&1
+		$MacVimBin "$@" &
+		sleep 2
+		open $MacVim
+		if $isf
+		then
+			wait
+		fi
+		;;
+	term)
+		unset DISPLAY
+		exec vim "$@"
+		;;
+esac
+

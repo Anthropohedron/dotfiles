@@ -1,0 +1,29 @@
+#!/bin/sh
+
+if test $# -gt 2 -o \( $# -gt 1 -a x`echo $1 | cut -c1` != x- \)
+then
+	echo "Usage: $0 [-signal] <pid>" >&2
+	exit 1
+fi
+
+if test $# -gt 1
+then
+	SIG="$1"
+	shift
+else
+	SIG="-TERM"
+fi
+
+pstree -p "$1" | awk -v sig="$SIG" -F '[()]' '
+	BEGIN	{ ix = 0; }
+		{
+		for (i=1;i<=NF;++i)
+			if ($i ~ /^[0-9][0-9]*$/)
+				pids[++ix] = $i;
+		}
+	END	{
+		printf("kill %s", sig);
+		for (;ix>0;--ix)
+			printf(" %s", pids[ix]);
+		printf("\n");
+		}' | sh -x

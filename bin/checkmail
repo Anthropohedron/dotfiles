@@ -1,0 +1,12 @@
+#!/bin/sh
+
+exec </dev/null
+exec >/dev/null
+exec 2>/dev/null
+
+MAIL_NOTIFY=$HOME/.mutt/notify
+
+if mutt -Z -e 'push x'
+then
+	touch $MAIL_NOTIFY
+fi

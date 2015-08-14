@@ -1,0 +1,16 @@
+#!/bin/sh
+
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+if ! /usr/bin/killall -CONT dropbox >/dev/null 2>&1
+then
+	/usr/bin/dropbox start
+	echo "Started dropbox"
+fi
+
+if ! df /mnt/ical | grep https >/dev/null 2>&1
+then
+	/bin/mount /mnt/ical
+	echo "Mounted ical"
+fi
+

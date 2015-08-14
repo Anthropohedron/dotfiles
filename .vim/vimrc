@@ -1,0 +1,130 @@
+let sourceexts="c,cpp,cc,C,cxx,m,mm"
+let headerexts="cpp:hpp,cc:h,C:H,cxx:hxx"
+set ffs=unix,mac,dos
+set nocindent noexpandtab
+" create backups
+set backup
+" the backup extension
+set bex=~
+" the backup directories
+set backupdir=.
+"set backupdir=~/tmp,.,~/,/tmp
+let VRML2_color_embedded_javascript = 1
+set fo=tcrq2vl
+set tw=75
+set tabpagemax=40
+set incsearch nohlsearch
+set nojoinspaces
+set whichwrap=b,s,h,l,<,>,[,]
+set suffixes=.bak,~,.o,.info,.swp,.class
+set matchpairs=(:),{:},[:]
+set backspace=2
+set comments=sr:<P>,mb:</P><P>,el:</P>,sr:/*,mb:*,el:*/,://,b:#,n:%,:XCOMM,n:>,n:}\ ,fb:-
+set nopaste
+if version >= 600
+	set foldtext=foldtext()
+"	source ~/.vim/cvsdiff.vim
+"	set patchexpr=CVSDiff()
+endif
+"let $MAKEFLAGS='-r'
+"set iskeyword=@,48-57,_,192-255
+set iskeyword=',@,48-57,_,192-255
+set cpoptions=aABcEFsy
+set helpheight=60
+let &titleold=$HOST . ": " . $PWD
+if &term =~ "xterm"
+	if has("terminfo")
+	  set t_Co=8
+	  set t_Sf=[3%p1%dm
+	  set t_Sb=[4%p1%dm
+	else
+	  set t_Co=8
+	  set t_Sf=[3%dm
+	  set t_Sb=[4%dm
+	endif
+endif
+command Rew rew
+command -bang Qa qa<bang>
+command -bang Q q<bang>
+command -bang W w<bang>
+command LCD !pwd > /home/gss/.pipes/cdpipe
+nmap gF :sp<CR>gf
+nmap gG :tab sp<CR>gf
+nmap <F1> <C-L>
+nmap   &2       :set ts=2 sw=2 expandtab<CR>
+nmap   &3       :set ts=3 sw=3 expandtab<CR>
+nmap   &4       :set ts=4 sw=4 expandtab<CR>
+nmap   &8       :set ts=8 sw=8 expandtab<CR>
+nnoremap <C-S-Left> <C-PageUp>
+nnoremap <C-S-Right> <C-PageDown>
+nnoremap <C-O> <C-W>
+nnoremap <S-Del> <C-A>
+nnoremap <S-Insert> <C-X>
+nnoremap <Insert> X
+nmap <F1> <ESC>
+nmap <DEL> <BS>
+set pastetoggle=<C-c>
+imap <C-c> <C-o>:set invpaste<CR> 
+imap  [2~    
+imap <C-A> <ESC>I
+imap <C-E> <ESC>A
+imap <C-B> <ESC>bi
+imap <C-F> <ESC>ea
+vmap <Tab> >
+nmap ö "*P
+imap ö <C-O>"*p
+cnoremap <C-A> <Home>
+cnoremap <C-E> <End>
+cnoremap <C-F> <C-Right>
+cnoremap <C-B> <C-Left>
+cnoremap <Esc>b <S-Left>
+cnoremap <Esc>f <S-Right>
+nmap   &&       :source $HOME/.vim/leave.vim<CR><C-L>
+nmap   &a       :set ft=awk<CR><C-L>
+nmap   &C       :set ft=c<CR><C-L>
+nmap   &c       :set ft=cpp<CR><C-L>
+nmap   &h       :set ft=html<CR><C-L>
+nmap   &j       :set ft=java<CR><C-L>
+nmap   &J       :set ft=jsp<CR><C-L>
+nmap   &m       :set ft=mail<CR><C-L>
+nmap   &M       :source $HOME/.vim/fammail.vim<CR><C-L>
+nmap   &o       :set ft=outline<CR><C-L>
+nmap   &P       :set ft=gnuplot<CR><C-L>
+nmap   &p       :set ft=postscr<CR><C-L>
+nmap   &s       :set ft=sh<CR><C-L>
+nmap   &t       :set ft=tex<CR><C-L>
+nmap   &u       :set ft=ruby<CR><C-L>
+nmap   &V       :set ft=vim<CR><C-L>
+nmap   &v       :set ft=vrml<CR><C-L>
+nmap   &w       :set ft=wiki<CR><C-L>
+nmap   &x       :set ft=xml<CR><C-L>
+source ~/.exrc
+source ~/.vim/functions.vim
+source ~/.vim/auto.vim
+source ~/.vim/scripts/scripts.vim
+vmap <C-R> :call ReverseLines()<CR><C-L>
+let myfiletypefile = "~/.vim/filetype.vim"
+let mysyntaxfile = "~/.vim/syntax/syntax.vim"
+"let myscriptsfile = "~/.vim/scripts.vim"
+if (($TERM_PROGRAM=="Apple_Terminal" || $TERM=="osXt" || $MAILTERM_SETTINGS!="") && !has("gui_running"))
+	set bg=dark
+endif
+"let loaded_matchparen = 1
+"set noloadplugins
+"runtime plugin/explorer.vim
+"runtime plugin/gzip.vim
+"runtime plugin/netrw.vim
+"runtime plugin/netrwPlugin.vim
+"runtime plugin/rrhelper.vim
+"
+"if ! &diff
+"	let spell_auto_type = "tex,mail,html,sgml,cvs,none"
+"	let spell_root_menu = "&i"
+"	let spell_root_menu_priority = "400."
+"	set mousemodel=popup_setpos
+"	runtime plugin/vimspell.vim
+"	let spell_language_list = "american"
+"endif
+syntax on
+filetype indent on
+filetype plugin on

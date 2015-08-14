@@ -1,0 +1,291 @@
+#!/usr/bin/ruby
+
+require 'rubygems'
+require 'hpricot'
+require 'open-uri'
+require 'date'
+
+module Comix
+
+  class Base
+    DAYS = Date::DAYS.inject({}) { |h,(k,v)| h[k.to_sym] = [v]; h }
+    DAYS[:all] = (0..6).freeze
+    DAYS[:weekdays] = (1..5).freeze
+    DAYS[:notsunday] = (1..6).freeze
+    DAYS[:weekends] = [6,0].freeze
+    DAYS.freeze
+    TODAY = Date.today.freeze
+    attr_reader :date
+
+    ComicStripClasses = {}
+    ComicPanelClasses = {}
+    IMG_TAG_FORMAT = '<img border="0" src="%s" alt="%s" />'
+
+    module ClassMethods
+
+      def offset_date(d)
+        d += @date_options[:offset]
+        my_date_format = @date_options[:format]
+        dclass = class << d; self; end
+        dclass.send(:define_method, :to_s) { strftime(my_date_format) }
+        d
+      end
+
+      def create_strips
+        ComicStripClasses.sort_by{ |k,v| [ v.to_s, k ] }.map { |k,v| v.new(k) }
+      end
+
+      def create_panels
+        ComicPanelClasses.sort_by{ |k,v| [ v.to_s, k ] }.map { |k,v| v.new(k) }
+      end
+
+      def create_comic(comic)
+        klass = ComicStripClasses[comic] || ComicPanelClasses[comic]
+        klass && klass.new(comic)
+      end
+
+      def strips_args
+        @strip_args ||= []
+      end
+
+      def panels_args
+        @panel_args ||= []
+      end
+
+      private
+
+      # class config method
+      def comic_strips(*args)
+        strip_args.push *args
+        strip_args.uniq!
+        args.each { |c| ComicStripClasses[c] = self }
+      end
+
+      # class config method
+      def comic_panels(*args)
+        panel_args.push *args
+        panel_args.uniq!
+        args.each { |c| ComicPanelClasses[c] = self }
+      end
+
+      DEFAULT_DATE_OPTIONS = {
+        :offset => 0,
+        :format => '%Y-%m-%d'.freeze,
+        :max_age => 14,
+        :valid_days => (0..6).freeze
+      }.freeze
+
+      # class config method
+      def date_options(options)
+        (@date_options ||= DEFAULT_DATE_OPTIONS.clone).merge(options)
+      end
+
+      # don't override
+      def valid_date?(date)
+        @date_options[:valid_days].include?(date.wday) and
+          ((TODAY - date).to_i <=
+           (@date_options[:max_age] - @date_options[:offset]))
+      end
+
+    end
+    extend ClassMethods
+
+    # main entry point, probably shouldn't override
+    def html_for(date)
+      date = self.class.offset_date(date)
+      valid_date(date) ? generate_html_for(date) : nil
+    end
+
+    # override as appropriate, expects @name
+    def to_s
+      @name
+    end
+
+    private
+
+    # secondary entry point, expects img_url_for,
+    # may want to override
+    def generate_html_for(date)
+      sprintf(IMG_TAG_FORMAT, img_url_for(date), "#{to_s}-#{date.strftime}")
+    end
+
+    # secondary entry point,
+    # may want to override
+    def valid_date?(date)
+      self.class.valid_date?(date)
+    end
+
+  end
+
+  class UnitedMedia < Base
+    date_options :offset => -7, :format => '%y%m%d'
+
+    comic_strips *%w(creators/agnes comics/arlonjanis creators/bc comics/ben comics/betty comics/bignate wash/bonanas comics/bornloser comics/buckets comics/bullsnbears wash/candorville comics/chickweed comics/dilbert comics/drabble comics/forbetter comics/frazz wash/genepool comics/getfuzzy comics/grandave creators/grandfathersclause comics/grizzwells comics/hedge comics/janesworld comics/jumpstart creators/liberty comics/lilabner comics/luann comics/meatloaf comics/meg creators/momma comics/monty comics/nancy creators/othercoast wash/pcnpixel comics/peanuts comics/pearls wash/pickles comics/pibgorn comics/potluck comics/raisingduncan wash/redandrover comics/roseisrose comics/rudypark comics/sheldon comics/shirleynson comics/soup2nutz comics/themall comics/topofworld comics/warped creators/wizardofid)
+
+    comic_panels *%w(comics/acaseinpoint creators/ballardst comics/committed creators/dinetteset creators/flightdeck comics/gofigure comics/herman comics/kitncarlyle comics/marmaduke comics/moderatelyconfused creators/naturalselection creators/rawmaterial comics/reality comics/ripleys creators/rubes creators/speedbump creators/strangebrew wash/thatslife comics/workingdaze creators/workingitout)
+
+    MagicNumberForDate = {}
+    BASE_URL = "http://www.comics.com"
+    IMG_URL_FORMAT = "#{BASE_URL}/%s/archive/images/%s%s.gif"
+
+    def initialize(comic)
+      @path = comic
+      @name = comic.split('/').last
+    end
+
+    private
+
+    def archive_doc_for(date)
+      Hpricot(open("#{BASE_URL}/#{@path}/archive/#{@name}-#{date}.html"))
+    end
+
+    def magic_number_for(date)
+      MagicNumberForDate[date] ||= archive_doc_for(date)/'img').find { |img|
+          /\/archive\/images\// === img.attributes['src'] rescue nil
+        }.attributes['src'].match(/\/#{@name}(\d+)\.gif$/)[1]
+    end
+
+    def img_url_for(date)
+      sprintf(IMG_URL_FORMAT, @path, @name, magic_number_for(date))
+    end
+
+  end
+
+  class UComics < Base
+    date_options :offset => 0, :format => '__%Y/%%s%y%m%d'
+
+    comic_strips *%w(ad ba bo ca cd cs db dp ft fu ga hc mb nq ob ss tm)
+    comic_panels *%w(bl bz cl co cr fw rl td zi)
+
+    IMG_URL_FORMAT = "http://www.ucomics.com/comics/%s.gif"
+
+    def initialize(comic)
+      @name = comic
+    end
+
+    def img_url_for(date)
+      sprintf(IMG_URL_FORMAT, sprintf(date.to_s, @name))
+    end
+
+  end
+
+  class Creators < Base
+    #must go to each page
+    comic_strips *%w(ballard-street cafe-con-leche dog-eat-doug for-heavens-sake liberty-meadows meaning-of-lila on-a-claire-day state-of-the-union zack-hill dogs-of-c-kennel)
+
+    BASE_URL = "http://www.creators.com/comics"
+
+    def initialize(comic)
+      @name = comic
+    end
+
+    private
+
+    def current_page_doc
+      Hpricot(open("#{BASE_URL}/#{@name}.html"))
+    end
+
+    def magic_number
+      @magic_number ||= archive_doc_for(date)/'img').find { |img|
+          /_thumb.gif$/ === img.attributes['src'] rescue nil
+        }.attributes['src'].
+          match(/\/comics\/(\d+\/\d+)_thumb\.gif$/)[1].
+          split('/').map{|n|n.to_i}
+    end
+
+    def img_url_for(date)
+      comic_num,day_num = magic_number
+      day_num += (date - TODAY).to_i
+      "#{BASE_URL}/#{comic_num}/#{day_num}_image.gif"
+    end
+
+  end
+
+  class KingFeatures < Base
+    date_options :offset => -21, :format => '%Y%m%d'
+
+    comic_strips *%w(Baby_Blues Beetle_Bailey Between_Friends Blondie Buckles Crock Curtis Piranha Funky_Winkerbean Hagar_The_Horrible Hi_and_Lois Marvin Mutts Norm Fast_Track Rhymes_with_Orange Safe_Havens Sally_Forth Shermans_Lagoon Zippy_the_Pinhead Zits 6Chix).map! { |comic| comic.split('/') }.freeze
+
+    comic_panels *%w(Better_Half Dennis_The_Menace Dinette_Set Grin_and_Bear_It I_Need_Help Lockhorns TDIE).map! { |comic| comic.split('/') }.freeze
+
+    IMG_URL_FORMAT = "http://est.rbma.com/content/%s?date=%s"
+
+    def initialize(comic)
+      @name = comic
+    end
+
+    private
+
+    def img_url_for(date)
+      sprintf(IMG_URL_FORMAT, @name, date)
+    end
+
+  end
+
+  class Keenspot < Base
+    #several separate comics
+    #TODO
+  end
+
+  class Independent < Base
+    #several separate comics
+    #TODO
+  end
+
+  module Indie
+
+    class SluggyFreelance < Base
+      date_options :format => '%y%m%d'
+      comic_strip_on :weekdays => :weekday, :saturday => :weekday, :sunday => :sunday
+      
+      def weekday(list)
+        "<a href=\"sluggy.html\"><img border=\"0\" src=\"http://www.sluggy.com/comics/#{date}a.gif\"></a>"
+      end
+
+      def sunday(list)
+        [
+	      "<a href=\"sluggy.html\">"
+	      "<img border=\"0\" src=\"http://www.sluggy.com/comics/#{date}b1.jpg\">"
+	      "<img border=\"0\" src=\"http://www.sluggy.com/comics/#{date}b2.jpg\">"
+	      "<img border=\"0\" src=\"http://www.sluggy.com/comics/#{date}b3.jpg\">"
+	      "<img border=\"0\" src=\"http://www.sluggy.com/comics/#{date}b4.jpg\">"
+	      "<img border=\"0\" src=\"http://www.sluggy.com/comics/#{date}b5.jpg\">"
+	      "<img border=\"0\" src=\"http://www.sluggy.com/comics/#{date}b6.jpg\">"
+	      "</a>"
+        ]
+      end
+
+    end
+
+    class GPFComics
+      date_options :format => '%Y%m%d'
+      #TODO
+    end
+
+  end
+
+end
+
+#ENV['WEBGET_SPOOF'] = 'Mozilla/4.73 [en] (X11; U; SunOS 5.6 sun4u; Nav)'
+#ENV.delete('http_proxy')
+
+$stderr = File.new('/home/gss/logs/comix', 'w')
+$stderr.puts basedate.to_s
+$stdout = File.new('/home/gss/public_html/comix/todays.html', 'w')
+
+print <<EOF
+<html><head>
+<title>Today's Comics</title>
+</head><body>
+<h1>Comics From <a href="http://www.comics.com/">United Media</a>,
+<a href="http://www.ucomics.com/">Universal Press</a>,
+<a href="http://www.creators.com/comics/comics.asp">Creators.com</a>,
+<a href="http://www.kingfeatures.com/comics/">King Features</a>,
+<a href="http://www.keenspot.com/">Keenspot</a>,
+and Others</h1>'
+#{Time.now}
+<p>
+EOF
+
+# vim: foldmethod=syntax
+

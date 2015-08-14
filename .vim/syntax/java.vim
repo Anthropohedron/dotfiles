@@ -1,0 +1,1 @@
+syn keyword javaType String

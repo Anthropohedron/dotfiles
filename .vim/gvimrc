@@ -1,0 +1,85 @@
+set hlsearch
+nnoremap <ESC> <ESC>:noh<CR>
+if has("gui_mac") || has("gui_macvim")
+	let norm_font="ProFontX:h14"
+	let small_font="ProFontX:h12"
+	let large_font="ProFontX:h20"
+	let itsy_font="ProFontX:h4"
+	colorscheme default
+"	let $PATH = substitute(
+"		\ system("source /private/etc/csh.login ; printenv PATH"),
+"		\ "\<C-J>$", "", "")
+elseif $DISPLAY!="" && has("x11") && has("gui_running")
+	set mousefocus
+	if has("gui_kde")
+		let norm_font="FreeMono/11/-1/5/50/0/0/0/1/0,8x16" "should be 11
+		let small_font="FreeMono/7/-1/5/50/0/0/0/1/0,7x13"
+		let large_font="FreeMono/16/-1/5/50/0/0/0/1/0,12x24"
+		let itsy_font="FreeMono/3/-1/5/50/0/0/0/1/0,5x7"
+	elseif has("gui_gtk2")
+		let platform=system("uname")
+		if platform == "Darwin\n"
+			let norm_font="ProFontX 10"
+			let small_font="ProFontX 8"
+			let large_font="ProFontX 16"
+			let itsy_font="ProFontX 0"
+		elseif platform == "Linux\n"
+			let norm_font="FreeMono 12"
+			let small_font="FreeMono 10"
+			let large_font="FreeMono 18"
+			let itsy_font="FreeMono 2"
+		elseif has("win32unix")
+			let norm_font="Fixed 12"
+			let small_font="Fixed 10"
+			let large_font="Fixed 18"
+			let itsy_font="Fixed 2"
+		else
+			let norm_font="8x16"
+			let small_font="7x13"
+			let large_font="12x24"
+			let itsy_font="5x7"
+		endif
+	else
+		let norm_font="8x16"
+		let small_font="7x13"
+		let large_font="12x24"
+		let itsy_font="5x7"
+	endif
+elseif has("gui_w32") || has("gui_w32s")
+	let norm_font="Andale Mono 12,8x16"
+	let small_font="Andale Mono 7,7x13"
+	let large_font="Andale Mono 16,12x24"
+	let itsy_font="Andale Mono 4,5x7"
+else
+	throw "Why is .gvimrc being read if there is no GUI?"
+endif
+	let &guifont=norm_font
+	map    &G     :let &guifont=norm_font
+	map    &    :let &guifont=small_font
+	map    &g     :let &guifont=large_font:set lines=28
+	menu   F&ont.&Normal<Tab>&G :let &guifont=norm_font
+	menu   F&ont.&Small<Tab>&^G :let &guifont=small_font
+	menu   F&ont.&Large<Tab>&g :let &guifont=large_font:set lines=28
+	menu   F&ont.&Itsy       :let &guifont=itsy_font
+	set lines=45
+	if &diff
+		set columns=170
+	else
+		set columns=80
+	endif
+	set guioptions=aegimlrt
+	set laststatus=2
+	set ruler
+	set mousehide
+	set bg=light
+	hi Normal guibg=#FFD39B
+	menu   &Mode.Normal      :source $HOME/.vim/leave.vim
+	menu   Mode.C            :source $HOME/.vim/c.vim
+	menu   Mode.Java         :source $HOME/.vim/java.vim
+	menu   Mode.Shell        :source $HOME/.vim/shell.vim
+	menu   Mode.VRML         :source $HOME/.vim/vrml.vim
+	menu   Mode.Web          :source $HOME/.vim/web.vim
+	menu   Mode.HTML         :source $HOME/.vim/html.vim
+	menu   Mode.Mail         :source $HOME/.vim/mail.vim
+	menu   File.Print        :w !enscript
+"source ~/.vimrc

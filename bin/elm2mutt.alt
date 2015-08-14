@@ -1,0 +1,45 @@
+#!/usr/bin/nawk -f
+# simple script to convert Elm aliases to mutt aliases
+# crude but works for me...
+# elm2mutt < ~/.elm/aliases.text > .mutt.aliases
+# afx@ibm.de
+
+BEGIN   { FS="\=";
+          inalias=0;
+        }
+
+/^$/    { print ; inalias=0 ; next}
+/^#/    { if (inalias==1) { print}
+          print $0 ; inalias=0 ; next}
+/^[^\t ]/ { if ( inalias==1 ) {
+               printf("\n"); inalias=0; }
+          }
+/^[\t ]*$/      { inalias=0 ; next}
+/\=/    { nick=$1;name=$2;addr=$3;
+          sub("[\t ]*$"," ",nick);
+          sub("[\t ]*$","",name);
+          sub("^[\t ]*","",name);
+	  nick = tolower(nick);
+          if (index(addr,",")>0) {
+            if ( length(name) == 0 )
+               printf("alias %s\t%s ",nick,addr);
+            else
+               printf("# %s\nalias %s\t%s ",name,nick,addr);
+            inalias=1;
+          } else {
+            if (inalias==1) { print }
+            if ( length(name) == 0 )
+               printf("alias %s\t%s\n",nick,addr);
+            else
+               printf("alias %s\t%s (%s)\n",nick,addr,name);
+            inalias=0;
+          }
+          next;
+        }
+        { if (inalias==1) {
+          sub("^[\t ]*","");
+          printf("%s", $1);
+        }}
+
+END { print "\n\n" }
+

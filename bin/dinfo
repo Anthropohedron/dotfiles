@@ -1,0 +1,9 @@
+#!/bin/sh
+if test $# -lt 1
+then
+	echo "Usage: `basename $0` <domainname> [domainname]..." >&2
+fi
+for domain in "$@"
+do
+	nslookup -type=ANY "$domain" `nslookup -type=ANY "$domain" | grep nameserver | cut -d= -f2 | head -1`
+done

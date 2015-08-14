@@ -1,0 +1,49 @@
+#Colors
+color normal	white black
+color markers	cyan black
+color tree	white black
+color signature	green black
+color attachment cyan black
+color search	brightcyan black
+color status	black white
+color indicator	white black
+
+color index	green black		~l
+color index	yellow black		"~d >1w"
+color index	brightblue black	"~d >1m"
+color index	brightwhite black	~F
+color index	brightred black		~N
+color index	brightgreen black	"~l ~F"
+color index	red black		"~l ~N"
+color index	cyan black		~O
+color index	brightyellow black	~P
+#color index	black red		"~s [*]SPAM[*]"
+#color index	white black		"~F ~s [*]SPAM[*]"
+color index	magenta black		~D
+#color index	white black		"(0[0-9]|1[01]):[0-5][0-9]:[0-5][0-9] -- Authentic"
+#color index	cyan black		"(1[2-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] -- Authentic"
+#color index	cyan black		"(0[02468]|1[02468]|2[02]):[0-5][0-9]:[0-5][0-9] -- Authentic"
+
+color header	brightred black		^From[^:]
+color header	red black		^Mime
+color header	red black		^Content
+color header	brightmagenta black	^(from|subject):
+color header	brightcyan black	^date:
+color header	brightyellow black	^x-url:
+color header	brightwhite black	^[^mcfsdMCFSD][^:]*
+color body	brightwhite black	[-A-Za-z_0-9.%$+]+@[-A-Za-z_0-9.%$]+
+color body	brightyellow black	"(mailto|file|ftp|http|https)://[-A-Za-z_0-9./%#~:@&?=,+]+"
+
+#Quoted:
+color body	cyan black \
+ "^( ?:[^-)(>]|[0-9A-Za-z]* ?[|}>] ?){1}([^:|}>]*|[^:>|]*[^ 0-9A-Za-z:|}>][^:>|]*[|}>].*|[^>|:]:.*|[^|}>:]{2,}:.*)$"
+color body	brightgreen black \
+ "^( ?:[^-)(>]|[0-9A-Za-z]* ?[|}>] ?){2}([^:|}>]*|[^:>|]*[^ 0-9A-Za-z:|}>][^:>|]*[|}>].*|[^>|:]:.*|[^|}>:]{2,}:.*)$"
+color body	brightblue black \
+ "^( ?:[^-)(>]|[0-9A-Za-z]* ?[|}>] ?){3,}([^:|}>]*|[^:>|]*[^ 0-9A-Za-z:|}>][^:>|]*[|}>].*|[^>|:]:.*|[^|}>:]{2,}:.*)$"
+
+mono  attachment underline
+mono  search	bold
+mono  header	bold			^(from|subject):
+mono  body	bold			[-A-Za-z_0-9.%$]+@[-A-Za-z_0-9.%$]+
+mono  body	underline		"(mailto|file|ftp|http|https)://[-A-Za-z_0-9./%#~:@&?=,+]+"

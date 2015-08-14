@@ -1,0 +1,12 @@
+unhook *
+
+source ~/.mutt/variables
+source ~/.mutt/color
+source ~/.mutt/hook
+source ~/.mutt/bind
+source ~/.mutt/macro
+source "m4 $HOME/.mutt/subs.m4|"
+macro index X "!echo RESET\n"
+macro pager X "!echo RESET\n"
+#push "!echo %f"
+

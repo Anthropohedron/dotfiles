@@ -1,0 +1,15 @@
+#!/bin/sh
+RSLT="No match."
+for i in `echo $PATH | tr ':' ' '`
+do
+	if test ! -d $i/$1 -a -x $i/$1
+	then
+		RSLT="$i/$1"
+		echo $RSLT
+	fi
+done
+if test "$RSLT" = "No match."
+then
+	echo $RSLT
+fi
+

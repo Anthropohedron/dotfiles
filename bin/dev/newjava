@@ -1,0 +1,20 @@
+#!/bin/sh
+
+JAVA_CLASSDIR=${JAVA_CLASSDIR-$HOME/lib/classes}
+
+if test ! -s "$1" && expr "$1" : '.*.java$' >/dev/null
+then
+	cd "`dirname $1`"
+	file="`basename $1`"
+	if expr "`pwd`" : '.*'$JAVA_CLASSDIR/'.*' >/dev/null
+	then
+		pwd | sed -e 's/[ 	]/_/g' -e 's,^.*'$JAVA_CLASSDIR'/,package ,' -e 's,/,.,g' -e 's/$/;/'
+		echo ""
+		echo public class `basename $1 .java` '{'
+		echo "  public `basename $1 .java`()"
+		echo '  {'
+		echo '  }'
+		echo '}'
+		echo ""
+	fi
+fi

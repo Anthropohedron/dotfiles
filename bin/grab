@@ -1,0 +1,4 @@
+#!/bin/sh
+
+exec wget --background --recursive --levels=inf --no-parent --convert-links \
+	--no-remove-listing --wait 1 --random-wait "$@"

@@ -1,0 +1,25 @@
+#Macros
+
+#macro compose F 'qn'	#Forget
+#macro index \\ ':set invresolve\n'
+#macro pager \\ ':set invresolve\n'
+macro index \ct ";|grep nyti.ms | sed 's/\\[[0-9]\\]//'\n"
+macro index \cu "|extractUrls \n"
+macro index l ":source ~/.mutt/limit\n<limit>" "Safe limit"
+macro index \cf "l~F\n" "Limit flagged"
+macro index L "l!~l\n" "Limit non-list"
+macro index O "l~O\n" "Limit Old"
+macro index \cn "l~N\n" "Limit New"
+macro index S "l!~F ~s [*]SPAM[*]\n" "Limit spam"
+macro index \ck ";N;s~/Maildir/.spam" "Save spam to folder"
+macro index <Esc>S "l!~C struts\n" "Limit non-struts"
+macro index \ca "T.\n" "Tag all"
+macro index \cw ":set nowait_key\n|urlview\n:set wait_key\n" "Pipe to urlview"
+macro pager \cw ":set nowait_key\n|urlview\n:set wait_key\n" "Pipe to urlview"
+macro index <Esc>! c!\n "Change to incoming spool"
+macro pager <Esc>! c!\n "Change to incoming spool"
+macro pager <Left> KKKKK
+macro pager <Right> JJJJJ
+macro pager D qd
+macro pager T qNkt
+macro compose = f=

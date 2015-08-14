@@ -1,0 +1,5 @@
+#!/bin/sh
+#elmalias -u -f "alias %a\t%n\t<%v>"
+elmalias -u -f "alias %a\t%n\t<%v>" | sed 's/,/>,</g' |\
+	nawk -F'	' '/,/ { print "\n# " $2; print $1,$3; next }
+		{print}' -

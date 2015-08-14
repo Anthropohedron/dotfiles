@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
+WordList = ENV['DICT'] || '/usr/dict/words'
+
+WordCount = 4
+MinWordLength = 5
+MaxWordLength = 8
+WordSel = /^[a-z]{#{MinWordLength},#{MaxWordLength}}$/
+
+StupidSeparators = [ '1', 'A', '.' ]
+
+def usage(msg = nil)
+  STDERR.puts msg if msg
+  STDERR.puts "Usage: #{$PROGRAM_NAME} [--stupid]"
+  exit 1
+end
+
+separator = nil
+
+usage if ARGV.size > 1
+
+if (ARGV.size == 1)
+  if (ARGV[0] == '--stupid')
+    separator = '%s'
+  else
+    usage
+  end
+end
+
+word_list = File.open(WordList, :encoding => "BINARY") { |f|
+  f.readlines
+}.select { |w|
+  w.chomp!
+  WordSel === w
+}
+len = word_list.size
+
+pw = (1..WordCount).map {
+  word_list[rand(len)]
+}.join(separator)
+
+if separator
+  sep_len = StupidSeparators.size
+  while StupidSeparators.size < (WordCount - 1)
+    StupidSeparators << StupidSeparators[StupidSeparators.size % sep_len]
+  end
+  pw = sprintf pw, *StupidSeparators
+end
+
+puts pw
+

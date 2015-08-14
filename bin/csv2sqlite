@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'csv'
+require 'sqlite3'
+
+def stream_lines(file, db, table_name)
+  columns = CSV.parse_line(file)
+  column_count = columns.length
+  columns.map! { |s| s.gsub(/[^a-z]+/i, '_') }
+  db.execute("CREATE TABLE #{table_name} (#{columns.join(' text, ')} text);")
+  stmt = db.prepare("INSERT INTO #{table_name} VALUES (#{columns.map{'?'}.join(', ')});")
+  while row = CSV.parse_line(file)
+    diff = row.length - column_count
+    if diff > 0
+      row.pop diff
+    else
+      while diff < 0
+        row.push nil
+        diff += 1
+      end
+    end
+    stmt.bind_params(row)
+    stmt.execute
+    stmt.reset!
+  end
+  stmt.close
+end
+
+if $PROGRAM_NAME == __FILE__
+  unless ARGV.length == 3 && File.readable?(ARGV[0])
+    STDERR.puts "Usage: #{$PROGRAM_NAME} <CSV file> <database file> <table name>"
+    exit 1
+  end
+  file = File.open(ARGV[0], 'r')
+  db = SQLite3::Database.new(ARGV[1])
+  stream_lines(file, db, ARGV[2])
+end

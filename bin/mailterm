@@ -1,0 +1,24 @@
+#!/bin/sh
+
+cd $HOME
+mail=${MUTT-"mutt -Z"}
+MAILTERM_SETTINGS='set xterm_set_titles'
+export MAILTERM_SETTINGS
+
+if tty >/dev/null && test -z "$DISPLAY" -o "$#" -ne 0 -o "$TERM" = osXt
+then
+#	elm
+	while $mail && (tty>/dev/null)
+	do
+		true
+	done
+else
+	TERMINFO=$HOME/.terminfo
+	TERM=xterm
+	XUSERFILESEARCHPATH=$HOME/lib/X11/app-defaults/%N
+	LANG="en_US.UTF-8"
+	export TERMINFO TERM XUSERFILESEARCHPATH LANG
+#	xterm -T elm -geometry 80x45 -name elm -e sh -c 'eval `resize -u`; elm'
+	exec xterm -T mutt -geometry 80x45 -bg black -fg white -name mutt -e sh -c 'eval `resize -u`;  stty erase 0x7F; '"$0 1"
+fi
+

@@ -1,0 +1,11 @@
+
+export REPORTBUGEMAIL="debbugs.20.gseidman@spamgourmet.com"
+
+if test -r /usr/lib/libXaw3d.so.7
+then
+	export LD_PRELOAD=/usr/lib/libXaw3d.so.7
+elif test -r /usr/lib/i386-linux-gnu/libXaw3d.so.6
+then
+	export LD_PRELOAD=/usr/lib/i386-linux-gnu/libXaw3d.so.6
+fi
+

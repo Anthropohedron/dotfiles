@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+ARGF.each_line do |line|
+  next unless /\bhttps?:\/\// === line
+  line.sub! /From newyorker.com:|Continue reading at/, ''
+  match = /\b(http[^\s]+)\s*<(http[^>]+)>/.match line
+  if match && match[1] == match[2]
+    line = match[1]
+  end
+  puts line
+end
+

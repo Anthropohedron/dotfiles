@@ -1,0 +1,52 @@
+#!/bin/sh
+
+if test $# -lt 1
+then
+	set f -
+	shift
+fi
+
+for file in "$@"
+do
+	if test "x$file" != x-
+	then
+		exec 3> "`dirname \"$file\"`/`basename \"$file\" .outline`.html"
+	else
+		exec 3>&1
+	fi
+	grep -v '^$' "$file" | {
+	read TITLE
+	echo '<!DOCTYPE html>'
+	echo '<html><head>'
+	echo "<title>$TITLE</title>"
+	echo '</head><body>'
+	echo '<h1 style="text-align:center">'$TITLE'</h1>'
+	awk 'BEGIN {
+		split("I A 1 a i", numtype, " ");
+		prevtab = 0;
+		tabs = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
+		}
+		{
+		i=1;
+		while (substr($0, i, 1) == "\t") i++;
+		while ((i<prevtab)&&(prevtab>4))
+			printf("%s</ul>\n", substr(tabs, 0, --prevtab));
+		while (i<prevtab)
+			printf("%s</ol>\n", substr(tabs, 0, --prevtab));
+		while ((i>prevtab)&&(prevtab>4))
+			printf("%s<ul type=\"CIRCLE\">\n", 
+				substr(tabs, 0, prevtab++));
+		while (i>prevtab)
+			printf("%s<ol type=\"%s\">\n", 
+				substr(tabs, 0, prevtab),
+				numtype[++prevtab]);
+		printf("%s<li>%s</li>\n", 
+			substr(tabs, 0, i-1),
+			substr($0, i, length($0)+1-i));
+		prevtab = i;
+		}
+		END { printf("</ol>\n") }' -
+	echo '</body></html>'
+	} >&3
+done
+exec 3>&1

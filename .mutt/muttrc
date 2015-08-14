@@ -1,0 +1,17 @@
+#
+# System configuration file for Mutt
+#
+
+auto_view text/html
+alternative_order text/enriched text/plain
+
+#Aliases
+source ~/.mutt/aliases
+source ~/.mutt/tmpaliases
+
+source ~/.mutt/resetdefaults
+
+source ~/.mutt/private
+
+push ''
+

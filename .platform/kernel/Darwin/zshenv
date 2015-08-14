@@ -1,0 +1,32 @@
+
+if test -n "$DISPLAY" -a -z "$TERM_PROGRAM"
+then
+	export LAUNCHD_X11_DISPLAY="$DISPLAY"
+	export DISPLAY=`echo "$DISPLAY" | sed 's/^.*:/:/'`
+fi
+
+export DOTFONTPATH=/usr/X11R6/lib/X11/fonts/TTF:/System/Library/Fonts
+
+# XXX: DO NOT USE! This stuff is nothing but trouble.
+# XXX: Instead, as root:
+# XXX:
+# XXX: cd /opt/X11/lib
+# XXX: mkdir -p PRESERVE
+# XXX: mv -i libXaw.* PRESERVE
+# XXX: ln -s libXaw3d.dylib libXaw.6.dylib
+# XXX: ln -s libXaw3d.dylib libXaw.7.dylib
+# XXX: ln -s libXaw3d.dylib libXaw.8.dylib
+# XXX: ln -s libXaw3d.dylib libXaw.dylib
+# XXX: 
+#alias xterm='DYLD_FORCE_FLAT_NAMESPACE=1 xterm'
+#unset DYLD_FORCE_FLAT_NAMESPACE
+#if test -r /opt/X11/lib/libXaw3d.dylib
+#then
+#	export DYLD_FORCE_FLAT_NAMESPACE=1
+#	export DYLD_INSERT_LIBRARIES=/opt/X11/lib/libXaw3d.dylib
+#elif test -r /opt/local/lib/libXaw3d.dylib
+#then
+#	export DYLD_FORCE_FLAT_NAMESPACE=1
+#	export DYLD_INSERT_LIBRARIES=/opt/local/lib/libXaw3d.dylib
+#fi
+

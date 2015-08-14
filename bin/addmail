@@ -1,0 +1,36 @@
+#!/bin/sh
+if test $# -ge 3
+then
+	ALIAS=$1
+	ADDR=$2
+	LAST=$3
+	FIRST=$4
+	shift; shift; shift; shift
+	COMM=$*
+else
+	echon "Alias: "
+	read ALIAS
+	echo
+	echon "Address: "
+	read ADDR
+	ADDR="`echo \"$ADDR\" | sed -e 's/[][<>(){} ]//g' -e 's/^mailto://'`"
+	echo
+	echon "Last name: "
+	read LAST
+	echo
+	echon "First Name: "
+	read FIRST
+	echo
+	echon "Comment: "
+	read COMM
+	echo
+fi
+if test "$FIRST" = "" -a "$LAST" = ""
+then
+	echo "$ALIAS = $COMM = $ADDR" >> $HOME/.elm/aliases.text
+else
+	echo "$ALIAS = $LAST; $FIRST, $COMM = $ADDR" >> $HOME/.elm/aliases.text
+fi 
+newalias
+elm2mutt > $HOME/.mutt/aliases
+echo Converted to mutt aliases

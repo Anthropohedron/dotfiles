@@ -1,0 +1,109 @@
+#!/bin/sh
+# start up xterm (or any other X command) on the specified host
+# Usage: xon host [arguments] [command]
+case $# in
+0)
+	echo "Usage: $0 <hostname> [-user user] [-name window-name] [-debug]"
+	echo "[-screen screen-number] [-port port] [command ...]"
+	exit 1
+	;;
+esac
+#domainname="`/u/gss/bin/domainname`"
+target=$1
+shift
+label=$target
+resource=xterm
+#rcmd="ssh"
+disconnect="-f"
+args=
+
+username=
+xauth=
+case x$XUSERFILESEARCHPATH$XFILESEARCHPATH$XAPPLERESDIR in
+x)
+	xpath='HOME=${HOME-`pwd`} '
+	;;
+*)
+	xpath='HOME=${HOME-`pwd`} XUSERFILESEARCHPATH=${XUSERFILESEARCHPATH-"'"$XUSERFILESEARCHPATH"'"} XFILESEARCHPATH=${XFILESEARCHPATH-"'"$XFILESEARCHPATH"'"} XAPPLERESDIR=${XAPPLERESDIR-"'"$XAPPLERESDIR"'"}'
+	;;
+esac
+redirect=" < /dev/null > /dev/null 2>&1 &"
+redirect=
+command=
+ls=-ls
+ls=
+continue=:
+while $continue; do
+	case $1 in
+	-user)
+		shift
+		username="-l $1"
+		label="$target $1"
+#		rcmd="ssh -f $target $username"
+		shift
+#		case x$XAUTHORITY in
+#		x)
+#			XAUTHORITY='$HOME/.Xauthority'
+#			;;
+#		esac
+		case x$XUSERFILESEARCHPATH$XFILESEARCHPATH$XAPPLERESDIR in
+		x)
+			;;
+		*)
+			xpath="XUSERFILESEARCHPATH=$XUSERFILESEARCHPATH XFILESEARCHPATH=$XFILESEARCHPATH XAPPLERESDIR=$XAPPLERESDIR"
+			;;
+		esac
+		;;
+#	-access)
+#		shift
+#		xhost +$target
+#		;;
+	-port)
+		shift
+		args="$args -p $1"
+		shift
+		;;
+	-name)
+		shift
+		label="$1"
+		resource="$1"
+		shift
+		;;
+#	-nols)
+#		shift
+#		ls=
+#		;;
+	-debug)
+		shift
+		disconnect=
+		;;
+#	-screen)
+#		shift
+#		DISPLAY=`echo $DISPLAY | sed 's/:\\([0-9][0-9]*\\)\\.[0-9]/:\1/'`.$1
+#		shift
+#		;;
+	*)
+		continue=false
+		;;
+	esac
+done
+case x$XAUTHORITY in
+x)
+	;;
+x*)
+	xauth="XAUTHORITY=$XAUTHORITY"
+	;;
+esac
+#vars="$xpath TERM=$TERM $xauth"
+vars="$xpath"
+rcmd="ssh $args $disconnect $target $username"
+#rcmd="ssh -X $disconnect $target $username"
+#rcmd="ssh +x $disconnect $target $username"
+case $# in
+0)
+	$rcmd 'sh -c '"'$vars"' xterm '$ls' -name "'"$resource"'" -T "'"$label"'" -n "'"$label"'" '"$redirect'"
+	;;
+*)
+	$rcmd 'sh -c '"'$vars"' '"$*$redirect'"
+	;;
+esac

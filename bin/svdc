@@ -1,0 +1,8 @@
+#!/bin/sh
+
+svn diff "$@" | tr -d '\015' |\
+	gawk '	/^+/ { printf("\033[32m%s\033[0m\n", $0); next }
+		/^-/ { printf("\033[31m%s\033[0m\n", $0); next }
+		{ print }' |\
+	less -R -m -E -F -X
+

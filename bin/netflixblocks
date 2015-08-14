@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'nokogiri'
+require 'open-uri'
+
+OctetMasks = (0..8).map { |b|
+  ('1' * b).to_i(2) << (8-b)
+}
+BitMasks = (0..32).map { |b|
+  octets = [ ]
+  while b > 8
+    octets << 255
+    b -= 8
+  end
+  octets << OctetMasks[b]
+  while octets.size < 4
+    octets << 0
+  end
+  octets.join('.')
+}
+
+def getBlocks
+  doc = Nokogiri::HTML(open('http://ipinfo.io/AS2906'))
+  table = doc.css('#blocks')[0].next_element
+  blocks = table.css('tr > td > a[href]')
+  blocks.map { |n|
+    addr, bits = n.text.strip.split('/')
+    addr && !addr.empty? && "#{addr}/#{BitMasks[bits.to_i]}"
+  }.compact.uniq
+end
+
+# note: place output in /etc/vpn_routes on gateway
+
+if __FILE__ == $PROGRAM_NAME
+  puts "# netflix\n\n"
+  puts getBlocks.join("\n")
+end
+

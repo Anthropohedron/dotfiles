@@ -1,0 +1,43 @@
+#!/bin/sh
+
+if test $# -gt 1 -o \( $# -eq 1 -a x"$1" != x-s \)
+then
+	echo "Usage: $0 [-s]" >&2
+	exit 1
+fi
+
+#echo "$0 was run on `tty`" > /dev/ttyp2
+
+#echo "SSH_AUTH_SOCK = $SSH_AUTH_SOCK" >&2
+if test ! -z "$SSH_AUTH_SOCK" -a -S "$SSH_AUTH_SOCK"
+then
+	exit 0
+fi
+
+authsock=$HOME/.ssh/authsock
+authpid=$HOME/.ssh/authpid
+if kill -CONT `cat $authpid` 2>/dev/null && \
+	test -f $authsock -a -O "`cat $authsock`" -a -S "`cat $authsock`"
+then
+	SSH_AUTH_SOCK="`cat $authsock`"
+	export SSH_AUTH_SOCK
+	SSH_AGENT_PID="`cat $authpid`"
+	export SSH_AGENT_PID
+	chmod 700 $SSH_AUTH_SOCK
+	chmod 600 $authsock
+else
+	eval `ssh-agent -s | grep -v '^echo'`
+	chmod 700 $SSH_AUTH_SOCK
+	echo $SSH_AUTH_SOCK > $authsock
+	chmod 600 $authsock
+	echo $SSH_AGENT_PID > $authpid
+fi
+
+if test x$1 = x-s
+then
+	echo 'SSH_AUTH_SOCK='$SSH_AUTH_SOCK'; export SSH_AUTH_SOCK;'
+	echo 'SSH_AGENT_PID='$SSH_AGENT_PID'; export SSH_AGENT_PID;'
+else
+	echo 'setenv SSH_AUTH_SOCK '$SSH_AUTH_SOCK';'
+	echo 'setenv SSH_AGENT_PID '$SSH_AGENT_PID';'
+fi

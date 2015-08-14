@@ -1,0 +1,32 @@
+[core]
+	editor = ddvim -f
+	excludesfile = ~/.gitglobalignore
+	pager = less -R -m -E -F -X
+[user]
+	name = Anthropohedron
+	email = Anthropohedron@users.noreply.github.com
+[help]
+	autocorrect = 30
+[color]
+	branch = auto
+	diff = auto
+	grep = auto
+	interactive = auto
+	pager = true
+	showbranch = auto
+	status = auto
+	ui = auto
+[color "diff"]
+	old = red
+	new = green
+[color "status"]
+	added = blue
+	changed = green
+	untracked = magenta
+	updated = cyan
+[alias]
+	subcheckout = !git submodule status | cut -c2- | awk '{ printf(\"(cd %s && git checkout %s)\\n\", $2, $1) }' | sh
+	lol = log --graph --decorate --pretty=format:'%Cred%h%Creset -%C(cyan)%d%Creset %s %C(bold green)(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+	lola = !git lol --all
+[push]
+	default = matching

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+TMPF=/tmp/vimf$$
+{
+for f in "$@"
+do
+	(cd "`dirname \"$f\"`" && pwd ) | tr '\012' '/' && \
+	basename "$f"
+done
+} > $TMPF
+
+{
+for srv in `vim --serverlist`
+do
+	vim --servername "$srv" --remote-expr 'Winlist()' |\
+	sed "s/^/$srv	/"
+done
+
+} | fgrep -f $TMPF | cut -f1 | {
+
+for srv in `cat`
+do
+	vim --servername "$srv" --remote-expr 'foreground()' >/dev/null
+done
+
+}

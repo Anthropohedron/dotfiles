@@ -1,0 +1,4 @@
+push '<limit>.'
+bind index q quit
+bind index Q quit
+bind pager Q quit

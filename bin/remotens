@@ -1,0 +1,14 @@
+#!/bin/sh
+#echo $0 "$@" > /dev/console
+URL=`echo "$1" | sed -e 's/ /%20/g' -e 's/,/%2C/g'`
+if test -z "$DISPLAY" -o "$TERM" = osXt -o ! -z "$SSH_CLIENT"
+then
+	www-browser "$URL"
+else
+	if test "`echo $DISPLAY | cut -d: -f2`" = "0.1"
+	then
+		DISPLAY="`echo $DISPLAY | cut -d: -f1`":0.0
+		export DISPLAY
+	fi
+	firefox -remote 'openURL('"$URL"', new-tab)'
+fi

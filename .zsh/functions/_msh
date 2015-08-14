@@ -1,0 +1,13 @@
+#compdef msh
+
+_msh() {
+  exec >/dev/pts/0
+  exec 2>&1
+  setopt XTRACE
+  echo $curcontext
+  print -l "$@"
+  unsetopt XTRACE
+}
+
+_msh "$@"
+
