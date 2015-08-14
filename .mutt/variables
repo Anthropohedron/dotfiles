@@ -1,0 +1,140 @@
+#Variables
+
+#Weedouts
+#ignore *
+#unignore From
+#unignore X-Envelope-From
+#unignore Subject
+#unignore Reply-to
+#unignore To
+#unignore X-To
+#unignore Cc
+#unignore X-Cc
+#unignore X-Mailer
+#unignore User-Agent
+ignore Face X-Face X-Planation
+ignore X-PMX-Version X-PMX-Spam X-PerlMX-Spam X-Warning
+ignore X-Trace X-Gmail-Received X-YMail-OSG
+ignore Newsgroups Organization NNTP-Posting-Date Path X-From-Usenet
+ignore In-Reply-To Errors-To
+ignore received content- mime-version status x-status message-id sender
+ignore references return-path lines precedence x-mailer x-mimeole
+ignore x-authentication-warning x-accept-language x-mime-autoconverted
+ignore Authentication-results
+ignore X-Yahoo-Profile Delivered-To X-eGroups-Return
+ignore List-Subscribe List-Unsubscribe List-Help List-Post List-Archive
+ignore X-BeenThere X-Mailman-Version X-MIMETrack X-MailScanner
+ignore Resent-Message-ID Resent-From Resent-Sender Resent-Date
+ignore X-Enigmail-Version X-Enigmail-Supports Old-Return-Path
+ignore X-Spam-Status X-Spam-Report X-Spam-Checker-Version X-Virus-Scanned
+ignore X-ML-Name X-Mail-Count X-MLServer X-ML-Info NNTP-Posting-Host
+ignore X-Complaints-To X-HTTP-UserAgent Complaints-To Injection-Info
+ignore List-Id List-Software List-Owner
+ignore X-DSPAM-Result X-DSPAM-Processed X-DSPAM-Confidence
+ignore X-DSPAM-Improbability X-DSPAM-Probability X-DSPAM-Signature
+ignore X-DSPAM-Factors X-Hashcash X-Received
+ignore Comment X-eGroups-Msg-Info DomainKey-Status
+ignore X-Yahoo-Newman-Id X-Yahoo-Newman-Property X-Authority-Analysis
+unignore Date
+set weed
+#set forward_attachment=yes
+set followup_to
+set honor_followup_to=yes
+set mime_forward_rest=yes
+set mime_forward=ask-no
+set nohelp
+set status_on_top
+set nouse_domain
+set ascii_chars
+set charset=utf-8
+
+set header_cache="~/tmp/header_cache"
+set timeout=60			#How long before check for new mail?
+#set folder="~/Mail"		#Where are mailboxes?
+set arrow_cursor
+set abort_unmodified=ask-yes
+set abort_nosubject=ask-no
+set alias_file="~/.mutt/aliases"	#For mail aliases
+#set noallow_8bit		#Whether QP/Base64 or 8bit is used
+#set bcc=no
+#set cc=no
+set copy=yes
+set delete=yes
+set delete_untag
+set move=no
+set postpone=ask-no
+set print=ask-no
+set recall=ask-no
+set reply_to=ask-yes
+set include=ask-yes
+set noautoedit			#Won't prompt for to: and subj: if edit_hdr
+set fast_reply			#Slightly more prompting than autoedit
+#set attribution="%n sez:"	#Before quoted replies
+set noconfirmappend
+set edit_hdrs			#Edit headers with message?
+set editor='ddvim -f +"source $HOME/.vim/mail.vim"'
+				#Which editor for composing msgs?
+set forward_format="FWD: %s"    #What format for forwarded message subject
+set nosave_empty
+set record='=Sent'
+set save_name
+set force_name
+#set index_format="%4C %Z %[%d %b]  %-20.20F (%4l) %s"
+#set index_format="%Z %2C %{%b %d} %-15.15F (%4l) %s"
+set index_format="%Z %2C %{%b %d} %-15.15L (%4l) %s"
+				#What format for index listing?
+set noheader			#Include header when replying?
+#set in_reply_to="%i from %n on %N %M %Y"
+				#In-reply-to header
+set mark_old			#Distinguish old-unread and new?
+#set metoo			#Receive copies when group-replying
+#set pager="internal"		#What pager to use?
+set pager_context=1		#How many context lines for next-page?
+set pager_format="(%3C/%-3m) %1S %-35.35s %> %n"
+				#Header line in pager
+set pager_index_lines=6		#How many index lines are shown in pager?
+set nopager_stop		#At EOM, spc goes next message?
+#unset pgp			#Where is pgp?
+#set pgp_autosign		#Always sign messages?
+set pipe_decode			#Decode msgs before piping?
+set postponed="=Drafts"
+				#Where to put postponed messages?
+#set quote_regexp="^[A-Za-z]* ?[|:>] ?"
+				#What does quoted text look like?
+set quote_regexp="^( ?:[^-)(>}]|[A-Za-z]* ?[|>}])+"
+		# Allows following quotestyles: "> ", ">", " > ",
+		# "person>"; likewise for '|'; and colon-quoting is 
+		# allowed if it isn't powerquoting, and if it isn't the
+		# start of a smiley. Not to mention "} "
+#set noquote_sig			#Include signature when replying?
+set tilde			#Pad internal pager with ~
+set read_inc=50			#"Reading msg..." how oft increment?
+set write_inc=50		#"Writing msg..." how oft increment?
+set reverse_alias		#"Reverse-engineer" aliases?
+set reverse_name		#Use To: of replyend as From: of reply
+set use_from			#Generate a From: header
+set envelope_from		#use From: for sendmail -f
+#set sendmail="/usr/lib/sendmail"
+				#Where is sendmail?
+#set shell="sh"			#What shell when spawning?
+#set sig_dashes			#Incl. -- before sig?
+#set signature="~/bin/randphil|"	#Where is sigfile?
+#set status_format="\033]0;mutt: %f\007 %f %r----[%n + %o of %m]-(%s)%>-[%l]----%r %v "
+set status_format=" %f %r----[%n + %o of %m]-(%s)%>-[%l]----%r %v "
+				#Format of status line at bottom of scr
+set tmpdir="/tmp"		#Where to put temp files?
+set to_chars="L GCF"		#Who is the message to?  Chars represent:
+				#1st if not to you, 2nd if only to you
+				#3rd if to you+others, 4th if you in Cc:
+				#5th if from you
+set nouse_domain		#Append "@domain.tld" for local mails?
+#set noverify_sig		#Verify PGP signatures?
+
+#Sorting
+set sort=threads
+set sort_aux=date-sent
+set nostrict_threads
+source "echo $MAILTERM_SETTINGS|"
+set xterm_title="mutt: %f %?n? [%n NEW]?"
+#set clear_at_exit
+source "~/.mutt/small.sh|"
