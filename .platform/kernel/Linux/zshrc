@@ -3,6 +3,21 @@ alias vzt='telnet-ssl -l admin -z ssl 192.168.1.1 992'
 function zshsulogin () {
 	echo sudo "$@" su - -s `whence -p zsh`
 }
+alias duplex="/usr/bin/lpr -o sides=two-sided-long-edge"
+alias burn="sudo cdrecord -dao -eject speed=12 fs=8m dev=0,0,0"
+
+#function adjvol () {
+#	if test $# -eq 1 && expr "$1" + 1 >/dev/null 2>/dev/null
+#	then
+#		false
+#	else
+#		echo "Usage: adjvol <volume delta>"
+#		return 1
+#	fi
+#
+#	local vol=`amixer sget PCM | tr ' ' '\012' | grep % | tr -cd '0-9 \012' | head -1`
+#	amixer -q sset PCM `expr $vol + $1`% unmute
+#}
 
 if test -L $HOME/work/firefox/latest-sdk
 then
