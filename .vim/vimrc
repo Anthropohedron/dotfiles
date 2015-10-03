@@ -47,6 +47,7 @@ command Rew rew
 command -bang Qa qa<bang>
 command -bang Q q<bang>
 command -bang W w<bang>
+command CD cd %:h
 command LCD !pwd > /home/gss/.pipes/cdpipe
 nmap gF :sp<CR>gf
 nmap gG :tab sp<CR>gf
