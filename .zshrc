@@ -205,14 +205,14 @@ function gst () {
 function gitst () {
 	gst -s "$@"
 }
-function gvm () {
-	gitst "$@" | grep '^\s\?[AM]' | cut -c4-
+function gitm () {
+	gitst "$@" | grep '^\s\?[?AM]' | cut -c4-
 }
 function gvi () {
-	ddvim -p `gvm "$@"`
+	ddvim -p `gitm "$@"`
 }
 function gitjs () {
-	gvm "$@" | grep '\.js$'
+	gitm "$@" | grep '\.js$'
 }
 function gjl () {
 	gitjs "$@" | xargs jslint
