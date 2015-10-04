@@ -14,8 +14,9 @@ function isLocal () {
 function isMac () {
 	test "$TERM_PROGRAM" = Apple_Terminal -a \
 			-z "$SSH_CLIENT" -a \
-			-x $MacVimBin && \
-		expr "$DISPLAY" : '^\(\|/.*launch.*\)$' >/dev/null
+			-x $MacVimBin && ( \ 
+		test -z "$DISPLAY" || \
+		expr "$DISPLAY" : '^/.*launch.*$' >/dev/null )
 }
 
 isf=false
