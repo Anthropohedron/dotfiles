@@ -6,11 +6,24 @@ setopt SH_WORD_SPLIT
 unsetopt BG_NICE
 unsetopt HUP
 
+export KERNEL=`uname -s`
+export ARCH=`uname -m`
+function platfile () {
+	if test -r $HOME/.platform/kernel/$KERNEL/$1
+	then
+		echo $HOME/.platform/kernel/$KERNEL/$1
+	fi
+	if test -r $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
+	then
+		echo $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
+	fi
+}
+
 umask 022
 if test -z "$systempath"
 then
 	systempath="$PATH"
-	export PATH=$HOME/bin:/usr/local/bin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/X11R6/bin:/usr/bin:/bin:/usr/sbin:/sbin
+	export PATH=`platfile bin | tr '\012' ':'`:$HOME/bin:/usr/local/bin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/X11R6/bin:/usr/bin:/bin:/usr/sbin:/sbin
 fi
 
 eval `$HOME/bin/agent -s`
@@ -23,20 +36,6 @@ export PAGER=less
 export RSYNC_RSH=ssh
 
 unset TMOUT
-
-export KERNEL=`uname -s`
-export ARCH=`uname -m`
-
-function platfile () {
-	if test -r $HOME/.platform/kernel/$KERNEL/$1
-	then
-		echo $HOME/.platform/kernel/$KERNEL/$1
-	fi
-	if test -r $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
-	then
-		echo $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
-	fi
-}
 
 if test -n "$TERM"
 then
