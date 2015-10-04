@@ -3,6 +3,20 @@
 MacVim=/Applications/MacPorts/MacVim.app
 MacVimBin=$MacVim/Contents/MacOS/MacVim
 
+function isLocal () {
+	octet='\.\([0-9]\|[1-9][0-9]\|1[0-9][0-9]\|2[0-4][0-9]\|25[0-5]\)'
+	expr "`echo "$SSH_CLIENT" | cut -d\  -f1`" : \
+		'^\(\|\(\(10\|127\)'"$octet"'\|192\.168\)'"$octet$octet"'\)$' \
+		>/dev/null
+}
+
+function isMac () {
+	test "$TERM_PROGRAM" = Apple_Terminal -a \
+			-z "$SSH_CLIENT" -a \
+			-x $MacVimBin && \
+		expr "$DISPLAY" : '^\(\|/.*launch.*\)$' >/dev/null
+}
+
 isf=false
 for arg in "$@"
 do
@@ -12,19 +26,11 @@ do
 	fi
 done
 
-ssh_from=`echo "$SSH_CLIENT" | cut -d\  -f1`
 UI=term
-if test "$TERM_PROGRAM" = Apple_Terminal \
-	-a -z "$ssh_from" \
-	-a -x $MacVimBin && ( \
-	test -z $DISPLAY || \
-	expr "$DISPLAY" : '.*/launch.*' >/dev/null )
+if isMac
 then
 	UI=mac
-elif test ! -z "$DISPLAY" && ( \
-	test -z "$ssh_from" || \
-	expr "$ssh_from" : \
-		'^192\.168\.11\.\([02-9][0-9]*\|1[0-9]\+\)$' > /dev/null )
+elif test ! -z "$DISPLAY" && isLocal
 then
 	UI=X
 fi
