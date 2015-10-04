@@ -18,12 +18,13 @@ function isMac () {
 }
 
 isf=false
+addp="-p"
 for arg in "$@"
 do
-	if test x"$arg" = x-f
-	then
-		isf=true
-	fi
+	case x"$arg" in
+		x-f) isf=true ;;
+		x-[doOp]) addp="" ;;
+	esac
 done
 
 UI=term
@@ -42,9 +43,9 @@ case $UI in
 		exec 2>&1
 		if test `uname` = Darwin && ! $isf
 		then
-			gvim "$@" &
+			gvim $addp "$@" &
 		else
-			exec gvim "$@"
+			exec gvim $addp "$@"
 		fi
 		;;
 	mac)
@@ -52,7 +53,7 @@ case $UI in
 		exec 0</dev/null
 		exec 1>/dev/null
 		exec 2>&1
-		$MacVimBin "$@" &
+		$MacVimBin $addp "$@" &
 		sleep 2
 		open $MacVim
 		if $isf
@@ -62,7 +63,7 @@ case $UI in
 		;;
 	term)
 		unset DISPLAY
-		exec vim "$@"
+		exec vim $addp "$@"
 		;;
 esac
 
