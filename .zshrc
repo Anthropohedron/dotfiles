@@ -228,6 +228,19 @@ function glastweek () {
 	gdc 'HEAD@{'$prevSunday' days ago}' 'HEAD@{'$daysSinceSunday' days ago}' -- "$@"
 }
 
+function pv () {
+	eval `rails_appdirs app/helpers,app/views "$@"`
+}
+function pc () {
+	eval `rails_appdirs app/models,app/controllers "$@"`
+}
+function pt () {
+	eval `rails_appdirs test/functional,test/fixtures,test/unit "$@"`
+}
+function pa () {
+	eval `rails_appdirs public/stylesheets,public/javascripts "$@"`
+}
+
 function vir () {
 	ddvim -p `find . -name '.*.swp' | sed 's,/\.\([^/]*\)\.swp$,/\1,'`
 }
