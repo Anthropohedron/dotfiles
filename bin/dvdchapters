@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+
+unless ARGV.size == 2 || ARGV.size == 4
+  STDERR.puts "Usage: #{$PROGRAM_NAME} <title#> <DVD device> [<offset count> <offset time>]"
+  exit 1
+end
+
+LineRE = /^\s*Chapter: (\d\d), Length: (\d\d:\d\d:\d\d\.\d\d\d),/
+
+class HMSm
+  LengthRE=/^(\d\d):(\d\d):(\d\d)(?:\.(\d\d\d))?$/
+  FMT="%02d:%02d:%02d.%03d"
+  ChapterFmt="CHAPTER%02d=%02d:%02d:%02d.%03d"
+  def initialize(start = nil)
+    @hours = @minutes = @seconds = @millis = 0
+    add start if start
+  end
+  def add(stamp)
+    fail unless match = LengthRE.match(stamp)
+    h  = Integer(match[1], 10)
+    m  = Integer(match[2], 10)
+    s  = Integer(match[3], 10)
+    mm = Integer(match[4] || '0', 10)
+    @millis += mm
+    if @millis >= 1000
+      s += 1
+      @millis -= 1000
+    end
+    @seconds += s
+    if @seconds >= 60
+      m += 1
+      @seconds -= 60
+    end
+    @minutes += m
+    if @minutes >= 60
+      h += 1
+      @minutes -= 60
+    end
+    @hours += h
+  end
+  def to_s
+    sprintf FMT, @hours, @minutes, @seconds, @millis
+  end
+  def chapter(num)
+    num = Integer(num, 10) unless Numeric === num
+    sprintf ChapterFmt, num, @hours, @minutes, @seconds, @millis
+  end
+end
+
+IO.popen("lsdvd -c -t #{ARGV[0]} #{ARGV[1]}", "r") do |f|
+  offset = Integer(ARGV[2] || '0', 10) - 1
+  current = HMSm.new ARGV[3]
+  f.each_line do |line|
+    if match = LineRE.match(line)
+      num = Integer(match[1], 10)
+      puts current.chapter(num + offset)
+      current.add(match[2])
+    end
+  end
+end
+

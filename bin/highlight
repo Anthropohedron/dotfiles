@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+unless [1,2].include? ARGV.size
+  $stderr.puts "Usage: #{$PROGRAM_NAME} <syntax> [file]"
+  exit 1
+end
+
+require 'rubygems'
+require 'syntax/convertors/html'
+
+convertor = Syntax::Convertors::HTML.for_syntax ARGV.shift
+
+highlighted = convertor.convert(ARGF.read)
+highlighted.sub!(/^<pre>/, "<pre class=\"code\">\n")
+puts highlighted
+
+#pre.code keyword { color: rgb(165, 42, 42); }
+#pre.code module, pre.class class { color: rgb(160, 32, 240); }
+#pre.code punct { color: rgb(106, 90, 205); }
+#pre.code ident { color: rgb(0, 0, 0); }
+#pre.code method { color: rgb(0, 139, 139); }
+#pre.code string { color: rgb(255, 0, 255); }
+#pre.code number { color: rgb(255, 0, 255); }
+#pre.code constant { color: rgb(0, 139, 139); }
+

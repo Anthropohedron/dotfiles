@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'json'
+require 'plist'
+
+outfile = case ARGV.size
+          when 0
+            text = ARGF.read
+            self
+          when 1
+            text = File.read(ARGV.first)
+            newname = ARGV.first.sub(/(\.json$|.js$|$)/, '.plist')
+            File.open(newname, 'w')
+          when 2
+            text = File.read(ARGV.first)
+            File.open(ARGV.last, 'w')
+          else
+            STDERR.puts "Usage: #{$PROGRAM_NAME} [infile [outfile]]"
+            exit 1
+          end
+
+outfile.puts JSON.parse(text).to_plist

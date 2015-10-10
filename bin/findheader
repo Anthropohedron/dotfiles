@@ -1,0 +1,55 @@
+#!/bin/sh
+
+if test $# -ne 1
+then
+	echo "Usage: $0 <filename>" >&2
+	exit 1
+fi
+DIRNAME="`dirname \"$1\"`"
+export DIRNAME
+DIRNAME="`( cd \"$DIRNAME\"; pwd )`"
+BASE="`basename \"$1\"`"
+
+if test -z "$INCLUDEPATH"
+then
+	make MKFLAGS="-W $DIRNAME/$BASE" -n "`echo \"$1\" | sed 's/.$/o/'`" 2>&1 |\
+	tr ' ' '\012' | grep -e -I | sed 's/^-I//' | grep -v '^$' | sort -u |\
+	tr '\012' ' ' |\
+	read INCLUDEPATH
+	INCLUDEPATH="$INCLUDEPATH . ./include ../include"
+else
+	INCLUDEPATH="`echo $INCLUDEPATH | tr ':' ' '`"
+fi
+
+BASE="`basename $1 .C`"
+ISCPP=true
+if test "$BASE" = "`basename $1`"
+then
+	BASE="`basename $1 .c`"
+	if test "$BASE" = "`basename $1`"
+	then
+		exit 0
+	else
+		ISCPP=""
+		BASE="$BASE".h
+	fi
+else
+	BASE="$BASE".H
+fi
+
+if test ! -f $1
+then
+	echo "`pwd`/$BASE"
+	exit 0
+fi
+
+for DIR in $INCLUDEPATH
+do
+	if test -r "$DIR/$BASE"
+	then
+		export DIR BASE
+		( cd "$DIR" ; echo "`pwd`/$BASE" )
+		exit 0
+	fi
+done
+

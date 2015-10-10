@@ -1,0 +1,29 @@
+#!/bin/sh
+
+exec 2>/dev/null
+#exec 2>/dev/pts/2
+#set -x
+if test $# -ne 1
+then
+	echo "Usage: $0 <dependency filename>" >&2
+	exit 1
+fi
+
+BUILDTYPE=${BUILDTYPE-"D"}
+TOPDIR="`make topdir`"
+CURDIR="`pwd | sed \"s,$TOPDIR/src/,,\"`"
+BUILDDIR="$ARCH/$BUILDTYPE/obj"
+DEPFILE="$1"
+DEPPATH="$TOPDIR/$BUILDDIR/$CURDIR/$DEPFILE"
+
+if test ! -f "$DEPPATH"
+then
+	exit 1
+fi
+
+cat "$DEPPATH"		|\
+tr ' 	' '\012\012'	|\
+grep '^/'		|\
+xargs -L 1 dirname	|\
+sort -u			|\
+tr '\012' ','

@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+
+DEFAULT_APPDIR = File.join(ENV['HOME'], 'work', 'space')
+DEFAULT_APP = File.join('browser_rails_cart', 'vendor', 'plugins', 'browser_store')
+DEFAULT_NAMESPACE = ''
+
+def usage
+  STDERR.puts "Usage: #{$PROGRAM_NAME} <dirlist> [app] [appdir] [namespace]"
+  exit 1
+end
+
+case ARGV.length
+when 1..3
+  dirs = ARGV.shift.split(',')
+  app = ARGV.shift || DEFAULT_APP
+  appdir = File.expand_path(ARGV.shift || DEFAULT_APPDIR)
+  namespace = ARGV.shift || DEFAULT_NAMESPACE
+  unless File.exist? appdir and File.directory? appdir
+    STDERR.puts "Error: '#{appdir}' does not exist or isn't a directory"
+    usage
+  end
+  appdir = File.join(appdir, app)
+  unless File.exist? appdir and File.directory? appdir
+    STDERR.puts "Error: '#{appdir}' does not exist or isn't a directory"
+    usage
+  end
+  dirs_exist = true
+  dirs.map! { |d|
+    d = File.join(appdir, d, namespace)
+    unless File.exist? d and File.directory? d
+      STDERR.puts "Error: '#{d}' does not exist or isn't a directory"
+      dirs_exist = false
+    end
+    d
+  }
+  usage unless dirs_exist
+  puts "dirs -c; cd #{dirs.join('; pushd ')}"
+else
+  usage
+end
+

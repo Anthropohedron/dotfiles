@@ -1,0 +1,35 @@
+#!/bin/sh
+
+if test $# -ne 2 -a $# -ne 3
+then
+	echo "Usage: $0 <svn URL> <git URL> [push branch]" >&2
+	echo "Example:" >&2
+	echo "	$0 https://www.example.com/svn/proj git@github.com:example/proj.git upstream" >&2
+	exit 1
+fi
+
+SVNURL="$1"
+GITURL="$2"
+
+if test $# -eq 3
+then
+	BRANCH="$3"
+else
+	BRANCH=master
+fi
+
+DIR="`tempfile`"
+TOPDIR="`dirname \"$DIR\"`"
+DIR="`basename \"$DIR\"`"
+
+set -x
+cd "$TOPDIR" && \
+rm -f "$DIR" && \
+git-svn clone "$SVNURL" "$DIR" && \
+cd "$DIR" && \
+git remote add origin "$GITURL" && \
+git pull --rebase origin "$BRANCH" && \
+git push origin "$BRANCH" && \
+cd "$TOPDIR" && \
+rm -rf "$DIR"
+
