@@ -1,0 +1,28 @@
+#!/bin/sh
+
+exec >/dev/null
+exec 2>&1
+set -x
+
+PATH="`zsh -c 'echo $PATH'`"
+export PATH
+
+if test $# -eq 0
+then
+	set `xselection PRIMARY`
+fi
+
+if test $# -gt 10
+then
+	set "`echo $* | sed -e 's/[ 	]/%20/g' -e 's,^,http://www.google.com/search?q=,' `"
+fi
+
+for url in "$@"
+do
+	trimurl="`echo \"$url\" | sed 's/^[ 	]*\([^ 	]*\)[ 	]*$/\1/'`"
+	if ! expr "$trimurl" : '[a-zA-Z][a-zA-Z]*:' >/dev/null
+	then
+		trimurl=http://"$trimurl"
+	fi
+	osascript -e "open location \"$trimurl\""
+done

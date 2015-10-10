@@ -1,0 +1,60 @@
+#!/usr/bin/env ruby
+
+begin
+
+if ARGV.length > 3 || ARGV.length < 1
+  fail "Usage: #{__FILE__} <AlbumData.xml> [ <album name> [<max area> [destination directory] ] ]"
+end
+
+fail "No such file: '#{ARGV[0]}'" unless File.exist?(ARGV[0])
+
+require 'rubygems'
+require 'iphoto2'
+
+
+photos = IPhoto2.new(ARGV[0])
+
+if ARGV.length == 1
+  photos.albums.each { |a| puts a.name }
+else
+  album = photos.albums.select { |a| a.name == ARGV[1] }
+  fail "Could not find an album named '#{ARGV[1]}'" unless album.length == 1
+  album = album[0]
+  if ARGV.length == 2
+    album.images.each { |img| puts img.path }
+  else
+    max_size = ARGV[2].to_i
+    fail "Max area must be at least 100" unless max_size >= 100
+    prefix = ARGV[3]
+    if ARGV.length == 3
+      require 'tempfile'
+      temp = Tempfile.new('pics')
+      prefix = temp.x
+      temp.unlink
+    end
+    if not File.exist?(prefix)
+      Dir.mkdir(prefix)
+    elsif not File.directory?(prefix)
+      fail "Destination directory is not a directory"
+    elsif not File.writable?(prefix)
+      fail "Destination directory is not writable"
+    end
+    max_size = "#{max_size}@"
+    require 'RMagick'
+    include Magick
+    imglist = album.images.map { |img| img.path }
+    imglist = ImageList.new(*imglist)
+    imglist.each { |img|
+      img.change_geometry!(max_size) { |col, row, i|
+        fname = File.join(prefix, File.basename(i.filename))
+        i.resize(col,row).write(fname)
+      }
+    }
+    puts "Created #{imglist.length} images in #{prefix}"
+  end
+end
+
+rescue RuntimeError => err
+  STDERR.puts err
+end
+

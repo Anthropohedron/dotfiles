@@ -1,0 +1,32 @@
+#!/bin/sh
+
+minreq=0
+
+function usage () {
+	echo "Usage: $0 <-t|--title title> <-m|--message msg>" >&2
+	exit 1
+}
+
+while test $# -gt 0
+do
+	case x"$1" in
+		x-t|x--title)
+			notetitle="$2"
+			minreq=`expr $minreq + 1`
+			shift
+			;;
+		x-m|x--message)
+			notemsg="$2"
+			minreq=`expr $minreq + 2`
+			shift
+			;;
+	esac
+	shift
+done
+
+if test $minreq -ne 3
+then
+	usage
+fi
+
+exec osascript "$0".scpt "$notetitle" "$notemsg"

@@ -1,0 +1,55 @@
+#!/usr/bin/env ruby
+
+# automate creating pasties
+# clipboard code: http://project.ioni.st/post/1334#snippet_1334
+require 'net/http'
+#STDOUT.reopen('/dev/ttyp2')
+#STDERR.reopen('/dev/ttyp2')
+
+def pastie(content)
+#puts "Content:\n\n#{content}"
+  url = URI.parse("http://rafb.net/paste/paste.php")
+  parameters = {
+    "nick" => "Anthro",
+    "lang" => "Ruby",
+    "cvt_tabs" => "No",
+    "text" => content
+  }
+  result = Net::HTTP.post_form(url, parameters)
+  url = result["location"]
+#puts url
+  url
+end
+
+def keep_url(pastie_url)
+  IO.popen('pbcopy', 'w+') { |clipboard| clipboard.write(pastie_url) }
+  system %Q(osascript -e 'open location "#{pastie_url}"')
+end
+
+def clipboard_paste
+  pastie(IO.popen('pbpaste') { |clipboard| clipboard.read })
+end
+
+# http://rpmfind.net/linux/rpm2html/search.php?query=xselection
+# http://docsrv.caldera.com:8457/cgi-bin/man?mansearchword=xselection&mansection=1x
+def x11_paste
+  pastie(IO.popen('xselection PRIMARY') { |clipboard| clipboard.read })
+end
+
+def stdio_paste
+  pastie_url = pastie(ARGF.read)
+  puts pastie_url
+  pastie_url
+end
+
+pastie_url = case ARGV[0]
+             when '-m'
+               clipboard_paste
+             when '-x'
+               x11_paste
+             else
+               stdio_paste
+             end
+
+keep_url pastie_url
+puts "done"

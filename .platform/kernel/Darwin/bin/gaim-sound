@@ -1,0 +1,3 @@
+#!/bin/sh
+
+growlnotify -m "gaim: `basename $1 .wav`"

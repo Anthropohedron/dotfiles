@@ -1,0 +1,3 @@
+#!/bin/sh
+
+osascript -e 'set volume alert volume 0 output volume 0 with output muted'

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+osascript -e 'set volume alert volume 90 output volume 90 without output muted'

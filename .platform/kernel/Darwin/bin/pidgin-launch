@@ -1,0 +1,28 @@
+#!/bin/sh
+
+PATH="`tcsh -c 'echo $PATH'`"
+
+#exec >/dev/ttys003
+#exec 2>&1
+#set -x
+
+DBUS_PATH="`launchctl getenv DBUS_LAUNCHD_SESSION_BUS_SOCKET`"
+if test -z "$DBUS_PATH" -o ! -S "$DBUS_PATH"
+then
+	KILL_DBUS=YES
+	export KILL_DBUS
+	exec dbus-launch $0
+fi
+
+DBUS_SESSION_BUS_ADDRESS="unix:path"'='"$DBUS_PATH"
+export DBUS_SESSION_BUS_ADDRESS
+growling_pidgin.rb &
+growl_pid=$!
+
+pidgin
+
+kill $growl_pid
+if test ! -z "$KILL_DBUS"
+then
+	kill $DBUS_SESSION_BUS_PID
+fi

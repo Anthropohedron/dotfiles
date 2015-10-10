@@ -1,0 +1,13 @@
+#!/bin/sh
+
+PREVIEW=/Applications/Preview.app
+if test ! -w $PREVIEW/Contents/Info.plist
+then
+	echo "Must run $0 with sudo or as root" >&2
+	exit 1
+fi
+
+set -x
+defaults write $PREVIEW/Contents/Info NSAppleScriptEnabled -bool true
+chmod 644 $PREVIEW/Contents/Info.plist
+codesign -f -s - $PREVIEW
