@@ -9,13 +9,13 @@ unsetopt HUP
 export KERNEL=`uname -s`
 export ARCH=`uname -m`
 function platfile () {
-	if test -r $HOME/.platform/kernel/$KERNEL/$1
-	then
-		echo $HOME/.platform/kernel/$KERNEL/$1
-	fi
 	if test -r $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
 	then
 		echo $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
+	fi
+	if test -r $HOME/.platform/kernel/$KERNEL/$1
+	then
+		echo $HOME/.platform/kernel/$KERNEL/$1
 	fi
 }
 
