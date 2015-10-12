@@ -29,10 +29,10 @@ elseif $DISPLAY!="" && has("x11") && has("gui_running")
 			let large_font="FreeMono 18"
 			let itsy_font="FreeMono 2"
 		elseif has("win32unix")
-			let norm_font="Fixed 12"
-			let small_font="Fixed 10"
-			let large_font="Fixed 18"
-			let itsy_font="Fixed 2"
+			let norm_font="Monospace 12"
+			let small_font="Monospace 10"
+			let large_font="Monospace 18"
+			let itsy_font="Monospace 2"
 		else
 			let norm_font="8x16"
 			let small_font="7x13"
