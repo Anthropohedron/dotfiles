@@ -1,9 +1,8 @@
 " Vim syntax file
 " Language:	Taskpaper (http://hogbaysoftware.com/projects/taskpaper)
 " Maintainer:	David O'Callaghan <david.ocallaghan@cs.tcd.ie>
-" URL:		http://www.cs.tcd.ie/David.OCallaghan/taskpaper.vim/
-" Version:	1
-" Last Change:  2007 Sep 25
+" URL:		https://github.com/davidoc/taskpaper.vim
+" Last Change:  2012-03-07
 
 if version < 600
   syntax clear
@@ -17,27 +16,31 @@ else
   command! -nargs=+ HiLink hi def link <args>
 endif
 
-" some style definitions
-hi def tpProject term=bold,underline cterm=bold,underline gui=bold,underline ctermbg=LightGray guibg=LightGray 
-hi def tpDoneTask ctermfg=Gray guifg=Gray
+" Define tag styles
+if !exists('g:task_paper_styles')
+    let g:task_paper_styles = {'FAIL': 'guibg=Red guifg=White'}
+endif
 
 syn case ignore
 
-syn match  taskpaperProject       /^.\+:\s*$/
-syn match  taskpaperLineContinue ".$" contained
-syn match  taskpaperListItem  "^\s*[-+]\s\+" 
-syn match  taskpaperContext  "@[A-Za-z0-9]\+"
-syn match  taskpaperDone "^\s*[-+]\s\+.*@[Dd]one.*$"
-
-syn region taskpaperProjectFold start=/^.\+:\s*$/ end=/^\s*$/ transparent fold
+syn match taskpaperComment	/^.*$/ contains=taskpaperContext
+syn match taskpaperProject	/^.\+:\(\s\+@[^ \t(]\+\(([^)]*)\)\?\)*$/ contains=taskpaperContext
+syn match taskpaperListItem	/^\t*-\s\+/
+syn match taskpaperContext	/\s\zs@[^ \t(]\+\(([^)]*)\)\?/
+syn match taskpaperDone		/^.*\s@done\(\(\s\|([^)]*)\).*\)\?$/
+syn match taskpaperCancelled	/^.*\s@cancelled\(\(\s\|([^)]*)\).*\)\?$/
 
 syn sync fromstart
 
 "highlighting for Taskpaper groups
-HiLink taskpaperListItem       Identifier
+HiLink taskpaperListItem      Identifier
 HiLink taskpaperContext       Identifier
-HiLink taskpaperProject       tpProject
-HiLink taskpaperDone          tpDoneTask
+HiLink taskpaperProject       Title
+HiLink taskpaperDone          NonText
+HiLink taskpaperCancelled     NonText
+HiLink taskpaperComment       Comment
+
+call taskpaper#tag_style_dict(g:task_paper_styles)
 
 let b:current_syntax = "taskpaper"
 
