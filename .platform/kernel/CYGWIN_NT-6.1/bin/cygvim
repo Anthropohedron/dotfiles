@@ -1,0 +1,9 @@
+#!/bin/sh
+
+file="`/bin/cygpath \"$1\"`"
+if test -z "$DISPLAY"
+then
+	DISPLAY=:0
+	export DISPLAY
+fi
+exec /bin/gvim -f "$file"
