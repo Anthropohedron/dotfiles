@@ -23,7 +23,7 @@ umask 022
 if test -z "$systempath"
 then
 	systempath="$PATH"
-	export PATH=`platfile bin | tr '\012' ':'`$HOME/bin:/usr/local/bin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/X11R6/bin:/usr/bin:/bin:/usr/sbin:/sbin
+	export PATH=`platfile bin | tr '\012' ':'`$HOME/bin:/usr/local/bin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/X11R6/bin:/usr/X11/bin:/usr/bin:/bin:/usr/sbin:/sbin
 fi
 
 eval `$HOME/bin/agent -s`
