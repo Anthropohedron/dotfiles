@@ -25,6 +25,8 @@ autocmd BufEnter */.postitnotes/* :set nobackup
 autocmd BufLeave */.postitnotes/* :set backup
 autocmd BufEnter *.mp3 :set nobackup
 autocmd BufLeave *.mp3 :set backup
+autocmd BufEnter ~/Dropbox/* :set nobackup dir=/tmp
+autocmd BufLeave ~/Dropbox/* :set backup dir=.,/tmp,/var/tmp
 autocmd BufEnter */tmp/* :set nobackup
 autocmd BufLeave */tmp/* :set backup
 autocmd BufEnter */tt/* :set nobackup
