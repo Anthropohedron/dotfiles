@@ -208,6 +208,9 @@ function gitst () {
 function gitm () {
 	gitst "$@" | grep '^\s\?[?AM]' | cut -c4-
 }
+function gita () {
+	git add "$@" `gitm`
+}
 function gvi () {
 	ddvim -p `gitm "$@"`
 }
@@ -219,6 +222,7 @@ function gjl () {
 }
 
 alias gdc="git diff"
+alias gdf="git diff --name-only"
 function gthisweek () {
 	gdc 'HEAD@{'`date +%w`' days ago}' HEAD -- "$@"
 }
