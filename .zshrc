@@ -291,10 +291,11 @@ then
 		else
 			alias osxbiff="(coolmail -geometry 55x55+0-0 $COOLARGS </dev/null >/dev/null 2>&1 &)"
 		fi
-		if xdpyinfo | grep '\<XTEST\>' >/dev/null 2>&1
-		then
-			alias fosxbiff="xdotool search --name coolmail windowmove 0 970"
-		fi
+	fi
+	if whence xdotool >/dev/null && \
+		xdpyinfo | grep '\<XTEST\>' >/dev/null 2>&1
+	then
+		alias fosxbiff="xdotool search --name coolmail windowmove 0 970"
 	fi
 else
 	function mkxsu () {
