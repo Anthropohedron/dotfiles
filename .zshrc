@@ -45,7 +45,7 @@ setopt CORRECT
 setopt PRINT_EXIT_VALUE
 
 setopt AUTO_CONTINUE
-setopt MONITOR
+#setopt MONITOR
 setopt NOTIFY
 
 setopt PROMPT_PERCENT
