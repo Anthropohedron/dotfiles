@@ -17,6 +17,10 @@ function platfile () {
 	then
 		echo $HOME/.platform/kernel/$KERNEL/$1
 	fi
+	if test -r $HOME/.local/$1
+	then
+		echo $HOME/.local/$1
+	fi
 }
 
 umask 022
