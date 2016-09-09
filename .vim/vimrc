@@ -126,6 +126,10 @@ endif
 "	runtime plugin/vimspell.vim
 "	let spell_language_list = "american"
 "endif
+
+call plug#begin('~/.vim/plugged')
+Plug 'keith/swift.vim'
+call plug#end()
 syntax on
 filetype indent on
 filetype plugin on
