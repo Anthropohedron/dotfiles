@@ -130,6 +130,7 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'keith/swift.vim'
 call plug#end()
+set modeline "must be set *after* plug is called
 syntax on
 filetype indent on
 filetype plugin on
