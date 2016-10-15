@@ -48,7 +48,9 @@ set nouse_domain
 set ascii_chars
 set charset=utf-8
 
-set header_cache="~/tmp/header_cache"
+set header_cache="~/.mutt/cache/headers"
+set message_cachedir="~/.mutt/cache/bodies"
+set certificate_file="~/.mutt/certificates"
 set timeout=60			#How long before check for new mail?
 #set folder="~/Mail"		#Where are mailboxes?
 set arrow_cursor
