@@ -2,6 +2,7 @@
 	editor = ddvim -f
 	excludesfile = ~/.gitglobalignore
 	pager = less -R -m -E -F -X
+	whitespace = trailing-space,space-before-tab
 [user]
 	name = Anthropohedron
 	email = Anthropohedron@users.noreply.github.com
