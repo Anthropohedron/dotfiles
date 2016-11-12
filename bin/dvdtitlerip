@@ -1,0 +1,98 @@
+#!/bin/sh
+
+function usage () {
+	echo "Usage: $0 [-r] <title> <output dir> [device]" >&2
+	exit 1
+}
+
+FAIL=false
+if ! command -v dvdbackup >/dev/null
+then
+	echo "Missing dvdbackup" >&2
+	FAIL=true
+fi
+if ! command -v ffmpeg >/dev/null
+then
+	echo "Missing ffmpeg" >&2
+	FAIL=true
+fi
+
+if test x"$1" = "x-r"
+then
+	RESCUE=true
+	shift
+	if ! command -v ddrescue >/dev/null
+	then
+		echo "Missing ddrescue" >&2
+		FAIL=true
+	fi
+else
+	RESCUE=false
+fi
+
+if $FAIL || test $# -lt 2 -o $# -gt 3
+then
+	usage
+fi
+
+TITLE="$1"
+
+if test $# -eq 3
+then
+	if test -b "$3" -o -c "$3"
+	then
+		DEVICE="$3"
+	else
+		echo "Device not found: '$3'" >&2
+		usage
+	fi
+elif test -b /dev/dvd -o test -c /dev/dvd
+then
+	DEVICE=/dev/dvd
+else
+	echo "Cannot determine DVD device" >&2
+	usage
+fi
+
+if ! test "$TITLE" -ge 1 -a "$TITLE" -le 99
+then
+	echo "Title must be a number 1 to 99" >&2
+	usage
+fi
+
+if test -e "$2"
+then
+	if ! -d "$2"
+	then
+		echo "Not a directory: '$2'" >&2
+		usage
+	fi
+else
+	printf "Directory '$2' does not exist. Create it (Y/n)? " >&2
+	read response
+	case "$response" in
+		[yY]*|"") mkdir "$2" || exit 2 ;;
+		*) exit 3
+	esac
+fi
+
+cd "$2"
+
+if $RESCUE
+then
+	VOBSRC=dvd.iso
+	ddrescue "$DEVICE" "$VOBSRC"
+else
+	VOBSRC="$DEVICE"
+fi
+
+dvdbackup -t "$TITLE" -o . -i "$VOBSRC" -p -n movie
+
+VOBFILES=`find movie/VIDEO_TS -name '*.VOB' | awk '
+	NR > 1 { printf("|", $0) }
+	{ printf("%s", $0) }
+	END { printf("\n") }'`
+
+ffmpeg -i concat:"$VOBFILES" -acodec copy -vcodec libx264 \
+	-crf 20 -threads 0 movie.mp4
+
