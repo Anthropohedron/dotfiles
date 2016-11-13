@@ -93,6 +93,8 @@ VOBFILES=`find movie/VIDEO_TS -name '*.VOB' | awk '
 	{ printf("%s", $0) }
 	END { printf("\n") }'`
 
-ffmpeg -i concat:"$VOBFILES" -acodec copy -vcodec libx264 \
-	-crf 20 -threads 0 movie.mp4
+ffmpeg -i concat:"$VOBFILES" \
+	-acodec libfdk_aac -vbr 5 \
+	-vcodec libx264 -profile:v high -level 4.0 -crf 20 \
+	-pix_fmt yuv420p -threads 0 movie.m4v
 
