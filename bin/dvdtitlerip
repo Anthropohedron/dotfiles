@@ -62,7 +62,7 @@ fi
 
 if test -e "$2"
 then
-	if ! -d "$2"
+	if ! test -d "$2"
 	then
 		echo "Not a directory: '$2'" >&2
 		usage
