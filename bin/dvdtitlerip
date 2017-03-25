@@ -1,34 +1,62 @@
 #!/bin/sh
 
 function usage () {
-	echo "Usage: $0 [-r] <title> <output dir> [device]" >&2
+	echo "Usage: $0 [-r] [-a <audio 1-based index>] [-s <subtitle 1-based index>] <title> <output dir> [device]" >&2
 	exit 1
 }
 
-FAIL=false
-if ! command -v dvdbackup >/dev/null
-then
-	echo "Missing dvdbackup" >&2
-	FAIL=true
-fi
-if ! command -v ffmpeg >/dev/null
-then
-	echo "Missing ffmpeg" >&2
-	FAIL=true
-fi
+function cmdreq () {
+	while test $# -gt 0
+	do
+		if ! command -v $1 >/dev/null
+		then
+			echo "Missing $1" >&2
+			FAIL=true
+		fi
+		shift
+	done
+}
 
-if test x"$1" = "x-r"
-then
-	RESCUE=true
-	shift
-	if ! command -v ddrescue >/dev/null
-	then
-		echo "Missing ddrescue" >&2
-		FAIL=true
-	fi
-else
-	RESCUE=false
-fi
+AUDIO=""
+SUBTITLE=""
+RESCUE=false
+FAIL=false
+PIECEMEAL=false
+
+cmdreq dvdbackup ffmpeg
+
+while getopts ":ra:s:" opt
+do
+	case "$opt" in
+		r)
+			RESCUE=true
+			shift
+			OPTIND=1
+			cmdreq ddrescue
+			;;
+		a|s)
+			PIECEMEAL=true
+			if test $opt = a
+			then
+				AUDIO="$OPTARG"
+			else
+				SUBTITLE="$OPTARG"
+			fi
+			shift
+			shift
+			OPTIND=1
+			cmdreq ffprobe jq lsdvd xpath
+			;;
+		\?)
+			echo "Invalid option: -$OPTARG" >&2
+			FAIL=true
+			;;
+		:)
+			echo "Option -$OPTARG requires an argument." >&2
+			FAIL=true
+			;;
+	esac
+done
 
 if $FAIL || test $# -lt 2 -o $# -gt 3
 then
@@ -37,6 +65,7 @@ fi
 
 TITLE="$1"
 
+# verify DVD block device
 if test $# -eq 3
 then
 	if test -b "$3" -o -c "$3"
@@ -54,12 +83,14 @@ else
 	usage
 fi
 
+# verify title number
 if ! test "$TITLE" -ge 1 -a "$TITLE" -le 99
 then
 	echo "Title must be a number 1 to 99" >&2
 	usage
 fi
 
+# verify output dir
 if test -e "$2"
 then
 	if ! test -d "$2"
@@ -69,14 +100,94 @@ then
 	fi
 else
 	printf "Directory '$2' does not exist. Create it (Y/n)? " >&2
-	read response
-	case "$response" in
+	read _response
+	case "$_response" in
 		[yY]*|"") mkdir "$2" || exit 2 ;;
 		*) exit 3
 	esac
 fi
 
 cd "$2"
+
+# streamidfor <selection> <file> <type>
+function streamidfor () {
+	_selection="$1"
+	_file="$2"
+	_type="$3"
+	if test . = "$_selection"
+	then
+		_needsinput=true
+		while $_needsinput
+		do
+			cat $_file >&2
+			echo -n "Choose $_type: " >&2
+			read _found
+			_found=$(grep "^$_found	" $_file | cut -f3)
+			if test -n "$_found"
+			then
+				_needsinput=false
+				echo $_found
+			fi
+		done
+	elif ! expr 1 + "$_selection" >/dev/null 2>&1
+	then
+		_found=$(grep -i "	$_selection	" $_file | cut -f3)
+		if test -z "$_found"
+		then
+			echo "Cannot find $_type stream '$_selection'" >&2
+			usage
+		fi
+		echo "$_found"
+	elif test $(wc -l < $_file) -lt $_selection
+	then
+		echo "Cannot find $_type stream '$_selection'" >&2
+		usage
+	else
+		_found=$(grep "^$_selection	" $_file | cut -f3)
+		if test -z "$_found"
+		then
+			echo "Cannot find $_type stream '$_selection'" >&2
+			usage
+		fi
+		echo "$_found"
+	fi
+}
+
+if $PIECEMEAL
+then
+	LANGXML=$(mktemp)
+	DVDAUDIO=$(mktemp)
+	DVDSUBS=$(mktemp)
+	lsdvd -Ox -a -s -t $TITLE "$DEVICE" 2>/dev/null >$LANGXML
+	xpath '//audio/ix | //audio/language | //audio/streamid' \
+		<$LANGXML 2>/dev/null |\
+		sed -e 's,</streamid>,%,g' \
+			-e 's,<ix>,,g' \
+			-e 's,</[a-z]*><[a-z]*>,	,g' |\
+		tr '%' '\012' |\
+		tr -d ' ' |\
+		grep -v '^\s*$' |\
+		sort -n >$DVDAUDIO
+	xpath '//subp/ix | //subp/language | //subp/streamid' \
+		<$LANGXML 2>/dev/null |\
+		sed -e 's,</streamid>,%,g' \
+			-e 's,<ix>,,g' \
+			-e 's,</[a-z]*><[a-z]*>,	,g' |\
+		tr '%' '\012' |\
+		tr -d ' ' |\
+		grep -v '^\s*$' |\
+		sort -n >$DVDSUBS
+	if test -z "$AUDIO"
+	then
+		AUDIO=1
+	fi
+	AUDIO=$(streamidfor "$AUDIO" $DVDAUDIO audio)
+	if test -n "$SUBTITLE"
+	then
+		SUBTITLE=$(streamidfor "$SUBTITLE" $DVDSUBS subtitle)
+	fi
+	rm -f $LANGXML $DVDAUDIO $DVDSUBS
+fi
 
 if $RESCUE
 then
@@ -88,13 +199,82 @@ fi
 
 dvdbackup -t "$TITLE" -o . -i "$VOBSRC" -p -n movie
 
-VOBFILES=`find movie/VIDEO_TS -name '*.VOB' | awk '
-	NR > 1 { printf("|", $0) }
-	{ printf("%s", $0) }
-	END { printf("\n") }'`
+TRANSCODEOPTS="\
+	-c:a libfdk_aac -vbr 5 \
+	-c:v libx264 -profile:v high -level 4.0 -crf 20 \
+	-pix_fmt yuv420p -threads 0 \
+	"
+w="ffffff"
+b="000000"
+g="00ff00"
+PALETTE="-palette $w,$b,$w,$g,$w,$w,$w,$w,$w,$w,$w,$w,$w,$w,$w,$w"
 
-ffmpeg -i concat:"$VOBFILES" \
-	-acodec libfdk_aac -vbr 5 \
-	-vcodec libx264 -profile:v high -level 4.0 -crf 20 \
-	-pix_fmt yuv420p -threads 0 movie.m4v
+RUNSCRIPT=$(mktemp)
+PROBEJSON=$(mktemp)
+
+# codecstream <codec_type> <streamid>
+function codecstream () {
+	jq '.streams|
+	    map(select((.codec_type == "'$1'") and (.id == "'$2'")))|
+	    .[].index' $PROBEJSON 2> /dev/null
+}
+
+# streammap <VOB file>
+function streammap () {
+	ffprobe -print_format json \
+		-show_entries stream=index,codec_type,id \
+		-i "$1" 2>/dev/null > $PROBEJSON
+	if test -n "$SUBTITLE"
+	then
+		_streamindex=$(codecstream subtitle "$SUBTITLE")
+		if test -n "$_streamindex"
+		then
+			echo "-filter_complex '[0:v][0:${_streamindex}]overlay[v]' -map '[v]'"
+		else
+			echo "-map 0:v"
+		fi
+	else
+		echo "-map 0:v"
+	fi
+	_streamindex=$(codecstream audio "$AUDIO")
+	if test -n "$_streamindex"
+	then
+		echo "-map 0:${_streamindex}"
+	else
+		echo "-map 0:a"
+	fi
+}
+
+# transcode <infile> <outfile>
+function transcode () {
+	echo ffmpeg -y $PALETTE -i "'$1'" \
+		$(streammap "$1") \
+		$TRANSCODEOPTS -f mpegts "'$2'"
+}
+
+if $PIECEMEAL
+then
+	CONCAT=""
+	for vob in $(find movie/VIDEO_TS -iname '*.VOB')
+	do
+		CONCAT="$CONCAT"'|'"$vob".ts
+		transcode "$vob" "$vob".ts >> $RUNSCRIPT
+	done
+
+	# get rid of pipe char at the beginning of the list
+	CONCAT="$(echo "$CONCAT" | cut -c2-)"
+	echo ffmpeg -y -i concat:"'$CONCAT'" \
+		-c:v copy -c:a copy \
+		movie.m4v >> $RUNSCRIPT
+else
+	CONCAT=$(find movie/VIDEO_TS -iname '*.VOB' | awk '
+		NR > 1 { printf("|") }
+		{ printf("%s", $0) }
+		END { printf("\n") }')
+	echo ffmpeg -y -i concat:"'$CONCAT'" \
+		$TRANSCODEOPTS movie.m4v >> $RUNSCRIPT
+fi
+
+sh -x $RUNSCRIPT
+rm -f $RUNSCRIPT $PROBEJSON
 
