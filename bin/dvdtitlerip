@@ -1,7 +1,30 @@
 #!/bin/sh
 
 function usage () {
-	echo "Usage: $0 [-r] [-a <audio 1-based index>] [-s <subtitle 1-based index>] <title> <output dir> [device]" >&2
+	if test -n "$1"
+	then
+		cat >&2 << EOF
+
+$1
+EOF
+	fi
+	s=$(echo "$0" | sed 's/./ /g')
+	cat >&2 << EOF
+
+Usage: $0 [-I|-R|-T]
+       $s [-a <audio language|index>]
+       $s [-s <subtitle language|index>]
+       $s [-d device]
+       $s <title> [output dir]
+
+	-I     information: output audio/subtitle streams and exit
+	-R     rescue mode: use ddrescue to read disc
+	-T  transcode only: skip ripping from disc
+	-d          device: the disc block device (default /dev/dvd)
+	-a    audio select: language (e.g. English) or index (e.g. 1)
+	-s subtitle select: language (e.g. English) or index (e.g. 1)
+
+EOF
 	exit 1
 }
 
@@ -17,22 +40,52 @@ function cmdreq () {
 	done
 }
 
+DEVICE=/dev/dvd
 AUDIO=""
 SUBTITLE=""
+RIP=true
+INFOANDEXIT=false
 RESCUE=false
 FAIL=false
 PIECEMEAL=false
+EXCFLAG=false
 
-cmdreq dvdbackup ffmpeg
+function exclusive () {
+	if $EXCFLAG
+	then
+		usage "The -I, -R, and -T flags are mutually exclusive"
+	fi
+	EXCFLAG=true
+}
 
-while getopts ":ra:s:" opt
+while getopts ":IRTd:a:s:" opt
 do
 	case "$opt" in
-		r)
+		I)
+			exclusive
+			INFOANDEXIT=true
+			shift
+			OPTIND=1
+			cmdreq lsdvd xpath
+			;;
+		T)
+			exclusive
+			RIP=false
+			shift
+			OPTIND=1
+			;;
+		R)
+			exclusive
 			RESCUE=true
 			shift
 			OPTIND=1
 			cmdreq ddrescue
+			;;
+		d)
+			DEVICE="$OPTARG"
+			shift
+			shift
+			OPTIND=1
 			;;
 		a|s)
 			PIECEMEAL=true
@@ -58,56 +111,91 @@ do
 	esac
 done
 
-if $FAIL || test $# -lt 2 -o $# -gt 3
+$INFOANDEXIT || cmdreq ffmpeg
+$RIP && cmdreq dvdbackup
+
+if $FAIL || test $# -lt 1 -o $# -gt 2
 then
 	usage
 fi
 
 TITLE="$1"
+OUTPUTDIR="$2"
 
-# verify DVD block device
-if test $# -eq 3
+if $RIP || $INFOANDEXIT
 then
-	if test -b "$3" -o -c "$3"
+	# verify DVD block device
+	if ! test -b "$DEVICE" -o -c "$DEVICE"
 	then
-		DEVICE="$3"
-	else
-		echo "Device not found: '$3'" >&2
-		usage
+		usage "Device not found: '$DEVICE'"
 	fi
-elif test -b /dev/dvd -o test -c /dev/dvd
-then
-	DEVICE=/dev/dvd
-else
-	echo "Cannot determine DVD device" >&2
-	usage
 fi
 
 # verify title number
 if ! test "$TITLE" -ge 1 -a "$TITLE" -le 99
 then
-	echo "Title must be a number 1 to 99" >&2
-	usage
+	usage "Title must be a number 1 to 99"
+fi
+
+function streaminfo () {
+	_dvdaudio=$1
+	_dvdsubs=$2
+	_langxml=$(mktemp)
+	lsdvd -Ox -a -s -t $TITLE "$DEVICE" 2>/dev/null >$_langxml
+	xpath '//audio/ix | //audio/language | //audio/streamid' \
+		<$_langxml 2>/dev/null |\
+		sed -e 's,</streamid>,%,g' \
+			-e 's,<ix>,,g' \
+			-e 's,</[a-z]*><[a-z]*>,	,g' |\
+		tr '%' '\012' |\
+		tr -d ' ' |\
+		grep -v '^\s*$' |\
+		sort -n >$_dvdaudio
+	xpath '//subp/ix | //subp/language | //subp/streamid' \
+		<$_langxml 2>/dev/null |\
+		sed -e 's,</streamid>,%,g' \
+			-e 's,<ix>,,g' \
+			-e 's,</[a-z]*><[a-z]*>,	,g' |\
+		tr '%' '\012' |\
+		tr -d ' ' |\
+		grep -v '^\s*$' |\
+		sort -n >$_dvdsubs
+	rm -f $_langxml
+}
+
+if $INFOANDEXIT
+then
+	DVDAUDIO=$(mktemp)
+	DVDSUBS=$(mktemp)
+	streaminfo $DVDAUDIO $DVDSUBS
+	echo "Audio streams:"
+	sed 's/^/	/' $DVDAUDIO
+	echo "Subtitles:"
+	sed 's/^/	/' $DVDSUBS
+	rm -f $DVDAUDIO $DVDSUBS
+	exit 0
 fi
 
 # verify output dir
-if test -e "$2"
+if test -z "$OUTPUTDIR"
 then
-	if ! test -d "$2"
+	OUTPUTDIR=$(mktemp -d)
+elif test -e "$OUTPUTDIR"
+then
+	if ! test -d "$OUTPUTDIR"
 	then
-		echo "Not a directory: '$2'" >&2
-		usage
+		usage "Not a directory: '$OUTPUTDIR'"
 	fi
 else
-	printf "Directory '$2' does not exist. Create it (Y/n)? " >&2
+	printf "Directory '$OUTPUTDIR' does not exist. Create it (Y/n)? " >&2
 	read _response
 	case "$_response" in
-		[yY]*|"") mkdir "$2" || exit 2 ;;
+		[yY]*|"") mkdir "$OUTPUTDIR" || exit 2 ;;
 		*) exit 3
 	esac
 fi
 
-cd "$2"
+cd "$OUTPUTDIR"
 
 # streamidfor <selection> <file> <type>
 function streamidfor () {
@@ -134,20 +222,17 @@ function streamidfor () {
 		_found=$(grep -i "	$_selection	" $_file | cut -f3)
 		if test -z "$_found"
 		then
-			echo "Cannot find $_type stream '$_selection'" >&2
-			usage
+			usage "Cannot find $_type stream '$_selection'"
 		fi
 		echo "$_found"
 	elif test $(wc -l < $_file) -lt $_selection
 	then
-		echo "Cannot find $_type stream '$_selection'" >&2
-		usage
+		usage "Cannot find $_type stream '$_selection'"
 	else
 		_found=$(grep "^$_selection	" $_file | cut -f3)
 		if test -z "$_found"
 		then
-			echo "Cannot find $_type stream '$_selection'" >&2
-			usage
+			usage "Cannot find $_type stream '$_selection'"
 		fi
 		echo "$_found"
 	fi
@@ -155,28 +240,9 @@ function streamidfor () {
 
 if $PIECEMEAL
 then
-	LANGXML=$(mktemp)
 	DVDAUDIO=$(mktemp)
 	DVDSUBS=$(mktemp)
-	lsdvd -Ox -a -s -t $TITLE "$DEVICE" 2>/dev/null >$LANGXML
-	xpath '//audio/ix | //audio/language | //audio/streamid' \
-		<$LANGXML 2>/dev/null |\
-		sed -e 's,</streamid>,%,g' \
-			-e 's,<ix>,,g' \
-			-e 's,</[a-z]*><[a-z]*>,	,g' |\
-		tr '%' '\012' |\
-		tr -d ' ' |\
-		grep -v '^\s*$' |\
-		sort -n >$DVDAUDIO
-	xpath '//subp/ix | //subp/language | //subp/streamid' \
-		<$LANGXML 2>/dev/null |\
-		sed -e 's,</streamid>,%,g' \
-			-e 's,<ix>,,g' \
-			-e 's,</[a-z]*><[a-z]*>,	,g' |\
-		tr '%' '\012' |\
-		tr -d ' ' |\
-		grep -v '^\s*$' |\
-		sort -n >$DVDSUBS
+	streaminfo $DVDAUDIO $DVDSUBS
 	if test -z "$AUDIO"
 	then
 		AUDIO=1
@@ -186,18 +252,20 @@ then
 	then
 		SUBTITLE=$(streamidfor "$SUBTITLE" $DVDSUBS subtitle)
 	fi
-	rm -f $LANGXML $DVDAUDIO $DVDSUBS
+	rm -f $DVDAUDIO $DVDSUBS
 fi
 
-if $RESCUE
+if $RIP
 then
-	VOBSRC=dvd.iso
-	ddrescue "$DEVICE" "$VOBSRC"
-else
-	VOBSRC="$DEVICE"
+	if $RESCUE
+	then
+		VOBSRC=dvd.iso
+		ddrescue "$DEVICE" "$VOBSRC"
+	else
+		VOBSRC="$DEVICE"
+	fi
+	dvdbackup -t "$TITLE" -o . -i "$VOBSRC" -p -n movie
 fi
-
-dvdbackup -t "$TITLE" -o . -i "$VOBSRC" -p -n movie
 
 TRANSCODEOPTS="\
 	-c:a libfdk_aac -vbr 5 \
