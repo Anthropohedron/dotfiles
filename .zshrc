@@ -265,6 +265,12 @@ function myip () {
 
 if test -n "$DISPLAY"
 then
+	if test -z "$DISPLAY_ORIG"
+	then
+		DISPLAY_ORIG="$DISPLAY"
+		DISPLAY=$(echo $DISPLAY | sed 's,^.*/com\.apple\.launchd[^:]*:,:,')
+		export DISPLAY
+	fi
 	function mkxsu () {
 		unfunction mkxsu
 		if whence zshsulogin >/dev/null
