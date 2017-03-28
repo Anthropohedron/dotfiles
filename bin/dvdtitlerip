@@ -11,7 +11,7 @@ EOF
 	s=$(echo "$0" | sed 's/./ /g')
 	cat >&2 << EOF
 
-Usage: $0 [-I|-R|-T]
+Usage: $0 [-R|-T|-I <mount>]
        $s [-a <audio language|index>]
        $s [-s <subtitle language|index>]
        $s [-d device]
@@ -58,15 +58,22 @@ function exclusive () {
 	EXCFLAG=true
 }
 
-while getopts ":IRTd:a:s:" opt
+while getopts ":RTI:d:a:s:" opt
 do
 	case "$opt" in
 		I)
 			exclusive
 			INFOANDEXIT=true
+			VIDEODIR="$OPTARG"/VIDEO_TS
+			shift
 			shift
 			OPTIND=1
-			cmdreq lsdvd xpath
+			cmdreq ffprobe jq lsdvd xpath
+			if ! test -d "$VIDEODIR" -a -r "$VIDEODIR"
+			then
+				echo "Cannot find video in '$VIDEODIR'" >&2
+				FAIL=true
+			fi
 			;;
 		T)
 			exclusive
@@ -137,6 +144,7 @@ then
 	usage "Title must be a number 1 to 99"
 fi
 
+# streaminfo <audio output file> <subtitles output file>
 function streaminfo () {
 	_dvdaudio=$1
 	_dvdsubs=$2
@@ -163,16 +171,68 @@ function streaminfo () {
 	rm -f $_langxml
 }
 
+# vobstreams <.VOB>
+function vobstreams () {
+	ffprobe -print_format json \
+		-show_entries stream=index,codec_type,id \
+		-i "$1" 2>/dev/null
+}
+
 if $INFOANDEXIT
 then
-	DVDAUDIO=$(mktemp)
-	DVDSUBS=$(mktemp)
-	streaminfo $DVDAUDIO $DVDSUBS
-	echo "Audio streams:"
-	sed 's/^/	/' $DVDAUDIO
-	echo "Subtitles:"
-	sed 's/^/	/' $DVDSUBS
-	rm -f $DVDAUDIO $DVDSUBS
+	INFODIR=$(mktemp -d)
+	cd $INFODIR
+	DVDAUDIO=audio
+	DVDSUBS=subs
+	_prefix="$VIDEODIR"/VTS_$(printf %02d $TITLE)_
+	for vob in ${_prefix}*.VOB
+	do
+		_outfile=$(echo "$vob" | sed 's@'"$_prefix"'\([0-9][0-9]*\)\.VOB@\1@')
+		vobstreams "$vob" |\
+			jq -r '.streams[]|.codec_type + "	" + .id' \
+			2> /dev/null > $_outfile
+	done
+	streaminfo ${DVDAUDIO}.txt ${DVDSUBS}.txt
+	sed 's/^[0-9]*/audio/' ${DVDAUDIO}.txt > $DVDAUDIO
+	sed 's/^[0-9]*/subtitle/' ${DVDSUBS}.txt > $DVDSUBS
+	echo $INFODIR
+	echo [0-9]*
+	awk '
+		$1 == "audio" {
+			matched = audio[$NF]
+			if (NF == 2) {
+				if (length(matched)) {
+					audio[$2] = matched "," FILENAME
+				} else {
+					audio[$2] = FILENAME
+				}
+			} else if (NF == 3) {
+				if (length(matched)) {
+					print $0,matched
+				} else {
+					print
+				}
+			}
+		}
+		$1 == "subtitle" {
+			matched = subtitle[$NF]
+			if (NF == 2) {
+				if (length(matched)) {
+					subtitle[$2] = matched "," FILENAME
+				} else {
+					subtitle[$2] = FILENAME
+				}
+			} else if (NF == 3) {
+				if (length(matched)) {
+					print $0,matched
+				} else {
+					print
+				}
+			}
+		}
+		' [0-9]* $DVDAUDIO $DVDSUBS
+	cd /
+	rm -rf $INFODIR
 	exit 0
 fi
 
@@ -289,9 +349,7 @@ function codecstream () {
 
 # streammap <VOB file>
 function streammap () {
-	ffprobe -print_format json \
-		-show_entries stream=index,codec_type,id \
-		-i "$1" 2>/dev/null > $PROBEJSON
+	vobstreams "$1" > $PROBEJSON
 	if test -n "$SUBTITLE"
 	then
 		_streamindex=$(codecstream subtitle "$SUBTITLE")
