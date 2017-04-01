@@ -11,14 +11,14 @@ EOF
 	s=$(echo "$0" | sed 's/./ /g')
 	cat >&2 << EOF
 
-Usage: $0 [-R|-T|-I <mount>]
+Usage: $0 [-F|-T|-I <mount>]
        $s [-a <audio language|index>]
        $s [-s <subtitle language|index>]
        $s [-d device]
        $s <title> [output dir]
 
 	-I     information: output audio/subtitle streams and exit
-	-R     rescue mode: use ddrescue to read disc
+	-F       force rip: use ddrescue to read disc
 	-T  transcode only: skip ripping from disc
 	-d          device: the disc block device (default /dev/dvd)
 	-a    audio select: language (e.g. English) or index (e.g. 1)
@@ -58,7 +58,7 @@ function exclusive () {
 	EXCFLAG=true
 }
 
-while getopts ":RTI:d:a:s:" opt
+while getopts ":FTI:d:a:s:" opt
 do
 	case "$opt" in
 		I)
@@ -81,7 +81,7 @@ do
 			shift
 			OPTIND=1
 			;;
-		R)
+		F)
 			exclusive
 			RESCUE=true
 			shift
