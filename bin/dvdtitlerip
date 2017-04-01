@@ -11,15 +11,17 @@ EOF
 	s=$(echo "$0" | sed 's/./ /g')
 	cat >&2 << EOF
 
-Usage: $0 [-F|-T|-I <mount>]
+Usage: $0 [-R|-T|-I <mount>]
+       $s [-f]
        $s [-a <audio language|index>]
        $s [-s <subtitle language|index>]
        $s [-d device]
        $s <title> [output dir]
 
 	-I     information: output audio/subtitle streams and exit
-	-F       force rip: use ddrescue to read disc
+	-R        rip only: skip transcoding after ripping
 	-T  transcode only: skip ripping from disc
+	-f       force rip: use ddrescue to read disc
 	-d          device: the disc block device (default /dev/dvd)
 	-a    audio select: language (e.g. English) or index (e.g. 1)
 	-s subtitle select: language (e.g. English) or index (e.g. 1)
@@ -40,29 +42,67 @@ function cmdreq () {
 	done
 }
 
+# there are lots of ways to fail
+FAIL=false
+
+# selected operation
+RIP=""
+TRANSCODE=""
+INFOANDEXIT=""
+
+# default operation
+D_RIP=true
+D_TRANSCODE=true
+D_INFOANDEXIT=false
+
+# operational variant
+RESCUE=false
+PIECEMEAL=false
+
+# actual params
 DEVICE=/dev/dvd
 AUDIO=""
 SUBTITLE=""
-RIP=true
-INFOANDEXIT=false
-RESCUE=false
-FAIL=false
-PIECEMEAL=false
-EXCFLAG=false
 
-function exclusive () {
-	if $EXCFLAG
+# fail_tmpl <RIP|TRANSCODE> <fail bool> <success bool> [msg...]
+function fail_tmpl () {
+	_var="$1"
+	shift
+	_bad="$1"
+	shift
+	_good="$1"
+	shift
+	if test "$(eval \${$_var})" = $_bad
 	then
-		usage "The -I, -R, and -T flags are mutually exclusive"
+		FAIL=true
+		echo "$@" >&2
+	else
+		eval $_var"="$_good
 	fi
-	EXCFLAG=true
 }
 
-while getopts ":FTI:d:a:s:" opt
+function req_rip () {
+	fail_tmpl RIP false true Cannot "$@" when not ripping
+}
+
+function no_rip () {
+	fail_tmpl RIP true false Cannot "$@" after requesting ripping
+}
+
+function req_transcode () {
+	fail_tmpl TRANSCODE false true Cannot "$@" when not transcoding
+}
+
+function no_transcode () {
+	fail_tmpl TRANSCODE true false Cannot "$@" after requesting transcoding
+}
+
+while getopts ":fRTI:d:a:s:" opt
 do
 	case "$opt" in
 		I)
-			exclusive
+			D_RIP=false
+			D_TRANSCODE=false
 			INFOANDEXIT=true
 			VIDEODIR="$OPTARG"/VIDEO_TS
 			shift
@@ -75,14 +115,20 @@ do
 				FAIL=true
 			fi
 			;;
-		T)
-			exclusive
-			RIP=false
+		R)
+			no_transcode rip only
+			RIP=true
 			shift
 			OPTIND=1
 			;;
-		F)
-			exclusive
+		T)
+			no_rip transcode only
+			TRANSCODE=true
+			shift
+			OPTIND=1
+			;;
+		f)
+			req_rip force rip
 			RESCUE=true
 			shift
 			OPTIND=1
@@ -98,8 +144,10 @@ do
 			PIECEMEAL=true
 			if test $opt = a
 			then
+				req_transcode specify audio
 				AUDIO="$OPTARG"
 			else
+				req_transcode specify subtitles
 				SUBTITLE="$OPTARG"
 			fi
 			shift
@@ -118,8 +166,27 @@ do
 	esac
 done
 
-$INFOANDEXIT || cmdreq ffmpeg
+if test -z "$INFOANDEXIT"
+then
+	INFOANDEXIT="$D_INFOANDEXIT"
+fi
+if test -z "$RIP"
+then
+	RIP="$D_RIP"
+fi
+if test -z "$TRANSCODE"
+then
+	TRANSCODE="$D_TRANSCODE"
+fi
+
+$TRANSCODE && cmdreq ffmpeg
 $RIP && cmdreq dvdbackup
+
+if $INFOANDEXIT && ( $RIP || $TRANSCODE )
+then
+	FAIL=true
+	echo "The -I flags conflicts with ripping or transcoding" >&2
+fi
 
 if $FAIL || test $# -lt 1 -o $# -gt 2
 then
@@ -325,6 +392,7 @@ then
 		VOBSRC="$DEVICE"
 	fi
 	dvdbackup -t "$TITLE" -o . -i "$VOBSRC" -p -n movie
+	$TRANSCODE || exit 0
 fi
 
 TRANSCODEOPTS="\
