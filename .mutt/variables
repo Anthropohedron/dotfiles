@@ -99,7 +99,8 @@ set nopager_stop		#At EOM, spc goes next message?
 #unset pgp			#Where is pgp?
 #set pgp_autosign		#Always sign messages?
 set pipe_decode			#Decode msgs before piping?
-set postponed="=Drafts"
+#set postponed="=Drafts"
+set postponed="~/Maildir/.Drafts"
 				#Where to put postponed messages?
 #set quote_regexp="^[A-Za-z]* ?[|:>] ?"
 				#What does quoted text look like?
