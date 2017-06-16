@@ -17,7 +17,7 @@ augroup END
 "autocmd BufLeave * :source ~/.vim/leave.vim
 autocmd BufEnter *.tex :let $TEXTARGET=b:fname
 autocmd BufEnter * :source ~/.vim/controlsyntax.vim | source ~/.vim/incpath.vim
-autocmd VimEnter * :call OpenInc(expand("%:r"), expand("%:e"))
+autocmd BufReadPost * :call OpenInc(expand("%:r"), expand("%:e"))
 """""triggers to toggle backup
 autocmd BufEnter */.xblast-setups/* :set nobackup
 autocmd BufLeave */.xblast-setups/* :set backup

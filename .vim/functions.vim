@@ -33,11 +33,12 @@ function! OpenInc(stem, ext)
 	try
 		let s:ext = HeaderExt(a:ext)
 		let s:incname = a:stem . "." . s:ext
+		let s:original = a:stem . "." . a:ext
 		exec "find " . s:incname
 		let &ft = s:buftype
 		split
 		wincmd j
-		b 1
+		exec "e " . s:original
 		let &ft = s:buftype
 	catch /^Vim\%((\a\+)\)\=:E345/
 	catch /^Extension /
