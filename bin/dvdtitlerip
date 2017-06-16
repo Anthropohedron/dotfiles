@@ -12,17 +12,18 @@ EOF
 	cat >&2 << EOF
 
 Usage: $0 [-R|-T|-I <mount>]
-       $s [-f]
+       $s [-d device (default: \$DVDDEV or /dev/dvd)]
+       $s [-f] [-m]
        $s [-a <audio language|index>]
        $s [-s <subtitle language|index>]
-       $s [-d device]
        $s <title> [output dir]
 
 	-I     information: output audio/subtitle streams and exit
 	-R        rip only: skip transcoding after ripping
 	-T  transcode only: skip ripping from disc
-	-f       force rip: use ddrescue to read disc
 	-d          device: the disc block device (default /dev/dvd)
+	-f       force rip: use ddrescue to read disc
+	-m      mirror rip: rip the whole disc, not just the single title
 	-a    audio select: language (e.g. English) or index (e.g. 1)
 	-s subtitle select: language (e.g. English) or index (e.g. 1)
 
@@ -57,6 +58,7 @@ D_INFOANDEXIT=false
 
 # operational variant
 RESCUE=false
+MIRROR=false
 PIECEMEAL=false
 
 # actual params
@@ -98,7 +100,7 @@ function no_transcode () {
 	fail_tmpl TRANSCODE true false Cannot "$@" after requesting transcoding
 }
 
-while getopts ":fRTI:d:a:s:" opt
+while getopts ":mfRTI:d:a:s:" opt
 do
 	case "$opt" in
 		I)
@@ -134,6 +136,12 @@ do
 			shift
 			OPTIND=1
 			cmdreq ddrescue
+			;;
+		m)
+			req_rip mirror
+			MIRROR=true
+			shift
+			OPTIND=1
 			;;
 		d)
 			DEVICE="$OPTARG"
@@ -393,7 +401,12 @@ then
 	else
 		VOBSRC="$DEVICE"
 	fi
-	dvdbackup -t "$TITLE" -o . -i "$VOBSRC" -p -n movie
+	if $MIRROR
+	then
+		dvdbackup --mirror -o . -i "$VOBSRC" -p -n movie
+	else
+		dvdbackup -t "$TITLE" -o . -i "$VOBSRC" -p -n movie
+	fi
 	$TRANSCODE || exit 0
 fi
 
