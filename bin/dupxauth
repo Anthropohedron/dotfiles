@@ -13,7 +13,7 @@ shift
 
 TMPF=`mktemp`
 
-xauth nextract "$@" $TMPF "$OLDDISP"
+xauth "$@" nextract $TMPF "$OLDDISP"
 
 awk -v 'newhost='`echo "$NEWHOST" | tr -d '\012' | xxd -p` '{
 	$2 = sprintf("%04x", length(newhost)/2);
