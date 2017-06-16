@@ -17,6 +17,7 @@ then
 	set "`echo $* | sed -e 's/[ 	]/%20/g' -e 's,^,http://www.google.com/search?q=,' `"
 fi
 
+{
 for url in "$@"
 do
 	trimurl="`echo \"$url\" | sed 's/^[ 	]*\([^ 	]*\)[ 	]*$/\1/'`"
@@ -24,5 +25,7 @@ do
 	then
 		trimurl=http://"$trimurl"
 	fi
-	osascript -e "open location \"$trimurl\""
+	echo "$trimurl"
 done
+} | tr '\012' '\000' | xargs -0 open
+
