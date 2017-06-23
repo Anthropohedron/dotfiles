@@ -9,6 +9,5 @@ inoreabbr main  int<CR>main(int argc, char **argv) {<CR>}<ESC>O<Left>
 nmap   Q        O<ESC>i#ifndef NDEBUG<CR>fprintf(stderr, "\n");<CR>#endif<ESC>k$hhhhi
 nmap   <C-W>    :w<CR>:make<CR>
 nmap   @        O#if 0<ESC>jo#endif<ESC>
-nmap   =        a <ESC>hi <ESC>l
 nmap   \        :source ~/.vim/ctmpl.vim<CR><C-L>
 " vim: ft=vim
