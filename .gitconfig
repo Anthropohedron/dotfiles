@@ -31,3 +31,5 @@
 	lola = !git lol --all
 [push]
 	default = matching
+[url "ssh://github443/"]
+	insteadOf = https://github.com/
