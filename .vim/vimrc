@@ -129,6 +129,9 @@ endif
 
 call plug#begin('~/.vim/plugged')
 Plug 'keith/swift.vim'
+Plug 'tpope/vim-fugitive'
+Plug 'xolox/vim-misc'
+Plug 'xolox/vim-easytags'
 call plug#end()
 set modeline "must be set *after* plug is called
 syntax on
