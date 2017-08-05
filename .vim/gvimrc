@@ -16,7 +16,7 @@ elseif $DISPLAY!="" && has("x11") && has("gui_running")
 		let small_font="FreeMono/7/-1/5/50/0/0/0/1/0,7x13"
 		let large_font="FreeMono/16/-1/5/50/0/0/0/1/0,12x24"
 		let itsy_font="FreeMono/3/-1/5/50/0/0/0/1/0,5x7"
-	elseif has("gui_gtk2")
+	elseif has("gui_gtk2") || has("gui_gtk3")
 		let platform=system("uname")
 		if platform == "Darwin\n"
 			let norm_font="ProFontX 10"
