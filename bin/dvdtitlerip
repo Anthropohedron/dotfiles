@@ -204,6 +204,7 @@ fi
 
 TITLE="$1"
 OUTPUTDIR="$2"
+VIDEODIR="${VIDEODIR:-"$OUTPUTDIR/movie/VIDEO_TS"}"
 
 if $RIP || $INFOANDEXIT
 then
@@ -254,6 +255,10 @@ function vobstreams () {
 		-i "$1" 2>/dev/null
 }
 
+function voblist () {
+	find "$VIDEODIR" -name VTS_$(printf %02d $TITLE)_\*.VOB
+}
+
 VOBPREFIX="$VIDEODIR"/VTS_$(printf %02d $TITLE)_
 
 if $INFOANDEXIT
@@ -262,7 +267,7 @@ then
 	cd $INFODIR
 	DVDAUDIO=audio
 	DVDSUBS=subs
-	for vob in ${VOBPREFIX}*.VOB
+	for vob in $(voblist)
 	do
 		_outfile=$(echo "$vob" | sed 's@'"$VOBPREFIX"'\([0-9][0-9]*\)\.VOB@\1@')
 		vobstreams "$vob" |\
@@ -464,7 +469,7 @@ function transcode () {
 if $PIECEMEAL
 then
 	CONCAT=""
-	for vob in ${VOBPREFIX}*.VOB
+	for vob in $(voblist)
 	do
 		CONCAT="$CONCAT"'|'"$vob".ts
 		transcode "$vob" "$vob".ts >> $RUNSCRIPT
@@ -476,10 +481,12 @@ then
 		-c:v copy -c:a copy \
 		movie.m4v >> $RUNSCRIPT
 else
-	for vob in ${VOBPREFIX}*.VOB
+	for vob in $(voblist)
 	do
 		CONCAT="$CONCAT"'|'"$vob"
 	done
+	# get rid of pipe char at the beginning of the list
+	CONCAT="$(echo "$CONCAT" | cut -c2-)"
 	echo ffmpeg -y -i concat:"'$CONCAT'" \
 		$TRANSCODEOPTS movie.m4v >> $RUNSCRIPT
 fi
