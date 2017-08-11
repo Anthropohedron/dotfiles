@@ -41,6 +41,9 @@ export RSYNC_RSH=ssh
 
 unset TMOUT
 
+# subject alt name for openssl
+export SAN=''
+
 if test -n "$TERM"
 then
 	if test -z "$xprompt"
