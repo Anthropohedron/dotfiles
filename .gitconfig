@@ -2,7 +2,7 @@
 	editor = ddvim -f
 	excludesfile = ~/.gitglobalignore
 	pager = less -R -m -E -F -X
-	whitespace = trailing-space,space-before-tab
+	whitespace = blank-at-eol,-blank-at-eof,space-before-tab,-indent-with-non-tab,-tab-in-indent,cr-at-eol
 [user]
 	name = Anthropohedron
 	email = Anthropohedron@users.noreply.github.com
