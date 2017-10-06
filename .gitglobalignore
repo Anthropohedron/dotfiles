@@ -2,4 +2,4 @@
 .*.swp
 *.bak
 build
-Session.vim
+*Session*.vim
