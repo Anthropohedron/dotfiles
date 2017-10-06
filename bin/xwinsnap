@@ -1,0 +1,76 @@
+#!/bin/sh
+
+function usage () {
+	echo "Usage: $0 <left|right|full|undo>" >&2
+	exit 2
+}
+
+test $# -eq 1 || usage
+
+case x"$1" in
+	x[lL]*) SNAP=snapLeft  ;;
+	x[rR]*) SNAP=snapRight ;;
+	x[fF]*) SNAP=snapFull  ;;
+	x[uU]*) SNAP=snapUndo  ;;
+	*) usage ;;
+esac
+
+if test -z "$DISPLAY"
+then
+	echo "No DISPLAY set" >&2
+	exit 1
+fi
+
+if ! command -v xdotool xdpyinfo xwininfo >/dev/null
+then
+	echo "Missing required command" >&2
+	exit 1
+fi
+
+XWINSNAPCACHE="${XWINSNAPCACHE:-"/tmp/xwinsnapcache-$DISPLAY"}"
+mkdir -p "$XWINSNAPCACHE"
+WINDOW=$(xdotool getactivewindow)
+
+if test -z "$WINDOW"
+then
+	echo "Could not get active window" >&2
+	exit 1
+fi
+
+CACHEDGEOM="$XWINSNAPCACHE"/"$WINDOW"
+if test ! -e "$CACHEDGEOM"
+then
+	#preserve previous size
+	xwininfo -id "$WINDOW" | awk -F ': *' '
+		/Width:/ { printf("WIDTH=%d;\n", $2) }
+		/Height:/ { printf("HEIGHT=%d;\n", $2) }
+		/Absolute.* X:/ { printf("X=%d;\n", $2) }
+		/Absolute.* Y:/ { printf("Y=%d;\n", $2) }
+		' > "$CACHEDGEOM"
+fi
+
+function snapLeft () {
+	xdotool windowsize "$WINDOW" 50% 100%
+	xdotool windowmove "$WINDOW" 0 0
+}
+
+function snapRight () {
+	xdotool windowsize "$WINDOW" 50% 100%
+	WIDTH=$(xwininfo -id "$WINDOW" |\
+		awk '/Width:/ { print $2 }')
+	xdotool windowmove "$WINDOW" $WIDTH 0
+}
+
+function snapFull () {
+	xdotool windowsize "$WINDOW" 100% 100%
+	xdotool windowmove "$WINDOW" 0 0
+}
+
+function snapUndo () {
+	. "$CACHEDGEOM"
+	xdotool windowsize "$WINDOW" $WIDTH $HEIGHT
+	xdotool windowmove "$WINDOW" $X $Y
+}
+
+$SNAP
+

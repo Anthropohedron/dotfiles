@@ -1,0 +1,3 @@
+XWINSNAPCACHE=/tmp/xwinsnapcache-"$DISPLAY"
+export XWINSNAPCACHE
+rm -rf "$XWINSNAPCACHE"
