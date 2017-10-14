@@ -19,7 +19,7 @@ elseif $DISPLAY!="" && has("x11") && has("gui_running")
 	elseif has("gui_gtk2") || has("gui_gtk3")
 		let platform=system("uname")
 		if platform == "Darwin\n"
-			let norm_font="ProFontX 10"
+			let norm_font="ProFontX 13"
 			let small_font="ProFontX 8"
 			let large_font="ProFontX 16"
 			let itsy_font="ProFontX 0"
