@@ -273,7 +273,7 @@ then
 	fi
 	function mkxsu () {
 		unfunction mkxsu
-		if whence zshsulogin >/dev/null
+		if command -v zshsulogin >/dev/null
 		then
 			alias xsu="(xterm -T root@$HOST -e `zshsulogin DISPLAY=$DISPLAY XAUTHORITY=$HOME/.Xauthority` &)"
 		else
@@ -298,7 +298,7 @@ then
 			alias osxbiff="(coolmail -geometry 55x55+0-0 $COOLARGS </dev/null >/dev/null 2>&1 &)"
 		fi
 	fi
-	if whence xdotool >/dev/null && \
+	if command -v xdotool xdpyinfo >/dev/null && \
 		xdpyinfo | grep '\<XTEST\>' >/dev/null 2>&1
 	then
 		alias fosxbiff="xdotool search --name coolmail windowmove 0 970"
@@ -306,7 +306,7 @@ then
 else
 	function mkxsu () {
 		unfunction mkxsu
-		if whence zshsulogin >/dev/null
+		if command -v zshsulogin >/dev/null
 		then
 			alias xsu="`zshsulogin zsh -l`"
 		else
