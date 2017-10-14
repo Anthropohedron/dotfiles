@@ -303,6 +303,16 @@ then
 	then
 		alias fosxbiff="xdotool search --name coolmail windowmove 0 970"
 	fi
+	if command -v xprop >/dev/null
+	then
+		function xsetprop () {
+			local _prop=$1
+			local _type=$2
+			local _value="$3"
+			shift 3
+			xprop "$@" -f $_prop $_type -set $_prop "$_value"
+		}
+	fi
 else
 	function mkxsu () {
 		unfunction mkxsu

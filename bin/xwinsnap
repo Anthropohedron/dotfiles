@@ -21,14 +21,12 @@ then
 	exit 1
 fi
 
-if ! command -v xdotool xdpyinfo xwininfo >/dev/null
+if ! command -v xdotool xwininfo xprop >/dev/null
 then
 	echo "Missing required command" >&2
 	exit 1
 fi
 
-XWINSNAPCACHE="${XWINSNAPCACHE:-"/tmp/xwinsnapcache-$DISPLAY"}"
-mkdir -p "$XWINSNAPCACHE"
 WINDOW=$(xdotool getactivewindow)
 
 if test -z "$WINDOW"
@@ -37,16 +35,30 @@ then
 	exit 1
 fi
 
-CACHEDGEOM="$XWINSNAPCACHE"/"$WINDOW"
-if test ! -e "$CACHEDGEOM"
+eval "$(xprop -id "$WINDOW" -notype \
+		16c XWINSNAP_X \
+		16c XWINSNAP_Y \
+		16c XWINSNAP_WIDTH \
+		16c XWINSNAP_HEIGHT |\
+	sed -n 's/^XWINSNAP_\([A-Z]*\) = \([0-9]*\)$/\1=\2;/p' \
+		)"
+
+if test -z "$X" -o -z "$Y" -o -z "$WIDTH" -o -z "$HEIGHT"
 then
-	#preserve previous size
-	xwininfo -id "$WINDOW" | awk -F ': *' '
+	eval "$(xwininfo -id "$WINDOW" | awk -F ': *' '
 		/Width:/ { printf("WIDTH=%d;\n", $2) }
 		/Height:/ { printf("HEIGHT=%d;\n", $2) }
 		/Absolute.* X:/ { printf("X=%d;\n", $2) }
 		/Absolute.* Y:/ { printf("Y=%d;\n", $2) }
-		' > "$CACHEDGEOM"
+		')"
+	xprop -id "$WINDOW" \
+		-f XWINSNAP_X 16c -set XWINSNAP_X $X
+	xprop -id "$WINDOW" \
+		-f XWINSNAP_Y 16c -set XWINSNAP_Y $Y
+	xprop -id "$WINDOW" \
+		-f XWINSNAP_WIDTH 16c -set XWINSNAP_WIDTH $WIDTH
+	xprop -id "$WINDOW" \
+		-f XWINSNAP_HEIGHT 16c -set XWINSNAP_HEIGHT $HEIGHT
 fi
 
 function snapLeft () {
@@ -67,9 +79,13 @@ function snapFull () {
 }
 
 function snapUndo () {
-	. "$CACHEDGEOM"
 	xdotool windowsize "$WINDOW" $WIDTH $HEIGHT
 	xdotool windowmove "$WINDOW" $X $Y
+	xprop -id "$WINDOW" \
+		-remove XWINSNAP_X \
+		-remove XWINSNAP_Y \
+		-remove XWINSNAP_WIDTH \
+		-remove XWINSNAP_HEIGHT
 }
 
 $SNAP
