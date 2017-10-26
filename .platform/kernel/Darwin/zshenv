@@ -6,6 +6,7 @@ then
 fi
 
 export DOTFONTPATH=/usr/X11R6/lib/X11/fonts/TTF:/System/Library/Fonts
+export NO_AT_BRIDGE=1
 
 # XXX: DO NOT USE! This stuff is nothing but trouble.
 # XXX: Instead, as root:
