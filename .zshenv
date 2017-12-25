@@ -6,7 +6,7 @@ setopt SH_WORD_SPLIT
 unsetopt BG_NICE
 unsetopt HUP
 
-export KERNEL=`uname -s`
+export KERNEL=$(echo $(uname -o 2>/dev/null || uname -s) | tr / -)
 export ARCH=`uname -m`
 function platfile () {
 	if test -r $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
