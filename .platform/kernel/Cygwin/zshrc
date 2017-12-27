@@ -1,4 +1,5 @@
 alias open=cygstart
+alias ps=procps
 function pg () {
 	ps -efa | grep "$@"
 }
