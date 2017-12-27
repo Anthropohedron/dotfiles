@@ -41,6 +41,14 @@ XTerm*VT100*font3:	6x10
 XTerm*VT100*font4:	7x13
 XTerm*VT100*font5:	9x15
 XTerm*VT100*font6:	10x20
+XTerm*faceName: 	DejaVu Sans Mono
+XTerm*faceSize: 	8.0
+XTerm*faceSize1:	2.0
+XTerm*faceSize2:	5.0
+XTerm*faceSize3:	7.0
+XTerm*faceSize4:	8.0
+XTerm*faceSize5:	10.0
+XTerm*faceSize6:	14.0
 XTerm*activeIcon:	false
 XTerm*backarrowKeyIsErase:	false
 XTerm*foreground:	black
