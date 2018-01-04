@@ -15,7 +15,7 @@ then
 else
 	TERMINFO=$HOME/.terminfo
 	TERM=xterm
-	XUSERFILESEARCHPATH=$HOME/lib/X11/app-defaults/%N
+#	XUSERFILESEARCHPATH=$HOME/lib/X11/app-defaults/%N
 	LANG="en_US.UTF-8"
 	export TERMINFO TERM XUSERFILESEARCHPATH LANG
 #	xterm -T elm -geometry 80x45 -name elm -e sh -c 'eval `resize -u`; elm'
