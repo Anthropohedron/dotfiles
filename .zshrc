@@ -326,16 +326,28 @@ else
 fi
 
 function fjs () {
-	fpath=${1:-"."}
-	find $fpath \
+	fpath="${1:-"."}"
+	if test $# -gt 0
+	then
+		shift
+	fi
+	find "$fpath" \
 		-path './css'     -prune \
 		-path './docs'    -prune \
 		-path './extjs'   -prune \
 		-path './ext'     -prune \
 		-path './images'  -prune \
 		-path './WEB_INF' -prune \
-		-o -name '*.js' -print
-	
+		-o -name '*.js' "$@"
+}
+function fcs () {
+	fpath="${1:-"."}"
+	if test $# -gt 0
+	then
+		shift
+	fi
+	find "$fpath" \
+		-name '*.cs' "$@"
 }
 function cloc () {
 	fjs "$@" |\
@@ -345,7 +357,10 @@ function cloc () {
 alias clocsum="sqlite3 code.db 'select num(nCode) from t;'"
 alias cloctop="sqlite3 code.db 'select File, nCode from t order by nCode DESC limit 10;'"
 function gjs () {
-	fjs | xargs grep "$@"
+	fjs . -print0 | xargs -0 grep "$@"
+}
+function gcs () {
+	fcs . -print0 | xargs -0 grep "$@"
 }
 
 function wiki () {
