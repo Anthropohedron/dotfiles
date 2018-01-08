@@ -174,6 +174,12 @@ then
 		elm2mutt > $HOME/.mutt/aliases
 	}
 fi
+if test -r $HOME/.mutt/subs.m4
+then
+	function edsubs () {
+		$EDITOR $HOME/.mutt/subs.m4
+	}
+fi
 
 alias mvno="mvn -o -DskipTests"
 function pg () {
