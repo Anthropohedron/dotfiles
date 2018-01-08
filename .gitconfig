@@ -26,6 +26,8 @@
 	untracked = magenta
 	updated = cyan
 [alias]
+	cur = rev-parse --abbrev-ref HEAD
+	pnew = !git push -u origin $(git cur)
 	subcheckout = !git submodule status | cut -c2- | awk '{ printf(\"(cd %s && git checkout %s)\\n\", $2, $1) }' | sh
 	lol = log --graph --decorate --pretty=format:'%Cred%h%Creset -%C(cyan)%d%Creset %s %C(bold green)(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
 	lola = !git lol --all
