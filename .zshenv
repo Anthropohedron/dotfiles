@@ -37,7 +37,7 @@ function pathlist () {
 }
 
 function resetpath () {
-	export PATH="$(pathlist | tr '\012' ':' | sed 's/^\(.*\):$/:\1/')"
+	export PATH="$(pathlist | tr '\012' ':' | sed 's/^\(.*\):$/\1/')"
 }
 
 umask 022
