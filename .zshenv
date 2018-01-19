@@ -23,11 +23,28 @@ function platfile () {
 	fi
 }
 
+function pathlist () {
+	platfile bin
+	echo $HOME/bin
+	echo /usr/local/bin
+	echo /usr/local/sbin
+	cat $(platfile pathBefore) </dev/null
+	echo /usr/bin
+	echo /bin
+	echo /usr/sbin
+	echo /sbin
+	cat $(platfile pathAfter) </dev/null
+}
+
+function resetpath () {
+	export PATH="$(pathlist | tr '\012' ':' | sed 's/^\(.*\):$/:\1/')"
+}
+
 umask 022
 if test -z "$systempath"
 then
 	systempath="$PATH"
-	export PATH="$(platfile bin | tr '\012' ':')$(cat $(platfile pathBefore) </dev/null | tr '\012' ':')$HOME/bin:/usr/local/bin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/X11R6/bin:/usr/X11/bin:/usr/bin:/bin:/usr/sbin:/sbin$(cat $(platfile pathAfter) </dev/null | tr '\012' ':' | sed 's/^\(.*\):$/:\1/')"
+	resetpath
 fi
 
 eval `$HOME/bin/agent -s`
