@@ -226,6 +226,21 @@ function gitjs () {
 function gjl () {
 	gitjs "$@" | xargs jslint
 }
+function gtc () {
+	local branch="$(git cur)"
+	if test $? -eq 0 -a $# -ge 0
+	then
+		if expr "$branch" : '^[-a-zA-Z0-9]\+/[A-Z]\+-[0-9]\+$' >/dev/null
+		then
+			git commit -m "$(echo $branch | cut -d/ -f2): $*"
+		else
+			git commit -m "$*"
+		fi
+	else
+		git status
+		false
+	fi
+}
 
 alias gdc="git diff"
 alias gdf="git diff --name-only"
