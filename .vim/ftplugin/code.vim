@@ -1,4 +1,5 @@
 set expandtab
+set cursorline cursorcolumn
 set sw=2 ts=2
 if &ro != 1
 	%s/\s\+$//e
