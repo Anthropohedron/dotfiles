@@ -1,0 +1,135 @@
+#!/bin/sh
+
+function usage () {
+	echo "Usage: $0 [-b <basic auth token>] [-u <username> [-p <password>]] <owner> <repo> <branch>" >&2
+	exit 1
+}
+
+function github () {
+	METHOD="$1"
+	shift
+	curl -s -X "$METHOD" \
+		-H "Accept: application/vnd.github.v3+json" \
+		"$AUTHARG1" "$AUTHARG2" \
+		"$@" "$URL"
+}
+
+HEADERACCEPT=
+HEADERAUTH=""
+USERPASS=false
+
+while getopts ":b:u:p:" opt
+do
+	case "$opt" in
+		b)
+			if $USERPASS
+			then
+				echo " -b cannot be combined with -u and -p" >&2
+				usage
+			fi
+			HEADERAUTH="$OPTARG"
+			shift
+			shift
+			OPTIND=1
+			;;
+		u)
+			if test -n "$HEADERAUTH"
+			then
+				echo " -b cannot be combined with -u and -p" >&2
+				usage
+			fi
+			USERPASS=true
+			USERNAME="$OPTARG"
+			shift
+			shift
+			OPTIND=1
+			;;
+		p)
+			if test -n "$HEADERAUTH"
+			then
+				echo " -b cannot be combined with -u and -p" >&2
+				usage
+			fi
+			USERPASS=true
+			PASSWORD="$OPTARG"
+			shift
+			shift
+			OPTIND=1
+			;;
+		\?)
+			echo "Invalid option: -$OPTARG" >&2
+			usage
+			;;
+		:)
+			echo "Option -$OPTARG requires an argument." >&2
+			usage
+			;;
+	esac
+done
+
+if test $# -ne 3
+then
+	usage
+fi
+
+if $USERPASS
+then
+	if test -z "$USERNAME"
+	then
+		echo "Missing username" >&2
+		usage
+	fi
+	AUTHARG1=--user
+	if test -z "$PASSWORD"
+	then
+		AUTHARG2="$USERNAME"
+	else
+		AUTHARG2="$USERNAME":"$PASSWORD"
+	fi
+else
+	AUTHARG1=-H
+	AUTHARG2="Authorization: Basic $HEADERAUTH"
+fi
+
+URL="https://api.github.com/repos/$1/$2/branches/$3/protection"
+
+SAVED=`mktemp`
+trap "rm -f $SAVED" EXIT
+
+github GET | jq '{
+		required_status_checks: (
+			if .required_status_checks? == null
+			then null
+			else .required_status_checks|{strict, contexts}
+			end),
+		enforce_admins: .enforce_admins.enabled,
+		required_pull_request_reviews: (
+			if .required_pull_request_reviews? == null
+			then null
+			else .required_pull_request_reviews|{
+				dismiss_stale_reviews: .dismiss_stale_reviews,
+				require_code_owner_reviews: .require_code_owner_reviews,
+				dismissal_restrictions: (
+					if .dismissal_restrictions? == null
+					then { users: [], teams: [] }
+					else .dismissal_restrictions
+					end)|{
+						users: .users|map(.login),
+						teams: .teams|map(.slug)
+				}
+			}
+			end),
+		restrictions: (
+			if .restrictions? == null
+			then { users: [], teams: [] }
+			else .restrictions
+			end)|{
+				users: .users|map(.login),
+				teams: .teams|map(.slug)
+			}
+	}' > $SAVED
+github DELETE >/dev/null
+echo "Waiting..."
+read foo
+github PUT --data-binary @$SAVED >/dev/null
+echo Restored.
