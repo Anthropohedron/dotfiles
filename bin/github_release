@@ -1,0 +1,24 @@
+#!/bin/sh
+
+function usage () {
+	echo "Usage: $0 <commit-ref> <destination branch>"
+	exit 1
+}
+
+if test $# -ne 2 || ! git rev-parse "$1" >/dev/null
+then
+	usage
+fi
+
+COMMIT="$1"
+BRANCH="$2"
+
+eval `git remote -v | sed -n 's,^\([^\s]\+\)\s\+[^:]*github[^:]*:\([^/]\+\)/\(.\+\)\.git (push)$,ORIGIN="\1";OWNER="\2";REPO="\3";,p'`
+
+if test -z "$ORIGIN" -o -z "$OWNER" -o -z "$REPO" -o -z "$BRANCH"
+then
+	usage
+fi
+
+set -x
+exec github_pause_protection "$OWNER" "$REPO" "$BRANCH" git push --force "$ORIGIN" "$COMMIT":"$BRANCH"
