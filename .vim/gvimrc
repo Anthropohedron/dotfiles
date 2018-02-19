@@ -53,33 +53,37 @@ elseif has("gui_w32") || has("gui_w32s")
 else
 	throw "Why is .gvimrc being read if there is no GUI?"
 endif
-	let &guifont=norm_font
-	map    &G     :let &guifont=norm_font
-	map    &    :let &guifont=small_font
-	map    &g     :let &guifont=large_font:set lines=28
-	menu   F&ont.&Normal<Tab>&G :let &guifont=norm_font
-	menu   F&ont.&Small<Tab>&^G :let &guifont=small_font
-	menu   F&ont.&Large<Tab>&g :let &guifont=large_font:set lines=28
-	menu   F&ont.&Itsy       :let &guifont=itsy_font
-	set lines=45
-	if &diff
-		set columns=170
-	else
-		set columns=80
-	endif
-	set guioptions=aegimlrt
-	set laststatus=2
-	set ruler
-	set mousehide
-	set bg=light
-	hi Normal guibg=#FFD39B
-	menu   &Mode.Normal      :source $HOME/.vim/leave.vim
-	menu   Mode.C            :source $HOME/.vim/c.vim
-	menu   Mode.Java         :source $HOME/.vim/java.vim
-	menu   Mode.Shell        :source $HOME/.vim/shell.vim
-	menu   Mode.VRML         :source $HOME/.vim/vrml.vim
-	menu   Mode.Web          :source $HOME/.vim/web.vim
-	menu   Mode.HTML         :source $HOME/.vim/html.vim
-	menu   Mode.Mail         :source $HOME/.vim/mail.vim
-	menu   File.Print        :w !enscript
-"source ~/.vimrc
+
+let &guifont=norm_font
+map    &G     :let &guifont=norm_font
+map    &    :let &guifont=small_font
+map    &g     :let &guifont=large_font:set lines=28
+menu   F&ont.&Normal<Tab>&G :let &guifont=norm_font
+menu   F&ont.&Small<Tab>&^G :let &guifont=small_font
+menu   F&ont.&Large<Tab>&g :let &guifont=large_font:set lines=28
+menu   F&ont.&Itsy       :let &guifont=itsy_font
+set lines=45
+if &diff
+	set columns=170
+else
+	set columns=80
+endif
+set guioptions=aegimlrt
+set laststatus=2
+set ruler
+set mousehide
+set bg=light
+hi Normal guibg=#FFD39B
+menu   &Mode.Normal      :source $HOME/.vim/leave.vim
+menu   Mode.C            :source $HOME/.vim/c.vim
+menu   Mode.Java         :source $HOME/.vim/java.vim
+menu   Mode.Shell        :source $HOME/.vim/shell.vim
+menu   Mode.VRML         :source $HOME/.vim/vrml.vim
+menu   Mode.Web          :source $HOME/.vim/web.vim
+menu   Mode.HTML         :source $HOME/.vim/html.vim
+menu   Mode.Mail         :source $HOME/.vim/mail.vim
+menu   File.Print        :w !enscript
+
+if filereadable(expand('$HOME/.local/gvimrc'))
+	source $HOME/.local/gvimrc
+endif

@@ -132,8 +132,14 @@ Plug 'keith/swift.vim'
 Plug 'tpope/vim-fugitive'
 Plug 'xolox/vim-misc'
 Plug 'xolox/vim-easytags'
+if filereadable(expand('$HOME/.local/vimplugins'))
+	source $HOME/.local/vimplugins
+endif
 call plug#end()
 set modeline "must be set *after* plug is called
 syntax on
 filetype indent on
 filetype plugin on
+if filereadable(expand('$HOME/.local/vimrc'))
+	source $HOME/.local/vimrc
+endif
