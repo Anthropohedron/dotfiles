@@ -5,18 +5,26 @@ function usage () {
 	exit 1
 }
 
+CONTENT_TYPE="application/vnd.github.v3+json"
 function github () {
 	METHOD="$1"
 	shift
 	curl -s -X "$METHOD" \
-		-H "Accept: application/vnd.github.v3+json" \
+		-H "Accept: $CONTENT_TYPE" \
 		"$AUTHARG1" "$AUTHARG2" \
 		"$@" "$URL"
 }
 
-HEADERACCEPT=
-HEADERAUTH=""
-USERPASS=false
+USERNAME="$GITHUB_PAUSE_PROTECTION_USERNAME"
+PASSWORD="$GITHUB_PAUSE_PROTECTION_PASSWORD"
+HEADERAUTH="$GITHUB_PAUSE_PROTECTION_HEADERAUTH"
+
+if test -n "$USERNAME"
+then
+	USERPASS=true
+else
+	USERPASS=false
+fi
 
 while getopts ":b:u:p:" opt
 do
@@ -72,7 +80,11 @@ then
 	usage
 fi
 
-if $USERPASS
+if test -n "$HEADERAUTH"
+then
+	AUTHARG1=-H
+	AUTHARG2="Authorization: Basic $HEADERAUTH"
+elif $USERPASS
 then
 	if test -z "$USERNAME"
 	then
@@ -86,17 +98,25 @@ then
 	else
 		AUTHARG2="$USERNAME":"$PASSWORD"
 	fi
-else
-	AUTHARG1=-H
-	AUTHARG2="Authorization: Basic $HEADERAUTH"
 fi
 
 URL="https://api.github.com/repos/$1/$2/branches/$3/protection"
 
 SAVED=`mktemp`
-trap "rm -f $SAVED" EXIT
+RESTORE=`mktemp`
+trap "rm -f $SAVED $RESTORE" EXIT
 
-github GET | jq '{
+CODE="`github GET -o $SAVED -w "%{http_code}"`"
+if test -n "$CODE" -a "$CODE" = 200
+then
+	DORESTORE=true
+else
+	DORESTORE=false
+fi
+
+if $DORESTORE
+then
+	jq '{
 		required_status_checks: (
 			if .required_status_checks? == null
 			then null
@@ -127,9 +147,17 @@ github GET | jq '{
 				users: .users|map(.login),
 				teams: .teams|map(.slug)
 			}
-	}' > $SAVED
-github DELETE >/dev/null
-echo "Waiting..."
-read foo
-github PUT --data-binary @$SAVED >/dev/null
-echo Restored.
+	}' $SAVED > $RESTORE
+	github DELETE >/dev/null
+	echo "Waiting..."
+	read foo
+else
+	echo "No protection in place. Proceeding."
+fi
+
+if $DORESTORE
+then
+	github PUT -H "Content-Type: $CONTENT_TYPE" --data-binary @$RESTORE >/dev/null
+	echo Restored.
+fi
+
