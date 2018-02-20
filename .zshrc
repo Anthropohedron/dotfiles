@@ -242,6 +242,10 @@ function gtc () {
 	fi
 }
 
+alias master="git checkout master"
+alias ggg="git checkout"
+alias gg-="git checkout -"
+alias gg..="git checkout -"
 alias gdc="git diff"
 alias gdf="git diff --name-only"
 function gthisweek () {
