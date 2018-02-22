@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# given a commit, find leaves of that commit.
+
+if test $# -gt 2 -o $# -lt 1
+then
+	echo "Usage: $0 <revision> [depth]" >&2
+	exit 1
+fi
+
+EDGES=`mktemp`
+INPUT=`mktemp`
+OUTPUT=`mktemp`
+trap "rm -f $EDGES $INPUT $OUTPUT" EXIT
+
+LEVEL=2
+COMMIT=`git rev-parse $1`
+if test $# -eq 2
+then
+	FINISHED=`expr $2 + 1`
+else
+	FINISHED=999999999999
+fi
+FORMAT=1.1,1.2
+
+git rev-list --min-parents=1 --all | tee $INPUT |\
+	sed 's/$/^/' | xargs git rev-parse |\
+	paste - $INPUT  | sort |\
+	tee $EDGES | grep '^'$COMMIT > $OUTPUT
+
+while test $LEVEL -lt $FINISHED
+do
+	sort -k $LEVEL $OUTPUT > $INPUT
+	join -a 1 -e "" -1 $LEVEL -2 1 -o "$FORMAT",2.2 $INPUT $EDGES > $OUTPUT
+	echo -n . >&2
+	if grep -v '\s$' $OUTPUT >/dev/null
+	then
+		LEVEL=`expr $LEVEL + 1`
+		FORMAT="$FORMAT",1.$LEVEL
+	else
+		LEVEL=$FINISHED
+	fi
+done
+echo '' >&2
+
+awk '{ print $NF }' $OUTPUT | xargs git describe --all --always
+
