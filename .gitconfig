@@ -29,6 +29,7 @@
 	terse = tformat:%Cred%h%Creset %C(green)%cI%Creset <%C(bold blue)%an%C(reset)> %C(bold black)%s%Creset
 [alias]
 	tags = tag -l --format='%(refname)\t%(creatordate:iso8601)'
+	confgrep = config --show-origin --get-regexp
 	cur = rev-parse --abbrev-ref HEAD
 	ff = !git rebase origin/$(git cur)
 	pnew = !git push -u origin $(git cur)

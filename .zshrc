@@ -206,16 +206,16 @@ function svl () {
 }
 
 function gst () {
-	git status "$@"
+	git status --show-stash "$@"
 }
 function gitst () {
-	gst -s "$@"
+	git status --porcelain "$@"
 }
 function gitm () {
 	gitst "$@" | grep '^\s\?[?AM]' | cut -c4-
 }
 function gita () {
-	git add "$@" `gitm`
+	git add --all "$@"
 }
 function gvi () {
 	ddvim -p `gitm "$@"`
