@@ -1,0 +1,56 @@
+#!/bin/sh
+
+if test $# -ne 2 || \
+	! git rev-parse "$1" >/dev/null 2>&1 || \
+	! git rev-parse "$2" >/dev/null 2>&1
+then
+	echo "Usage: $0 <commit-ish> <commit-ish>" >&2
+	exit 1
+fi
+
+C1="$1"
+C2="$2"
+
+TZ=UTC
+export TZ
+
+COMMON=`git merge-base $C1 $C2 | xargs git rev-parse --short`
+DIV1=`git log --pretty=tformat:%h "$COMMON".."$C1" | wc -l`
+DIV2=`git log --pretty=tformat:%h "$COMMON".."$C2" | wc -l`
+
+if command -v tput >/dev/null
+then
+	C1COLOR="`tput setaf 1`"
+	C2COLOR="`tput setaf 4`"
+	COMMONCOLOR="`tput setaf 5`"
+	DATECOLOR="`tput setaf 2`"
+	RESETCOLOR="`tput setaf 0`"
+fi
+
+echo "common ancestor: $COMMONCOLOR$COMMON$RESETCOLOR"
+{
+git log -1 --date=iso-strict-local --pretty=tformat:'%h %cd' $COMMON'^..'$COMMON
+git log -1 --date=iso-strict-local --pretty=tformat:$C1' %cd' $C1'^..'$C1
+git log -1 --date=iso-strict-local --pretty=tformat:$C2' %cd' $C2'^..'$C2
+} | sort -k 2 | awk -F '[+T 	]'	\
+	-v "c1name=$C1"			\
+	-v "c2name=$C2"			\
+	-v "commonname=$COMMON"		\
+	-v "c1=$C1COLOR"		\
+	-v "c2=$C2COLOR"		\
+	-v "common=$COMMONCOLOR"	\
+	-v "date=$DATECOLOR"		\
+	-v "reset=$RESETCOLOR"		\
+	'{
+		if      ($1 == c1name    ) color = c1;
+		else if ($1 == c2name    ) color = c2;
+		else if ($1 == commonname) color = common;
+		else color = "";
+		printf("%s%s%s\t%s%s %s%s\n",
+			color, $1, reset, date, $2, $3, reset)
+	}'
+
+echo ""
+echo "commits $COMMONCOLOR$COMMON$RESETCOLOR..$C1COLOR$C1$RESETCOLOR: $DIV1"
+echo "commits $COMMONCOLOR$COMMON$RESETCOLOR..$C2COLOR$C2$RESETCOLOR: $DIV2"
+
