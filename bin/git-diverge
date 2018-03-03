@@ -32,7 +32,7 @@ echo "common ancestor: $COMMONCOLOR$COMMON$RESETCOLOR"
 git log -1 --date=iso-strict-local --pretty=tformat:'%h %cd' $COMMON'^..'$COMMON
 git log -1 --date=iso-strict-local --pretty=tformat:$C1' %cd' $C1'^..'$C1
 git log -1 --date=iso-strict-local --pretty=tformat:$C2' %cd' $C2'^..'$C2
-} | sort -k 2 | awk -F '[+T 	]'	\
+} | sort -k 2 | awk -F '[+ 	]'	\
 	-v "c1name=$C1"			\
 	-v "c2name=$C2"			\
 	-v "commonname=$COMMON"		\
@@ -46,8 +46,9 @@ git log -1 --date=iso-strict-local --pretty=tformat:$C2' %cd' $C2'^..'$C2
 		else if ($1 == c2name    ) color = c2;
 		else if ($1 == commonname) color = common;
 		else color = "";
-		printf("%s%s%s\t%s%s %s%s\n",
-			color, $1, reset, date, $2, $3, reset)
+		sub("T", " ", $2);
+		printf("%s%s%s\t%s%s%s\n",
+			color, $1, reset, date, $2, reset)
 	}'
 
 echo ""
