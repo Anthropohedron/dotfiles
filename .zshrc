@@ -455,4 +455,10 @@ for s in $sourceExtra
 do
 	. $s
 done
+
+if test -n "$FFPASS" && command -v nss-passwords >/dev/null
+then
+	alias ffpass="nss-passwords -d $FFPASS"
+fi
+
 mkxsu
