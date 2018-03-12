@@ -1,3 +1,4 @@
+let b:is_posix=1
 nmap   Q       Oecho "" >&2<ESC>4hi
 nmap   <C-W>   :w<CR>:!chmod u+x %<CR><C-L>
 nmap   #       0i#<ESC>
