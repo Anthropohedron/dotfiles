@@ -205,17 +205,11 @@ function svl () {
 	svjs "$@" | xargs jslint
 }
 
-function gst () {
-	git status --show-stash "$@"
-}
-function gitst () {
-	git status --porcelain "$@"
-}
+alias gita="git add --all"
+alias gst="git status"
+alias gitst="git status --porcelain"
 function gitm () {
 	gitst "$@" | grep '^\s\?[?AM]' | cut -c4-
-}
-function gita () {
-	git add --all "$@"
 }
 function gvi () {
 	ddvim -p `gitm "$@"`

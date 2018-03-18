@@ -6,6 +6,8 @@
 [user]
 	name = Anthropohedron
 	email = Anthropohedron@users.noreply.github.com
+[status]
+	showStash = true
 [help]
 	autocorrect = 30
 [color]
