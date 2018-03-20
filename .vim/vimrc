@@ -56,6 +56,7 @@ nmap   &2       :set ts=2 sw=2 expandtab<CR>
 nmap   &3       :set ts=3 sw=3 expandtab<CR>
 nmap   &4       :set ts=4 sw=4 expandtab<CR>
 nmap   &8       :set ts=8 sw=8 expandtab<CR>
+nnoremap gg ;
 nnoremap <C-S-Left> <C-PageUp>
 nnoremap <C-S-Right> <C-PageDown>
 nnoremap <C-O> <C-W>

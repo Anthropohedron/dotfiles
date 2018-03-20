@@ -6,11 +6,7 @@ set ai
 set sw=8 ts=8
 set noflash
 source ~/.vim/abbr.vim
-noremap gg ;
 map   K        k
-map   à        ~hx
-map   ó        
-"map   T        {!}fmt -c -
 map          :next
 map   	 >>
 map          X
