@@ -33,7 +33,7 @@ UI=term
 if isMac
 then
 	UI=mac
-elif test ! -z "$DISPLAY" && isLocal
+elif test -n "$DISPLAY" && isLocal && command -v gvim >/dev/null
 then
 	UI=X
 fi
@@ -65,7 +65,15 @@ case $UI in
 		;;
 	term)
 		unset DISPLAY
-		exec vim $addp "$@"
+		if command -v vim >/dev/null
+		then
+			exec vim $addp "$@"
+		elif echo ':q' | vi --version 2>&1 | grep 'VIM - Vi IMproved' >/dev/null
+		then
+			exec vi $addp "$@"
+		else
+			exec vi "$@"
+		fi
 		;;
 esac
 
