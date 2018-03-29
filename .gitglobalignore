@@ -4,3 +4,4 @@
 build
 *Session*.vim
 .vs
+*.user
