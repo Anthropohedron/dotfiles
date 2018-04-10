@@ -456,4 +456,10 @@ then
 	alias ffpass="nss-passwords -d $FFPASS"
 fi
 
+
+if test -n "$NUGETLOCAL" -a -n "$NUGETEXE"
+then
+	alias nulocal="$NUGETEXE "'add -source "'"$NUGETLOCAL"'"'
+fi
+
 mkxsu
