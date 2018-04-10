@@ -242,6 +242,7 @@ alias gg-="git checkout -"
 alias gg..="git checkout -"
 alias gdc="git diff"
 alias gdf="git diff --name-only"
+alias gds="git diff --stat"
 function gthisweek () {
 	gdc 'HEAD@{'`date +%w`' days ago}' HEAD -- "$@"
 }
