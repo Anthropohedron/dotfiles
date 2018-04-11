@@ -97,11 +97,7 @@ export LESS='-m -E -F -X'
 export CVS_RSH=ssh
 export RSYNC_RSH=ssh
 
-NUGETEXE=`command -v nuget || command -v dotnet`
-if echo "$NUGETEXE" | grep 'dotnet$' >/dev/null
-then
-	NUGETEXE="$NUGETEXE nuget"
-fi
+NUGETEXE=`whence -p nuget || whence -p dotnet`
 
 sourceExtra="`platfile zshenv`"
 if test -r $HOME/.zshlocal

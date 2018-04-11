@@ -456,10 +456,17 @@ then
 	alias ffpass="nss-passwords -d $FFPASS"
 fi
 
-
-if test -n "$NUGETLOCAL" -a -n "$NUGETEXE"
+if test -n "$NUGETEXE"
 then
-	alias nulocal="$NUGETEXE "'add -source "'"$NUGETLOCAL"'"'
+	if test -n "$NUGETLOCAL"
+	then
+		alias nulocal='nuget add -source "'"$NUGETLOCAL"'"'
+	fi
+	if echo "$NUGETEXE" | grep 'dotnet$' >/dev/null
+	then
+		alias nuget='dotnet nuget'
+		alias nulocal='nuget push --source "'"$NUGETLOCAL"'"'
+	fi
 fi
 
 mkxsu
