@@ -389,6 +389,24 @@ function wiki () {
 }
 alias bt=transmissioncli
 
+function ftilde () {
+	fpath="${1:-"."}"
+	if test $# -gt 0
+	then
+		shift
+	fi
+	find "$fpath" \
+		-name '*~' "$@"
+}
+function rmtilde () {
+	fpath="${1:-"."}"
+	if test $# -gt 0
+	then
+		shift
+	fi
+	ftilde "$fpath" "$@" -print0 | xargs -0 -r rm
+}
+
 prompt="%m %~ %B%#%b "
 if test -n "$xprompt"
 then
