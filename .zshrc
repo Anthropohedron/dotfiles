@@ -238,6 +238,7 @@ function gtc () {
 
 alias master="git checkout master"
 alias ggg="git checkout"
+alias ggb="git checkout -b"
 alias gg-="git checkout -"
 alias gg..="git checkout -"
 alias gdc="git diff"
