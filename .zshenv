@@ -24,6 +24,7 @@ function platfile () {
 }
 
 function pathlist () {
+	cat $(platfile pathPrepend) </dev/null
 	platfile bin
 	echo $HOME/bin
 	echo /usr/local/bin
