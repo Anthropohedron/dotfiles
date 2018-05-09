@@ -133,6 +133,8 @@ Plug 'keith/swift.vim'
 Plug 'tpope/vim-fugitive'
 Plug 'xolox/vim-misc'
 Plug 'xolox/vim-easytags'
+Plug 'pangloss/vim-javascript'
+Plug 'mxw/vim-jsx'
 if filereadable(expand('$HOME/.local/vimplugins'))
 	source $HOME/.local/vimplugins
 endif
