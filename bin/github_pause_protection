@@ -1,12 +1,12 @@
 #!/bin/sh
 
-function usage () {
+usage() {
 	echo "Usage: $0 [-b <basic auth token>] [-u <username> [-p <password>]] <owner> <repo> <branch> [command...]" >&2
 	exit 1
 }
 
 CONTENT_TYPE="application/vnd.github.v3+json"
-function github () {
+github() {
 	METHOD="$1"
 	shift
 	curl -s -X "$METHOD" \

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function usage () {
+usage() {
 	echo "Usage: $0 <commit-ref> <destination branch>"
 	exit 1
 }

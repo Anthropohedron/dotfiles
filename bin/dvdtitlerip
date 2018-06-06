@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function usage () {
+usage() {
 	if test -n "$1"
 	then
 		cat >&2 << EOF
@@ -31,7 +31,7 @@ EOF
 	exit 1
 }
 
-function cmdreq () {
+cmdreq() {
 	while test $# -gt 0
 	do
 		if ! command -v $1 >/dev/null
@@ -67,7 +67,7 @@ AUDIO=""
 SUBTITLE=""
 
 # fail_tmpl <RIP|TRANSCODE> <fail bool> <success bool> [msg...]
-function fail_tmpl () {
+fail_tmpl() {
 	_var="$1"
 	shift
 	_bad="$1"
@@ -84,19 +84,19 @@ function fail_tmpl () {
 	fi
 }
 
-function req_rip () {
+req_rip() {
 	fail_tmpl RIP false true Cannot "$@" when not ripping
 }
 
-function no_rip () {
+no_rip() {
 	fail_tmpl RIP true false Cannot "$@" after requesting ripping
 }
 
-function req_transcode () {
+req_transcode() {
 	fail_tmpl TRANSCODE false true Cannot "$@" when not transcoding
 }
 
-function no_transcode () {
+no_transcode() {
 	fail_tmpl TRANSCODE true false Cannot "$@" after requesting transcoding
 }
 
@@ -222,7 +222,7 @@ then
 fi
 
 # streaminfo <audio output file> <subtitles output file>
-function streaminfo () {
+streaminfo() {
 	_dvdaudio=$1
 	_dvdsubs=$2
 	_langxml=$(mktemp)
@@ -249,13 +249,13 @@ function streaminfo () {
 }
 
 # vobstreams <.VOB>
-function vobstreams () {
+vobstreams() {
 	ffprobe -print_format json \
 		-show_entries stream=index,codec_type,id \
 		-i "$1" 2>/dev/null
 }
 
-function voblist () {
+voblist() {
 	find "$VIDEODIR" -name VTS_$(printf %02d $TITLE)_\*.VOB
 }
 
@@ -340,7 +340,7 @@ fi
 cd "$OUTPUTDIR"
 
 # streamidfor <selection> <file> <type>
-function streamidfor () {
+streamidfor() {
 	_selection="$1"
 	_file="$2"
 	_type="$3"
@@ -429,14 +429,14 @@ RUNSCRIPT=$(mktemp)
 PROBEJSON=$(mktemp)
 
 # codecstream <codec_type> <streamid>
-function codecstream () {
+codecstream() {
 	jq '.streams|
 	    map(select((.codec_type == "'$1'") and (.id == "'$2'")))|
 	    .[].index' $PROBEJSON 2> /dev/null
 }
 
 # streammap <VOB file>
-function streammap () {
+streammap() {
 	vobstreams "$1" > $PROBEJSON
 	if test -n "$SUBTITLE"
 	then
@@ -460,7 +460,7 @@ function streammap () {
 }
 
 # transcode <infile> <outfile>
-function transcode () {
+transcode() {
 	echo ffmpeg -y $PALETTE -i "'$1'" \
 		$(streammap "$1") \
 		$TRANSCODEOPTS -f mpegts "'$2'"

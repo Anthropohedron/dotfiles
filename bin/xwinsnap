@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function usage () {
+usage() {
 	echo "Usage: $0 <left|right|full|undo>" >&2
 	exit 2
 }
@@ -61,24 +61,24 @@ then
 		-f XWINSNAP_HEIGHT 16c -set XWINSNAP_HEIGHT $HEIGHT
 fi
 
-function snapLeft () {
+snapLeft() {
 	xdotool windowsize "$WINDOW" 50% 100%
 	xdotool windowmove "$WINDOW" 0 0
 }
 
-function snapRight () {
+snapRight() {
 	xdotool windowsize "$WINDOW" 50% 100%
 	WIDTH=$(xwininfo -id "$WINDOW" |\
 		awk '/Width:/ { print $2 }')
 	xdotool windowmove "$WINDOW" $WIDTH 0
 }
 
-function snapFull () {
+snapFull() {
 	xdotool windowsize "$WINDOW" 100% 100%
 	xdotool windowmove "$WINDOW" 0 0
 }
 
-function snapUndo () {
+snapUndo() {
 	xdotool windowsize "$WINDOW" $WIDTH $HEIGHT
 	xdotool windowmove "$WINDOW" $X $Y
 	xprop -id "$WINDOW" \
