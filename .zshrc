@@ -236,6 +236,17 @@ function gtc () {
 	fi
 }
 
+function gdcs () {
+	if test $# -gt 0
+	then
+		local ref='stash@{'"$1"'}'
+		shift
+	else
+		local ref='stash@{0}'
+	fi
+	git diff "$@" "$ref"^.."$ref"
+}
+
 alias master="git checkout master"
 alias ggg="git checkout"
 alias ggb="git checkout -b"
