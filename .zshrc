@@ -370,7 +370,8 @@ function fjs () {
 		-path './ext'     -prune \
 		-path './images'  -prune \
 		-path './WEB_INF' -prune \
-		-o -name '*.js' "$@"
+		-o \( -name '*.jsx' -o -name '*.js' \) \
+		"$@"
 }
 function fcs () {
 	fpath="${1:-"."}"
