@@ -220,13 +220,19 @@ function gitjs () {
 function gjl () {
 	gitjs "$@" | xargs jslint
 }
+function gtt () {
+	git cur | awk -F '[-/]' '
+		($2 ~ /^[A-Z]+$/) && ($3 ~ /^[0-9]+$/) {
+			printf("%s-%s", $2, $3)
+		}'
+}
 function gtc () {
-	local branch="$(git cur)"
-	if test $? -eq 0 -a $# -ge 0
+	if test $# -ge 0 && git cur >/dev/null 2>&1
 	then
-		if expr "$branch" : '^[-a-zA-Z0-9]\+/[A-Z]\+-[0-9]\+$' >/dev/null
+		local ticket="$(gtt)"
+		if test -n "$ticket"
 		then
-			git commit -m "$(echo $branch | cut -d/ -f2): $*"
+			git commit -m "$ticket"": $*"
 		else
 			git commit -m "$*"
 		fi
