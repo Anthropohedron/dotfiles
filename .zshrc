@@ -443,36 +443,28 @@ function prompt_dirs () {
 prompt="%m %~ %B%#%b "
 if test -n "$xprompt"
 then
+	function precmd () {
+		local SPACE=$'\n'
+		local PREFIX=""
+		local dirs="$(prompt_dirs)"
+		if test -n "$dirs"
+		then
+			PREFIX="$fg_bold[blue]+$reset_color "
+		fi
+		prompt="${PREFIX}%m $(prompt_git)$bg_bold[cyan] %~ $reset_color${dirs}${SPACE}%# "
+	}
 	if test "$xprompt" = title
 	then
-		TITLEHOST=$SHOST
-		function precmd () {
-			local SPACE=" "
-			local PREFIX=""
-			local dirs="$(prompt_dirs)"
-			if test -n "$dirs"
-			then
-				SPACE=$'\n'
-				PREFIX="$fg_bold[blue]+$reset_color "
-			fi
-			prompt="${PREFIX}%m $(prompt_git)%~${dirs}${SPACE}%# "
+		function chpwd () {
 			print -nP '\033]0;%m: %~\007'
 		}
-	else
-		TITLEHOST=$SHOST
-		function precmd () {
-			local SPACE=" "
-			local dirs="$(prompt_dirs)"
-			if test -n "$dirs"
-			then
-				SPACE=$'\n'
-			fi
-			prompt="$fg_bold[blue]+$reset_color %m $(prompt_git)%~${dirs}${SPACE}%# "
-		}
+		chpwd
 	fi
-	precmd
 else
 	function precmd () { }
+	unfunction precmd
+	function chpwd () { }
+	unfunction chpwd
 fi
 
 function foreground-process () {
