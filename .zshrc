@@ -7,8 +7,8 @@ fi
 homefpath=($HOME/.zsh/functions `platfile functions`)
 fpath=($homefpath $systemfpath)
 autoload -U ${^homefpath}/*(:t)
-autoload -U compinit
-compinit
+autoload -U compinit && compinit
+autoload -U colors && colors
 
 zstyle ':completion:*' verbose yes
 zstyle ':completion:*:descriptions' format '%B%d%b'
@@ -424,6 +424,21 @@ function rmtilde () {
 	fi
 	ftilde "$fpath" "$@" -print0 | xargs -0 -r rm
 }
+function prompt_git () {
+	local branch="$(git cur-pretty)"
+	if test -n "$branch"
+	then
+		echo '['"$fg[green]$branch$reset_color"'] '
+	fi
+}
+function prompt_dirs () {
+	local dir=""
+	local NEWLINE=$'\n'
+	for dir in "$dirstack[@]"
+	do
+		echo -n "$NEWLINE$fg[blue]|$reset_color ${dir/#$HOME/~}"
+	done
+}
 
 prompt="%m %~ %B%#%b "
 if test -n "$xprompt"
@@ -431,21 +446,33 @@ then
 	if test "$xprompt" = title
 	then
 		TITLEHOST=$SHOST
-		function chpwd () {
-			local dirs="`dirs`"
-			prompt="%m ${dirs} %B%#%b "
+		function precmd () {
+			local SPACE=" "
+			local PREFIX=""
+			local dirs="$(prompt_dirs)"
+			if test -n "$dirs"
+			then
+				SPACE=$'\n'
+				PREFIX="$fg_bold[blue]+$reset_color "
+			fi
+			prompt="${PREFIX}%m $(prompt_git)%~${dirs}${SPACE}%# "
 			print -nP '\033]0;%m: %~\007'
 		}
 	else
 		TITLEHOST=$SHOST
-		function chpwd () {
-			local dirs="`dirs`"
-			prompt="%m ${dirs} %B%#%b "
+		function precmd () {
+			local SPACE=" "
+			local dirs="$(prompt_dirs)"
+			if test -n "$dirs"
+			then
+				SPACE=$'\n'
+			fi
+			prompt="$fg_bold[blue]+$reset_color %m $(prompt_git)%~${dirs}${SPACE}%# "
 		}
 	fi
-	chpwd
+	precmd
 else
-	function chpwd () { }
+	function precmd () { }
 fi
 
 function foreground-process () {
