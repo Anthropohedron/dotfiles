@@ -425,7 +425,7 @@ function rmtilde () {
 	ftilde "$fpath" "$@" -print0 | xargs -0 -r rm
 }
 function prompt_git () {
-	local branch="$(git cur-pretty)"
+	local branch="$(git cur-pretty 2>/dev/null)"
 	if test -n "$branch"
 	then
 		echo '['"$fg[green]$branch$reset_color"'] '
