@@ -23,22 +23,21 @@ function platfile () {
 	fi
 }
 
-function pathlist () {
-	cat $(platfile pathPrepend) </dev/null
-	platfile bin
-	echo $HOME/bin
-	echo /usr/local/bin
-	echo /usr/local/sbin
-	cat $(platfile pathBefore) </dev/null
-	echo /usr/bin
-	echo /bin
-	echo /usr/sbin
-	echo /sbin
-	cat $(platfile pathAfter) </dev/null
-}
-
 function resetpath () {
-	export PATH="$(pathlist | tr '\012' ':' | sed 's/^\(.*\):$/\1/')"
+	IFS=$'\n' local path_items=(\
+		$(cat $(platfile pathPrepend) </dev/null) \
+		$(platfile bin) \
+		$HOME/bin \
+		/usr/local/bin \
+		/usr/local/sbin \
+		$(cat $(platfile pathBefore) </dev/null) \
+		/usr/bin \
+		/bin \
+		/usr/sbin \
+		/sbin \
+		$(cat $(platfile pathAfter) </dev/null) \
+	)
+	PATH=${(j/:/)${^~path_items}}
 }
 
 umask 022
