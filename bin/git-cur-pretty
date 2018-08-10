@@ -13,7 +13,11 @@ git describe --all --long --abbrev=8 "$REV" 2>/dev/null |\
 	awk '{
 		$0 = gensub("^[a-zA-Z]+/(.*)-([0-9]+)-g[0-9a-fA-F]{8}$",
 			"\\2\t\\1", 1, $0);
-		if ($1 != 0) printf("%d + ", $1);
-		print $2
+		dist = ($1 == 0) ? "" : ($1 " + ");
+		if ($1 == 0) {
+			printf("HEAD: %s\n", $2);
+		} else {
+			printf("HEAD: %d + %s\n", $1, $2);
+		}
 	}'
 
