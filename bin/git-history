@@ -1,0 +1,22 @@
+#!/bin/sh
+
+if test $# -gt 1 -o x"$1" = "x-h" -o x"$1" = "x--help"
+then
+	echo "Usage: $0 [count]" >&2
+	exit 1
+fi
+
+HIST=${1:-"5"}
+
+while test $HIST -gt 0
+do
+	REF="@{-"$HIST"}"
+	HASH=$(git rev-parse --short "$REF"'^{commit}' 2>/dev/null)
+	EXISTS=$?
+	HIST=$(expr $HIST - 1)
+	if test $EXISTS -eq 0
+	then
+		echo "$REF	$HASH" $(git cur-pretty "$REF")
+	fi
+done
+echo "HEAD	$(git rev-parse --short HEAD) $(git cur-pretty)"
