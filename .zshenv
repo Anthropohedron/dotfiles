@@ -37,7 +37,7 @@ function resetpath () {
 		/sbin \
 		$(cat $(platfile pathAfter) </dev/null) \
 	)
-	PATH=${(j/:/)${^~path_items}}
+	IFS=$'\n' PATH=${(j/:/)${^~path_items}}
 }
 
 umask 022
