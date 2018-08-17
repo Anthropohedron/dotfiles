@@ -24,7 +24,9 @@ function platfile () {
 }
 
 function resetpath () {
-	IFS=$'\n' path_items=(\
+	oldIFS="$IFS"
+	IFS=$'\n'
+	path_items=(\
 		$(cat $(platfile pathPrepend) </dev/null) \
 		$(platfile bin) \
 		$HOME/bin \
@@ -37,7 +39,8 @@ function resetpath () {
 		/sbin \
 		$(cat $(platfile pathAfter) </dev/null) \
 	)
-	IFS=$'\n' PATH=${(j/:/)${^~path_items}}
+	PATH=${(j/:/)${^~path_items}}
+	IFS="$oldIFS"
 }
 
 umask 022
