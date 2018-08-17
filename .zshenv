@@ -24,7 +24,7 @@ function platfile () {
 }
 
 function resetpath () {
-	IFS=$'\n' local path_items=(\
+	IFS=$'\n' path_items=(\
 		$(cat $(platfile pathPrepend) </dev/null) \
 		$(platfile bin) \
 		$HOME/bin \
