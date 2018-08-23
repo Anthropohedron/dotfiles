@@ -40,6 +40,7 @@
 	confgrep = config --show-origin --get-regexp
 	cur = rev-parse --abbrev-ref HEAD
 	pick = cherry-pick
+	detach = !git checkout $(git rev-parse HEAD)
 	ff = !git rebase origin/$(git cur)
 	pnew = !git push -u origin $(git cur)
 	amend = commit --amend --no-edit
