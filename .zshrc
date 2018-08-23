@@ -512,6 +512,19 @@ then
 	alias ffpass="nss-passwords -d $FFPASS"
 fi
 
+if command -v xmlstarlet >/dev/null
+then
+	function csver () {
+		typeset verfile=$(grep AssemblyVersion {.,app,library}/Directory.Build.props 2>/dev/null | head -1 | cut -d: -f1)
+		if test -z "$verfile"
+		then
+			echo "Could not find a build props file" >&2
+			return 1
+		fi
+		xmlstarlet sel -t --value-of /Project/PropertyGroup/AssemblyVersion $verfile | sed -n 's/^\([0-9]\.[0-9]\+\.[0-9]\+\).*$/\1/p'
+	}
+fi
+
 if test -n "$NUGETEXE"
 then
 	NUGETSOURCEFLAG="-source"
