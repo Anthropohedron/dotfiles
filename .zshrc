@@ -256,7 +256,10 @@ function gdcs () {
 alias master="git checkout master"
 alias ggg="git checkout"
 alias ggb="git checkout -b"
-alias gg-="git checkout -"
+alias ggh="git history"
+function gg- () {
+	git checkout @{-"${1:-"1"}"}
+}
 alias gg..="git checkout -"
 alias gdc="git diff"
 alias gdf="git diff --name-only"
