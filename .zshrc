@@ -221,9 +221,18 @@ function gjl () {
 	gitjs "$@" | xargs jslint
 }
 function gtt () {
-	git cur | awk -F '[-/]' '
-		($2 ~ /^[A-Z]+$/) && ($3 ~ /^[0-9]+$/) {
-			printf("%s-%s", $2, $3)
+	git cur | awk -F '[-/,]' '
+		/^[a-zA-Z0-9]+\/([A-Z]+-[0-9]+)(,[A-Z]+-[0-9]+)*$/ {
+			count = (NF - 1) / 2;
+			str = "";
+			for (i=0; i<count; ++i) {
+				prj = $(i*2 + 2);
+				num = $(i*2 + 3);
+				if (!((prj ~ /^[A-Z]+$/) && (num ~ /^[0-9]+$/))) next;
+				if (i==0) str = prj "-" num;
+				else str = str "," prj "-" num;
+			}
+			printf("%s", str);
 		}'
 }
 function gtc () {
