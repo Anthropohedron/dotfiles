@@ -144,7 +144,7 @@ function dls () {
 }
 
 function l () {
-	grep "$@" ~/.z{shenv,shrc,login}
+	grep "$@" ~/.z{shenv,shrc,login} $(platfile zshenv) $(platfile zshrc)
 }
 alias ll="edtr ~/.zshrc"
 alias lll=". ~/.zshenv; . ~/.zshrc"
