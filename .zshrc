@@ -211,11 +211,17 @@ alias gitst="git status --porcelain"
 function gitm () {
 	gitst "$@" | grep '^\s\?[?AM]' | cut -c4-
 }
+function gitmr () {
+	local count=$(git pwd | tr -cd / | wc -c)
+	gitst "$@" |\
+		grep '^\s\?[?AM]' |\
+		sed 's,...\([^/]\+/\)\{'$count'\},,'
+}
 function gvi () {
-	ddvim -p `gitm "$@"`
+	ddvim -p `gitmr "$@"`
 }
 function gitjs () {
-	gitm "$@" | grep '\.js$'
+	gitmr "$@" | grep '\.js$'
 }
 function gjl () {
 	gitjs "$@" | xargs jslint

@@ -1,0 +1,32 @@
+#!/bin/sh
+
+PORCELAIN=false
+if test $# -eq 1 -a x"$1" = "x--porcelain"
+then
+	PORCELAIN=true
+	shift
+fi
+
+usage () {
+	echo "Usage: $0 [--porcelain]" >&2
+	exit 1
+}
+
+if test $# -gt 1
+then
+	usage
+fi
+
+if ! git rev-parse HEAD >/dev/null
+then
+	usage
+fi
+
+count=$(git rev-parse --show-toplevel | tr -cd / | wc -c)
+
+if $PORCELAIN
+then
+	pwd | sed 's,^\(/[^/]\+\)\{'$count'\}/,,'
+else
+	pwd | sed 's,^\(/[^/]\+\)\{'$count'\},.,'
+fi
