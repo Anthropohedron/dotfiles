@@ -1,0 +1,47 @@
+#!/bin/sh
+
+usage () {
+	cat >&2 <<EOF
+semantic version order for 'git tag'
+
+Usage: $0 [-l|-m]
+	-m	only the highest micro version of each minor version
+	-M	only the highest minor version of each major version
+	-l	only the highest version
+
+EOF
+	exit 1
+}
+
+if test $# -gt 1
+then
+	usage
+fi
+
+semanticsort () {
+	sort -n -t . -k 1 -k 2 -k 3
+}
+
+case x"$1" in
+	x) git tag | semanticsort ;;
+	x-m) git tag | semanticsort | awk -F '[.]' '
+		NR > 1 {
+			if (last && (($1 != major) || ($2 != minor)))
+				print last;
+		}
+		{ last = $0; major = $1; minor = $2 }
+		END { print last }
+		' ;;
+	x-M) git tag | semanticsort | awk -F '[.]' '
+		NR > 1 {
+			if (last && ($1 != major))
+				print last;
+		}
+		{ last = $0; major = $1 }
+		END { print last }
+		' ;;
+	x-l) git tag | semanticsort | tail -1 ;;
+	*) usage ;;
+esac
+
+
