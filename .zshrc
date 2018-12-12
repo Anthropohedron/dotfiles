@@ -209,12 +209,12 @@ alias gita="git add --all"
 alias gst="git status"
 alias gitst="git status --porcelain"
 function gitm () {
-	gitst "$@" | grep '^\s\?[?AM]' | cut -c4-
+	gitst "$@" | grep '^\s\?[?AMU]' | cut -c4-
 }
 function gitmr () {
 	local count=$(git pwd | tr -cd / | wc -c)
 	gitst "$@" |\
-		grep '^\s\?[?AM]' |\
+		grep '^\s\?[?AMU]' |\
 		sed 's,...\([^/]\+/\)\{'$count'\},,'
 }
 function gvi () {
