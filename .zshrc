@@ -62,6 +62,7 @@ alias cd..='cd ..'
 alias edtr=ddvim
 alias pd=pushd
 alias pop=popd
+alias rd='dirstack=("${(@)dirstack:1}" ${dirstack[1]})'
 
 export cppipe=$HOME/.pipes/cppipe
 if test ! -p $cppipe
