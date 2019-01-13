@@ -129,6 +129,7 @@ endif
 "endif
 
 call plug#begin('~/.vim/plugged')
+Plug 'davidoc/taskpaper.vim'
 Plug 'keith/swift.vim'
 Plug 'tpope/vim-fugitive'
 Plug 'xolox/vim-misc'
