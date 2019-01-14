@@ -51,5 +51,7 @@
 	log1 = !git log --pretty=terse "$1"'^..'"$1"
 [push]
 	default = matching
+[url "ssh://git@github.com/"]
+	insteadOf = github:
 [url "ssh://github443/"]
 	insteadOf = https://github.com/
