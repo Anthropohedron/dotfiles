@@ -133,6 +133,9 @@ function edsh () {
 function mz () {
 	zcat $1 | $PAGER
 }
+function viewcert () {
+	openssl x509 -text -noout -in "$@" | less
+}
 
 alias gvw='gv -watch -swap'
 
