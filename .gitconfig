@@ -35,6 +35,7 @@
 [pretty]
 	terse = tformat:%Cred%h%Creset %C(green)%cI%Creset <%C(bold blue)%an%C(reset)> %C(bold black)%s%Creset
 [alias]
+	wtf = blame -w
 	root = rev-parse --show-toplevel
 	ignored = ls-files --others --ignored --exclude-standard
 	tags = tag -l --format='%(refname)\t%(creatordate:iso8601)'
