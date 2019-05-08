@@ -1,0 +1,34 @@
+#!/bin/sh
+
+git versions |\
+awk -F '[.v]' \
+ -v "gitlog=git log --no-merges --pretty=format:'* %h - %s' --abbrev-commit" \
+ -v 'between=| tail +2; echo ""\necho \\#\\# ' \
+'
+	NR == 1 {
+		printf("%s %s %s %s\n", gitlog, $0, between, $0);
+		PREVMAJOR=$2
+		PREVMINOR=$3
+		PREVMICRO=$4
+	}
+	NR > 1 {
+		if ($4 > 0) {
+			printf("%s v%d.%d.%d..%s %s %s\n",
+				gitlog, $2, $3, $4 - 1, $0, between, $0);
+		} else if ($PREVMICRO == 0) {
+			printf("%s v%d.%d.%d..%s %s %s\n",
+				gitlog, $2, $3 - 1, $4, $0, between, $0);
+		} else {
+			printf("%s $(git linear %s", gitlog, $0);
+			while (PREVMICRO >= 0) {
+				printf(" v%d.%d.%d",
+					PREVMAJOR, PREVMINOR, PREVMICRO);
+				PREVMICRO = PREVMICRO - 1;
+			}
+			printf(") %s %s\n", between, $0);
+		}
+		PREVMAJOR=$2
+		PREVMINOR=$3
+		PREVMICRO=$4
+	}
+' | tac | sh
