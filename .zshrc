@@ -1,5 +1,7 @@
 # only for interactive shells
 
+# begin completion
+
 if test -z "$systemfpath"
 then
 	systemfpath="$fpath"
@@ -16,6 +18,9 @@ zstyle ':completion:*:messages' format '%d'
 zstyle ':completion:*:warnings' format 'No matches for: %d'
 zstyle ':completion:*' group-name ''
 
+# end completion
+# begin options
+
 setopt AUTO_CD
 setopt CHASE_LINKS
 setopt PUSHD_IGNORE_DUPS
@@ -28,7 +33,7 @@ setopt REC_EXACT
 setopt AUTO_PARAM_KEYS
 setopt AUTO_PARAM_SLASH
 setopt AUTO_REMOVE_SLASH
-setopt COMPLETE_ALIASES
+#setopt COMPLETE_ALIASES
 setopt GLOB_COMPLETE
 setopt LIST_AMBIGUOUS
 setopt LIST_TYPES
@@ -57,12 +62,7 @@ export HISTFILE=~/.zsh_history
 export SAVEHIST=500
 export HISTSIZE=500
 
-alias ..='cd ..'
-alias cd..='cd ..'
-alias edtr=ddvim
-alias pd=pushd
-alias pop=popd
-alias rd='dirstack=("${(@)dirstack:1}" ${dirstack[1]})'
+#end options
 
 export cppipe=$HOME/.pipes/cppipe
 if test ! -p $cppipe
@@ -77,11 +77,21 @@ then
 	mknod $cdpipe p || mkfifo $cdpipe
 	chmod 600 $cdpipe
 fi
+
+# begin aliases
+
 alias cdl='cd "`cat $cdpipe`"'
 alias pdl='pd "`cat $cdpipe`"'
 alias cdlf='cd "`xargs -0 dirname < $cdpipe`"'
 alias pdlf='pd "`xargs -0 dirname < $cdpipe`"'
 alias lcd='pwd > $cdpipe'
+
+alias ..='cd ..'
+alias cd..='cd ..'
+alias edtr=ddvim
+alias pd=pushd
+alias pop=popd
+alias rd='dirstack=("${(@)dirstack:1}" ${dirstack[1]})'
 
 alias w='whence -c'
 alias whichall='whence -c -a'
@@ -446,6 +456,10 @@ function rmtilde () {
 	fi
 	ftilde "$fpath" "$@" -print0 | xargs -0 -r rm
 }
+
+# end aliases
+# begin prompt
+
 function prompt_git () {
 	local branch="$(git cur-pretty 2>/dev/null)"
 	if test -n "$branch"
@@ -489,6 +503,9 @@ else
 	unfunction chpwd
 fi
 
+# end prompt
+# begin keybinding
+
 function foreground-process () {
 	fg 2>/dev/null || echo "fg: No current job"
 }
@@ -520,6 +537,8 @@ bindkey '\E[F'   end-of-line
 bindkey '\E[1~'  beginning-of-line
 bindkey '\E[4~'  end-of-line
 
+# end keybinding
+
 #WORDCHARS='*?_-.[]~=/&;!#$%^(){}<>'
 WORDCHARS=\'\"'[]{}()<>^$%~_.'
 
@@ -528,6 +547,8 @@ for s in $sourceExtra
 do
 	. $s
 done
+
+# begin conditional aliases
 
 if test -n "$FFPASS" && command -v nss-passwords >/dev/null
 then
@@ -564,5 +585,7 @@ then
 		NUGETSOURCEFLAG="--source"
 	fi
 fi
+
+# end conditional aliases
 
 mkxsu
