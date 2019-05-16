@@ -253,7 +253,8 @@ function gtt () {
 				else str = str "," prj "-" num;
 			}
 			printf("%s", str);
-		}'
+		}
+		$2 ~ /^AB#[0-9]+$/ { print $2 }'
 }
 function gtc () {
 	if test $# -ge 0 && git cur >/dev/null 2>&1
