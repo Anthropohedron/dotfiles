@@ -1,0 +1,24 @@
+#!/bin/sh
+
+DAYSAGO=${1:-"1"}
+
+yesterday=$(expr $(date +%s) - $DAYSAGO \* 24 \* 60 \* 60)
+drawdate="$(date -d @$yesterday +%Y-%m-%d)"
+weekday=$(date -d @$yesterday +%w)
+case $weekday in
+	3|6)
+		title=Powerball
+		win="$(curl -sk 'https://data.ny.gov/resource/8vkr-v8vh.json?draw_date='"$drawdate"'T00:00:00.000' |\
+			jq -r '.[0].winning_numbers')"
+		;;
+	2|5)
+		title="Mega Millions"
+		win="$(curl -sk 'https://data.ny.gov/resource/h6w8-42p9.json?draw_date='"$drawdate"'T00:00:00.000' |\
+			jq -r '.[0]|(.winning_numbers + " " + .mega_ball)')"
+		;;
+	*) exit 0 ;;
+esac
+
+test -z "$win" && exit 0
+
+echo "$drawdate: $win" | mail -s "$win $title" gss
