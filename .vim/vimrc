@@ -15,6 +15,7 @@ set tw=75
 set tabpagemax=40
 set incsearch nohlsearch
 set nojoinspaces
+set nofixeol
 set whichwrap=b,s,h,l,<,>,[,]
 set suffixes=.bak,~,.o,.info,.swp,.class
 set matchpairs=(:),{:},[:]
