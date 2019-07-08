@@ -571,7 +571,14 @@ fi
 if command -v xmlstarlet >/dev/null
 then
 	function csver () {
-		typeset verfile=$(grep AssemblyVersion {.,app,library}/Directory.Build.props 2>/dev/null | head -1 | cut -d: -f1)
+		typeset verfile="$(
+			find . -maxdepth 2 \
+				-name \*.csproj -o \
+				-name Directory.Build.props |\
+			grep '^\./\(app/\|library/\|src/\|\)[^/]\+$' |\
+			xargs grep -l '</AssemblyVersion>' |\
+			head -1
+			)"
 		if test -z "$verfile"
 		then
 			echo "Could not find a build props file" >&2
