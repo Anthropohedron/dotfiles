@@ -1,4 +1,5 @@
 set hlsearch
+set mouse=a
 nnoremap <ESC> <ESC>:noh<CR>
 if has("gui_mac") || has("gui_macvim")
 	let norm_font="ProFontX:h14"
