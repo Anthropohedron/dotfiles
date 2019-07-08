@@ -234,6 +234,18 @@ function gitmr () {
 function gvi () {
 	ddvim -p `gitmr "$@"`
 }
+function gitc () {
+	gitst "$@" | grep '^UU' | cut -c4-
+}
+function gitcr () {
+	local count=$(git pwd | tr -cd / | wc -c)
+	gitst "$@" |\
+		grep '^UU' |\
+		sed 's,...\([^/]\+/\)\{'$count'\},,'
+}
+function gvc () {
+	ddvim -p `gitcr "$@"`
+}
 function gitjs () {
 	gitmr "$@" | grep '\.js$'
 }
