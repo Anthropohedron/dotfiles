@@ -16,12 +16,15 @@ set tw=75
 set tabpagemax=40
 set incsearch nohlsearch
 set nojoinspaces
-set nofixeol
+if version >= 800
+	set nofixeol
+endif
 set whichwrap=b,s,h,l,<,>,[,]
 set suffixes=.bak,~,.o,.info,.swp,.class
 set matchpairs=(:),{:},[:]
 set backspace=2
 set comments=sr:<P>,mb:</P><P>,el:</P>,sr:/*,mb:*,el:*/,://,b:#,n:%,:XCOMM,n:>,n:}\ ,fb:-
+set statusline=%<%f\ %h%m%r%=%{\"[\".(&ff).\",\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}%k\ %-14.(%l,%c%V%)\ %P
 set nopaste
 set t_RV=
 set ttymouse=
