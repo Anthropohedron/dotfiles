@@ -304,7 +304,7 @@ function gg- () {
 }
 alias gg..="git checkout -"
 alias gdc="git diff"
-alias gdf="git diff --name-only"
+alias gdf="git diff --name-status"
 alias gds="git diff --stat"
 function gthisweek () {
 	gdc 'HEAD@{'`date +%w`' days ago}' HEAD -- "$@"
@@ -338,13 +338,14 @@ alias google='w3m http://www.google.com/'
 function mani () {
 	info --subnodes --output - "$1" | $PAGER
 }
-function myip () {
+function localip () {
 	ifconfig | grep '\<inet\>' |\
 		tr '\011' ' ' | tr -dc '[0-9]. \012' |\
 		sed	-e '/^ *127\./d' \
 			-e 's/^ *//' \
 			-e 's/ .*$//'
 }
+alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 
 if test -n "$DISPLAY"
 then
