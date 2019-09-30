@@ -72,7 +72,8 @@ then
 		then
 			xprompt=title
 			export TERM=xterm
-		elif test "$TERM" = xterm
+		elif test "$TERM" = xterm -o \
+			"$TERM" = xterm-256color
 		then
 			xprompt=title
 		else
