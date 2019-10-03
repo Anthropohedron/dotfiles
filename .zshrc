@@ -219,18 +219,19 @@ function svl () {
 	svjs "$@" | xargs jslint
 }
 
-alias gita="git add --all"
 alias gst="git status"
-alias gitst="git status --porcelain"
+alias gitst="git status-relative-porcelain"
+alias gita="git add --all"
+function gitam () {
+	gitst "$@" |\
+		sed -n 's/^[M ][M ] //p' |\
+		tr '\012' '\000' |\
+		xargs -0 git add
+}
 function gitm () {
 	gitst "$@" | grep '^\s\?[?AMU]' | cut -c4-
 }
-function gitmr () {
-	local count=$(git pwd | tr -cd / | wc -c)
-	gitst "$@" |\
-		grep '^\s\?[?AMU]' |\
-		sed 's,...\([^/]\+/\)\{'$count'\},,'
-}
+alias gitmr=gitm
 function gvi () {
 	ddvim -p `gitmr "$@"`
 }

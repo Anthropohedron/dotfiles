@@ -1,0 +1,51 @@
+#!/bin/sh
+
+usage() {
+	echo "Usage: $0 [dir]" >&2
+	exit 1
+}
+
+if test $# -ge 1
+then
+	if test $# -eq 1
+	then
+		DIR="$(cd "$1" && pwd)"
+		if test $? -ne 0
+		then
+			usage
+		fi
+	else
+		usage
+	fi
+fi
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+if test x"$(pwd)" = x"$ROOT"
+then
+	git status --porcelain "$@"
+	exit 0
+else
+	ROOTLEN="$(echo x"$ROOT" | wc -c)"
+	RELDIR="$(pwd | cut -c"$ROOTLEN"-)"
+fi
+
+git status --porcelain "$@" |\
+	sed 's,^\(..\) ,\1/,' |\
+	awk -F / -v "curdir=$RELDIR" '
+	BEGIN { segcount = split(curdir, segments) }
+	{
+		start=0;
+		for (same=2; same<(NF+1) && $same == segments[same-1]; ++same) {
+		}
+		different=segcount-(same-2);
+		printf("%s ", $1);
+		for (j=0; j<different; ++j) {
+			printf("../");
+		}
+		for (k=same; k<NF; ++k) {
+			printf("%s/", $k);
+		}
+		printf("%s\n", $NF);
+	}'
+
