@@ -12,6 +12,26 @@ autoload -U ${^homefpath}/*(:t)
 autoload -U compinit && compinit
 autoload -U colors && colors
 
+if test ! -r ~/.zplug/init.zsh
+then
+	git -C ~ submodule init
+	git -C ~ submodule update
+fi
+
+if test -r ~/.zplug/init.zsh
+then
+	source ~/.zplug/init.zsh
+
+	zplug "zsh-users/zsh-syntax-highlighting", defer:2
+	zplug "zsh-users/zsh-autosuggestions"
+
+	if ! zplug check
+	then
+	    zplug install
+	fi
+	zplug load
+fi
+
 zstyle ':completion:*' verbose yes
 zstyle ':completion:*:descriptions' format '%B%d%b'
 zstyle ':completion:*:messages' format '%d'
