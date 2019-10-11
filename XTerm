@@ -14,6 +14,7 @@ XTerm*SimpleMenu*HorizontalMargins:	16
 XTerm*SimpleMenu*Sme.height:	16
 XTerm*SimpleMenu*menuLabel.font:	-adobe-helvetica-bold-r-normal--*-120-*-*-*-*-iso8859-*
 XTerm*SimpleMenu*menuLabel.vertSpace:	100
+XTerm*termName: xterm-256color
 XTerm*VT100*boldColors:	on
 XTerm*VT100*color0:	#222222
 XTerm*VT100*color10:	green
