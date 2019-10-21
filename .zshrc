@@ -274,6 +274,17 @@ function gjl () {
 	gitjs "$@" | xargs jslint
 }
 function gtt () {
+	local ticketfile="$(git root)/.git/.ticket"
+	if test $# -gt 0
+	then
+		echo "$@" | tr ' ' ',' > $ticketfile
+		return
+	fi
+	if test -r "$ticketfile"
+	then
+		cat "$ticketfile"
+		return
+	fi
 	git cur | awk -F '[-/,]' '
 		/^[a-zA-Z0-9]+\/([A-Z]+-[0-9]+)(,[A-Z]+-[0-9]+)*$/ {
 			count = (NF - 1) / 2;
