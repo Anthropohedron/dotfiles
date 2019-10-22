@@ -106,6 +106,53 @@ alias cdlf='cd "`xargs -0 dirname < $cdpipe`"'
 alias pdlf='pd "`xargs -0 dirname < $cdpipe`"'
 alias lcd='pwd > $cdpipe'
 
+dirstacks="$HOME/.dirstacks/"
+alias lsds='find "$dirstacks" -name '"'stack*'"' | sort -r'
+function savewd () {
+	local file="$dirstacks/stack$(stamp)_$$"
+	pwd > $file
+	for dir in "${(@)dirstack}"
+	do
+		echo "$dir" >> $file
+	done
+}
+
+function loadwd () {
+	lsds | awk -F/ '{ print NR, $NF }'
+	local count=$(lsds | wc -l)
+	local choice
+	echo ""
+	while read 'choice?Load: '
+	do
+		if test -z "$choice"
+		then
+			choice=1
+		elif test 0 -ge "$choice" -o "$count" -lt "$choice"
+		then
+			lsds | awk -F/ '{ print NR, $NF }'
+			count=$(lsds | wc -l)
+			echo ""
+		else
+			local file="$(lsds | tail +$choice | head -1)"
+			cd "$(head -1 "$file")"
+			local oldIFS="$IFS"
+			IFS=$'\n'
+			dirstack=($(tail +2 "$file"))
+			IFS="$oldIFS"
+			return
+		fi
+	done
+}
+
+function cleanwd () {
+	local pastmax=6
+	if test $# -gt 0
+	then
+		pastmax=$(expr 1 + $1)
+	fi
+	lsds | tail +$pastmax | tr '\012' '\000' | xargs -0 rm
+}
+
 alias ..='cd ..'
 alias cd..='cd ..'
 alias edtr=ddvim
@@ -364,7 +411,7 @@ function vir () {
 	ddvim -p `find . -name '.*.swp' | sed 's,/\.\([^/]*\)\.swp$,/\1,'`
 }
 
-alias stamp='date -u +%Y-%m-%d_%H:%M:%S'
+alias stamp='date -u +%Y-%m-%d_%H:%M:%SZ'
 
 alias google='w3m http://www.google.com/'
 function mani () {
