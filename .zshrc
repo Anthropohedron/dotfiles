@@ -109,6 +109,10 @@ alias lcd='pwd > $cdpipe'
 dirstacks="$HOME/.dirstacks/"
 alias lsds='find "$dirstacks" -name '"'stack*'"' | sort -r'
 function savewd () {
+	if test ${#dirstack} -eq 0 -a "$(pwd)" = "$(sh -c 'cd "$HOME" && pwd')"
+	then
+		return
+	fi
 	local file="$dirstacks/stack$(stamp)_$$"
 	pwd > $file
 	for dir in "${(@)dirstack}"
