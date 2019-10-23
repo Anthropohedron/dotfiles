@@ -1,0 +1,9 @@
+set tw=75 incsearch hlsearch
+nnoremap d;     dt;
+nnoremap <ESC>  <ESC>:noh<CR>
+nmap   <C-O>    <C-W>
+nmap   ;        a;<ESC>
+nmap   _        hea_<ESC>
+nmap   @        I//<ESC>
+nmap   (       lbi(<ESC>
+nmap   )       hea)<ESC>
