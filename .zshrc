@@ -108,41 +108,69 @@ alias lcd='pwd > $cdpipe'
 
 dirstacks="$HOME/.dirstacks/"
 alias lsds='find "$dirstacks" -name '"'stack*'"' | sort -r'
+function writewd () {
+	pwd
+	for dir in "${(@)dirstack}"
+	do
+		echo "$dir"
+	done
+}
+function readwd () {
+	IFS=$'\n'
+	dirstack=($(cat))
+	IFS="$oldIFS"
+	popd
+}
 function savewd () {
 	if test ${#dirstack} -eq 0 -a "$(pwd)" = "$(sh -c 'cd "$HOME" && pwd')"
 	then
 		return
 	fi
 	local file="$dirstacks/stack$(stamp)_$$"
-	pwd > $file
-	for dir in "${(@)dirstack}"
-	do
-		echo "$dir" >> $file
-	done
+	writewd > $file
 }
-
 function loadwd () {
 	lsds | awk -F/ '{ print NR, $NF }'
 	local count=$(lsds | wc -l)
 	local choice
+	local show
+	local file
 	echo ""
 	while read 'choice?Load: '
 	do
-		if test -z "$choice"
-		then
-			choice=1
-		elif test 0 -ge "$choice" -o "$count" -lt "$choice"
+		show=false
+		eval $(echo x"$choice" | awk '
+			/^x$/ { printf("choice=1\n"); next; }
+			/^xx$/ { printf("return\n"); next; }
+			/^x[0-9]+$/ {
+				printf("choice=%d\n",
+					substr($0, 2));
+				next;
+			}
+			/^x\?[0-9]+$/ {
+				printf("show=true;choice=%d\n",
+					substr($0, 3));
+				next;
+			}
+			{ printf("choice=-1\n"); }
+		')
+
+		if $show || test 0 -ge "$choice" -o "$count" -lt "$choice"
 		then
 			lsds | awk -F/ '{ print NR, $NF }'
 			count=$(lsds | wc -l)
 			echo ""
+			if $show
+			then
+				file="$(lsds | tail +$choice | head -1)"
+				echo "$file":
+				echo ""
+				cat $file
+				echo ""
+			fi
 		else
-			local file="$(lsds | tail +$choice | head -1)"
-			cd "$(head -1 "$file")"
-			local oldIFS="$IFS"
-			IFS=$'\n'
-			dirstack=($(tail +2 "$file"))
-			IFS="$oldIFS"
+			file="$(lsds | tail +$choice | head -1)"
+			readwd < "$file"
 			return
 		fi
 	done
@@ -156,6 +184,9 @@ function cleanwd () {
 	fi
 	lsds | tail +$pastmax | tr '\012' '\000' | xargs -0 rm
 }
+
+alias lwd='writewd > "$cdpipe"'
+alias wdl='readwd < "$cdpipe"'
 
 alias ..='cd ..'
 alias cd..='cd ..'
