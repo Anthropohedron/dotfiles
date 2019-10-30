@@ -359,7 +359,12 @@ function gtt () {
 	local ticketfile="$(git root)/.git/.ticket"
 	if test $# -gt 0
 	then
-		echo "$@" | tr ' ' ',' > $ticketfile
+		if test x"$1" = "x-"
+		then
+			rm -f "$ticketfile"
+		else
+			echo "$@" | tr ' ' ',' > "$ticketfile"
+		fi
 		return
 	fi
 	if test -r "$ticketfile"
