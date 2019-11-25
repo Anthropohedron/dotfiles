@@ -162,14 +162,14 @@ function loadwd () {
 			echo ""
 			if $show
 			then
-				file="$(lsds | tail +$choice | head -1)"
+				file="$(lsds | tail -n +$choice | head -1)"
 				echo "$file":
 				echo ""
 				cat $file
 				echo ""
 			fi
 		else
-			file="$(lsds | tail +$choice | head -1)"
+			file="$(lsds | tail -n +$choice | head -1)"
 			readwd < "$file"
 			return
 		fi
@@ -182,7 +182,7 @@ function cleanwd () {
 	then
 		pastmax=$(expr 1 + $1)
 	fi
-	lsds | tail +$pastmax | tr '\012' '\000' | xargs -0 rm
+	lsds | tail -n +$pastmax | tr '\012' '\000' | xargs -0 rm
 }
 
 alias lwd='writewd > "$cdpipe"'
