@@ -541,7 +541,12 @@ function fjs () {
 		-path './ext'     -prune \
 		-path './images'  -prune \
 		-path './WEB_INF' -prune \
-		-o \( -name '*.jsx' -o -name '*.js' \) \
+		-o \( \
+			-name '*.jsx' \
+			-o -name '*.js' \
+			-o -name '*.tsx' \
+			-o -name '*.ts' \
+		\) \
 		"$@"
 }
 function fcs () {
