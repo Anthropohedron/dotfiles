@@ -535,6 +535,7 @@ function fjs () {
 		shift
 	fi
 	find "$fpath" \
+		-path './node_modules' -prune \
 		-path './css'     -prune \
 		-path './docs'    -prune \
 		-path './extjs'   -prune \
