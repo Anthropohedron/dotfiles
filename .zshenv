@@ -32,6 +32,7 @@ function resetpath () {
 		$HOME/bin \
 		/usr/local/bin \
 		/usr/local/sbin \
+		$HOME/.yarn/bin \
 		$(cat $(platfile pathBefore) </dev/null) \
 		/usr/bin \
 		/bin \
