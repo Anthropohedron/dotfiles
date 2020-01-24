@@ -6,8 +6,8 @@ setopt SH_WORD_SPLIT
 unsetopt BG_NICE
 unsetopt HUP
 
-export KERNEL=$(echo $(uname -o 2>/dev/null || uname -s) | tr / -)
-export ARCH=`uname -m`
+export KERNEL=$(echo $(/bin/uname -o 2>/dev/null || /bin/uname -s) | /usr/bin/tr / -)
+export ARCH=`/bin/uname -m`
 function platfile () {
 	if test -r $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
 	then
@@ -27,18 +27,18 @@ function resetpath () {
 	oldIFS="$IFS"
 	IFS=$'\n'
 	path_items=(\
-		$(cat $(platfile pathPrepend) </dev/null) \
+		$(/bin/cat $(platfile pathPrepend) </dev/null) \
 		$(platfile bin) \
 		$HOME/bin \
 		/usr/local/bin \
 		/usr/local/sbin \
 		$HOME/.yarn/bin \
-		$(cat $(platfile pathBefore) </dev/null) \
+		$(/bin/cat $(platfile pathBefore) </dev/null) \
 		/usr/bin \
 		/bin \
 		/usr/sbin \
 		/sbin \
-		$(cat $(platfile pathAfter) </dev/null) \
+		$(/bin/cat $(platfile pathAfter) </dev/null) \
 	)
 	PATH=${(j/:/)${^~path_items}}
 	IFS="$oldIFS"
