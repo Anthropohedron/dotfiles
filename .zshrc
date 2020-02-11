@@ -129,53 +129,54 @@ function savewd () {
 	local file="$dirstacks/stack$(stamp)_$$"
 	writewd > $file
 }
-function loadwd () {
-	lsds | awk -F/ '{ print NR, $NF }'
+function internal_loadwd_handleChoice () {
 	local count=$(lsds | wc -l)
-	local choice
-	local show
+	local choice="$1"
+	local show=false
 	local file
-	echo ""
-	while read 'choice?Load: '
-	do
-		show=false
-		eval $(echo x"$choice" | awk '
-			/^x$/ { printf("choice=1\n"); next; }
-			/^xx$/ { printf("return\n"); next; }
-			/^x[0-9]+$/ {
-				printf("choice=%d\n",
-					substr($0, 2));
-				next;
-			}
-			/^x\?[0-9]+$/ {
-				printf("show=true;choice=%d\n",
-					substr($0, 3));
-				next;
-			}
-			{ printf("choice=-1\n"); }
-		')
+	eval $(echo x"$choice" | awk '
+		/^x$/ { printf("choice=1\n"); next; }
+		/^xx$/ { printf("return 1\n"); next; }
+		/^x[0-9]+$/ {
+			printf("choice=%d\n",
+				substr($0, 2));
+			next;
+		}
+		/^x\?[0-9]+$/ {
+			printf("show=true;choice=%d\n",
+				substr($0, 3));
+			next;
+		}
+		{ printf("choice=-1\n"); }
+	')
 
-		if $show || test 0 -ge "$choice" -o "$count" -lt "$choice"
+	if $show || test 0 -ge "$choice" -o "$count" -lt "$choice"
+	then
+		lsds | awk -F/ '{ print NR, $NF }'
+		count=$(lsds | wc -l)
+		echo ""
+		if $show
 		then
-			lsds | awk -F/ '{ print NR, $NF }'
-			count=$(lsds | wc -l)
-			echo ""
-			if $show
-			then
-				file="$(lsds | tail -n +$choice | head -1)"
-				echo "$file":
-				echo ""
-				cat $file
-				echo ""
-			fi
-		else
 			file="$(lsds | tail -n +$choice | head -1)"
-			readwd < "$file"
-			return
+			echo "$file":
+			echo ""
+			cat $file
+			echo ""
 		fi
+		return 0
+	else
+		file="$(lsds | tail -n +$choice | head -1)"
+		readwd < "$file"
+		return 1
+	fi
+}
+function loadwd () {
+	local choice=${1:-"invalid"}
+	#echo ""
+	while internal_loadwd_handleChoice "$choice" && read 'choice?Load: '
+	do
 	done
 }
-
 function cleanwd () {
 	local pastmax=6
 	if test $# -gt 0
