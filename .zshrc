@@ -126,7 +126,13 @@ function savewd () {
 	then
 		return
 	fi
-	local file="$dirstacks/stack$(stamp)_$$"
+	local file
+	if test -z "$1"
+	then
+		file="$dirstacks/stack$(stamp)_$$"
+	else
+		file="$dirstacks/stack_$1"
+	fi
 	writewd > $file
 }
 function internal_loadwd_handleChoice () {
