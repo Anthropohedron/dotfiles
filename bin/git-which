@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if test $# -ne 1
+then
+	echo "Usage: $0 <git command>" >&2
+	exit 1
+fi
+
+CMD=git-"$1"
+
+if PATH="$(git --exec-path)" command -v "$CMD" >/dev/null
+then
+	echo "$1: git build-in command"
+	exit 0
+elif command -v "$CMD"
+then
+	exit 0
+elif git config --get-regexp '^alias\.'"$1"'$' |\
+	cut -d. -f2- | sed -e 's/ /: aliased to /'
+then
+	exit 0
+fi
+
+echo "$1 not found"
+exit 1

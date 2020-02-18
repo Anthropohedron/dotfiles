@@ -328,6 +328,7 @@ function svl () {
 	svjs "$@" | xargs jslint
 }
 
+alias gw="git which"
 alias gst="git status"
 alias gitst="git status-relative-porcelain"
 alias gita="git add --all"
