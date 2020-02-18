@@ -10,13 +10,13 @@ CMD=git-"$1"
 
 if PATH="$(git --exec-path)" command -v "$CMD" >/dev/null
 then
-	echo "$1: git build-in command"
+	echo "$1: git built-in command"
 	exit 0
 elif command -v "$CMD"
 then
 	exit 0
 elif git config --get-regexp '^alias\.'"$1"'$' |\
-	cut -d. -f2- | sed -e 's/ /: aliased to /'
+	sed 's/^alias\.\([^\s]\+\)/\1: aliased to /'
 then
 	exit 0
 fi
