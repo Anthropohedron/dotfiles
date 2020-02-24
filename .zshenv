@@ -6,8 +6,12 @@ setopt SH_WORD_SPLIT
 unsetopt BG_NICE
 unsetopt HUP
 
-export KERNEL=$(echo $(/bin/uname -o 2>/dev/null || /bin/uname -s) | /usr/bin/tr / -)
-export ARCH=`/bin/uname -m`
+function binuname () {
+	/bin/uname "$@" 2>/dev/null || /usr/bin/uname "$@"
+}
+
+export KERNEL=$(echo $(binuname -o 2>/dev/null || binuname -s) | /usr/bin/tr / -)
+export ARCH=`binuname -m`
 function platfile () {
 	if test -r $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
 	then
