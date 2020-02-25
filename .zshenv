@@ -6,12 +6,11 @@ setopt SH_WORD_SPLIT
 unsetopt BG_NICE
 unsetopt HUP
 
-function binuname () {
-	/bin/uname "$@" 2>/dev/null || /usr/bin/uname "$@"
-}
+alias uname="$(PATH=/bin:/usr/bin command -v uname)"
+alias cat="$(PATH=/bin:/usr/bin command -v cat)"
 
-export KERNEL=$(echo $(binuname -o 2>/dev/null || binuname -s) | /usr/bin/tr / -)
-export ARCH=`binuname -m`
+export KERNEL=$(echo $(uname -o 2>/dev/null || uname -s) | /usr/bin/tr / -)
+export ARCH=`uname -m`
 function platfile () {
 	if test -r $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
 	then
@@ -31,18 +30,18 @@ function resetpath () {
 	oldIFS="$IFS"
 	IFS=$'\n'
 	path_items=(\
-		$(/bin/cat $(platfile pathPrepend) </dev/null) \
+		$(cat $(platfile pathPrepend) </dev/null) \
 		$(platfile bin) \
 		$HOME/bin \
 		/usr/local/bin \
 		/usr/local/sbin \
 		$HOME/.yarn/bin \
-		$(/bin/cat $(platfile pathBefore) </dev/null) \
+		$(cat $(platfile pathBefore) </dev/null) \
 		/usr/bin \
 		/bin \
 		/usr/sbin \
 		/sbin \
-		$(/bin/cat $(platfile pathAfter) </dev/null) \
+		$(cat $(platfile pathAfter) </dev/null) \
 	)
 	PATH=${(j/:/)${^~path_items}}
 	IFS="$oldIFS"
