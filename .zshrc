@@ -275,6 +275,15 @@ alias edenv="edtr ~/.zshenv"
 alias edssh="edtr ~/.ssh/config"
 alias edk="edtr ~/.ssh/known_hosts"
 
+function md5hostkey () {
+	if test $# -ne 1
+	then
+		echo "Usage: $funcstack[1] <ssh host>" >&2
+		return 1
+	fi
+	ssh-keyscan -t rsa "$1" | ssh-keygen -l -f - -E md5
+}
+
 alias elm=mutt
 if test -d $HOME/Maildir
 then
