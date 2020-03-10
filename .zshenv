@@ -6,8 +6,10 @@ setopt SH_WORD_SPLIT
 unsetopt BG_NICE
 unsetopt HUP
 
-alias uname="$(command -pv uname)"
-alias cat="$(command -pv cat)"
+unalias uname 2>/dev/null
+alias uname="$(PATH=/bin:/usr/bin command -v uname)"
+unalias cat 2>/dev/null
+alias cat="$(PATH=/bin:/usr/bin command -v cat)"
 
 export KERNEL=$(echo $(uname -o 2>/dev/null || uname -s) | /usr/bin/tr / -)
 export ARCH=`uname -m`
