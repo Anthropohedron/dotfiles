@@ -402,7 +402,10 @@ function gtt () {
 			}
 			printf("%s", str);
 		}
-		$2 ~ /^AB#[0-9]+$/ { print $2 }'
+		$2 ~ /^AB#[0-9]+$/ {
+			for (i=2;i<NF;++i) printf("%s,", $i);
+			print $NF;
+		}'
 }
 function gtc () {
 	if test $# -ge 0 && git cur >/dev/null 2>&1
