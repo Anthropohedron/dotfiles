@@ -215,11 +215,11 @@ function msh () {
 			whence -c $1
 			;;
 		command)
-			local cmd=`whence -p $1`
-			local filetype="`file -Lb $cmd`"
-			if expr "$filetype" : '.*script.*' >/dev/null
+			local cmd="`whence -p $1`"
+			local filetype="$(file -Lb "$cmd")"
+			if expr "$filetype" : '.*\(script\|text\).*' >/dev/null
 			then
-				$PAGER `whence -p $1`
+				$PAGER "$cmd"
 			else
 				echo "$cmd": "$filetype"
 			fi
