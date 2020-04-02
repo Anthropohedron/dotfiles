@@ -108,12 +108,26 @@ alias lcd='pwd > $cdpipe'
 
 dirstacks="$HOME/.dirstacks/"
 alias lsds='find "$dirstacks" -name '"'stack*'"' | sort -r'
+alias catdirstack='for d in "${(@)dirstack}"; do echo "$d"; done'
 function writewd () {
 	pwd
-	for dir in "${(@)dirstack}"
-	do
-		echo "$dir"
-	done
+	catdirstack
+}
+function sroll () {
+	awk -v count=${1:-"1"} '
+		NR <= count {lines[NR] = $0}
+		NR > count {print}
+		END {for (i=1;i<=count;++i) print lines[i]}'
+}
+if test $(whence -w rd | cut -d\  -f2) = alias
+then
+	unalias rd
+fi
+function rd () {
+	local oldIFS="$IFS"
+	IFS=$'\n'
+	dirstack=($(catdirstack | sroll "$@"))
+	IFS="$oldIFS"
 }
 function readwd () {
 	local oldIFS="$IFS"
@@ -201,7 +215,6 @@ alias cd..='cd ..'
 alias edtr=ddvim
 alias pd=pushd
 alias pop=popd
-alias rd='dirstack=("${(@)dirstack:1}" ${dirstack[1]})'
 
 alias w='whence -c'
 alias whichall='whence -c -a'
