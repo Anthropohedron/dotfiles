@@ -29,7 +29,7 @@ function platfile () {
 }
 
 function resetpath () {
-	oldIFS="$IFS"
+	local oldIFS="$IFS"
 	IFS=$'\n'
 	path_items=(\
 		$(cat $(platfile pathPrepend) </dev/null) \

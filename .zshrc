@@ -116,6 +116,7 @@ function writewd () {
 	done
 }
 function readwd () {
+	local oldIFS="$IFS"
 	IFS=$'\n'
 	dirstack=($(cat))
 	IFS="$oldIFS"
