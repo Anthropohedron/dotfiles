@@ -403,23 +403,22 @@ function gtt () {
 		cat "$ticketfile"
 		return
 	fi
-	git cur | awk -F '[-/,]' '
-		/^[a-zA-Z0-9]+\/([A-Z]+-[0-9]+)(,[A-Z]+-[0-9]+)*$/ {
-			count = (NF - 1) / 2;
-			str = "";
-			for (i=0; i<count; ++i) {
-				prj = $(i*2 + 2);
-				num = $(i*2 + 3);
-				if (!((prj ~ /^[A-Z]+$/) && (num ~ /^[0-9]+$/))) next;
-				if (i==0) str = prj "-" num;
-				else str = str "," prj "-" num;
+
+	local cur="$(git cur)"
+	echo "$cur" |\
+		sed -n \
+			-e 's/,/	/g' \
+			-e 's,^[a-z]\+/\([^/]\+\)\(/.*\)\?$,\1,p' |\
+		awk -F '[-]' '
+			BEGIN { RS="\t" }
+			($1 ~ /^[A-Z]+$/) && ($2 ~ /^[0-9]+$/) {
+				printf("%s-%s\t", $1, $2)
 			}
-			printf("%s", str);
-		}
-		$2 ~ /^AB#[0-9]+$/ {
-			for (i=2;i<NF;++i) printf("%s,", $i);
-			print $NF;
-		}'
+			$1 ~ /^AB#[0-9]+$/ {
+				printf("%s\t", $1)
+			}
+			END { printf("\n") }
+		' | tr '\011' ',' | sed 's/,$//'
 }
 function gtc () {
 	if test $# -ge 0 && git cur >/dev/null 2>&1
