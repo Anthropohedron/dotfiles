@@ -31,7 +31,7 @@ function platfile () {
 function resetpath () {
 	local oldIFS="$IFS"
 	IFS=$'\n'
-	path_items=(\
+	local path_items=(\
 		$(cat $(platfile pathPrepend) </dev/null) \
 		$(platfile bin) \
 		$HOME/bin \
@@ -46,6 +46,18 @@ function resetpath () {
 		$(cat $(platfile pathAfter) </dev/null) \
 	)
 	PATH=${(j/:/)${^~path_items}}
+	export PATH
+	local more_path_items=(\
+		$(platfile ifcommand |\
+			xargs -I X find X -maxdepth 1 -mindepth 1 -type d |\
+			sed 's,/.*/\([^/]\+\)$,command -v "\1" >/dev/null \&\& echo "&",' |\
+			sh)
+	)
+	if test ${#more_path_items} -gt 0
+	then
+		PATH=${(j/:/)${^~path_items}}:${(j/:/)${^~more_path_items}}
+		export PATH
+	fi
 	IFS="$oldIFS"
 }
 
