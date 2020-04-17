@@ -1,0 +1,46 @@
+#!/bin/sh
+
+usage () {
+	#TODO: recursive
+	echo "Usage: $0 <account/container/path...> <destination>" >&2
+	exit 1
+}
+
+if test $# -ne 2
+then
+	usage
+fi
+
+eval "$(echo "$1" | sed \
+	-e 's/^/ACCOUNT="/' \
+	-e 's,/,";CONTAINER=",' \
+	-e 's,/,";BLOB=",' \
+	-e 's/$/"/')"
+OUTFILE="$2"
+OUTDIR="$(dirname "$OUTFILE")"
+
+if test -z "$ACCOUNT" -o \
+	-z "$CONTAINER" -o \
+	-z "$BLOB" -o \
+	"$(echo "$BLOB" | sed 's/^.*\(.\)$/\1/')" = / -o \
+	-z "$OUTFILE" -o \
+	-d "$OUTFILE" -o \
+	! -d "$OUTDIR" -o \
+	! -w "$OUTDIR" -o \
+	! -x "$OUTDIR"
+then
+	usage
+fi
+
+if test "$(dirname "$OUTFILE")" != . && \
+	command -v cygpath >/dev/null
+then
+	OUTFILE="$(cygpath -wa "$(readlink -f "$OUTFILE")")"
+fi
+
+exec az.cmd storage blob download \
+	--auth-mode login \
+	--account-name "$ACCOUNT" \
+	-c "$CONTAINER" \
+	-n "$BLOB" \
+	-f "$OUTFILE"

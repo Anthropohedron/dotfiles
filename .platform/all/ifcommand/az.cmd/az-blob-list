@@ -1,0 +1,32 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 <account/container/path...>" >&2
+	exit 1
+}
+
+if test $# -ne 1
+then
+	usage
+fi
+
+eval "$(echo "$1" | sed \
+	-e 's/^/ACCOUNT="/' \
+	-e 's,/,";CONTAINER=",' \
+	-e 's,/,";BLOB=",' \
+	-e 's/$/"/')"
+
+if test -z "$ACCOUNT" -o \
+	-z "$CONTAINER" -o \
+	-z "$BLOB"
+then
+	usage
+fi
+
+az.cmd storage blob list \
+	--auth-mode login \
+	--prefix "$BLOB" \
+	--account-name "$ACCOUNT" \
+	-c "$CONTAINER" \
+	-o tsv --num-results '*' |\
+	cut -f 4

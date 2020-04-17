@@ -1,0 +1,52 @@
+#!/bin/sh
+
+usage () {
+	#TODO: recursive
+	echo "Usage: $0 <file> <account/container/path...>" >&2
+	exit 1
+}
+
+if test $# -ne 2
+then
+	usage
+fi
+
+eval "$(echo "$2" | sed \
+	-e 's/^/ACCOUNT="/' \
+	-e 's,/,";CONTAINER=",' \
+	-e 's,/,";BLOB=",' \
+	-e 's/$/"/')"
+INFILE="$1"
+
+if test -z "$ACCOUNT" -o \
+	-z "$CONTAINER" -o \
+	-z "$BLOB" -o \
+	"$(echo "$BLOB" | sed 's/^.*\(.\)$/\1/')" = / -o \
+	-d "$INFILE" -o \
+	! -r "$INFILE"
+then
+	usage
+fi
+
+MIME=$(file --mime-type "$INFILE" 2>/dev/null |\
+	cut -c$(expr 2 + $(echo "$INFILE" | wc -c))-)
+
+if test -n "$MIME"
+then
+	ARGS="--content-type $MIME"
+fi
+
+if test "$(dirname "$INFILE")" != . && \
+	command -v cygpath >/dev/null
+then
+	INFILE="$(cygpath -wa "$(readlink -f "$INFILE")")"
+fi
+
+exec az.cmd storage blob upload \
+	$ARGS \
+	--auth-mode login \
+	--account-name "$ACCOUNT" \
+	-c "$CONTAINER" \
+	-n "$BLOB" \
+	-f "$INFILE"
+
