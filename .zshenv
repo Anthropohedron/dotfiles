@@ -14,6 +14,10 @@ alias cat="$(PATH=/bin:/usr/bin command -v cat)"
 export KERNEL=$(echo $(uname -o 2>/dev/null || uname -s) | /usr/bin/tr / -)
 export ARCH=`uname -m`
 function platfile () {
+	if test -r $HOME/.platform/all/$1
+	then
+		echo $HOME/.platform/all/$1
+	fi
 	if test -r $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
 	then
 		echo $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
