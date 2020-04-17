@@ -18,7 +18,8 @@ then
 	git -C ~ submodule update
 fi
 
-if test -r ~/.zplug/init.zsh
+if test -r ~/.zplug/init.zsh && \
+	! command -v zplug >/dev/null
 then
 	source ~/.zplug/init.zsh
 
