@@ -32,37 +32,44 @@ function platfile () {
 	fi
 }
 
+function _BasePath () {
+	cat $(platfile pathPrepend) </dev/null
+	platfile bin
+	echo $HOME/bin
+	echo /usr/local/bin
+	echo /usr/local/sbin
+	echo $HOME/.yarn/bin
+	cat $(platfile pathBefore) </dev/null
+	echo /usr/bin
+	echo /bin
+	echo /usr/sbin
+	echo /sbin
+	cat $(platfile pathAfter) </dev/null
+}
+
+function _CondPath () {
+	platfile ifcommand |\
+		xargs -I X find X -maxdepth 1 -mindepth 1 -type d |\
+		sed 's,/.*/\([^/]\+\)$,command -v "\1" >/dev/null \&\& echo "&",' |\
+		sh
+}
+
+function _JoinPath () {
+	tr '\012' ':' | sed \
+		-e 's,~,'"$HOME",g \
+		-e 's/::\+//g' \
+		-e 's/:$//'
+}
+
 function resetpath () {
-	local oldIFS="$IFS"
-	IFS=$'\n'
-	local path_items=(\
-		$(cat $(platfile pathPrepend) </dev/null) \
-		$(platfile bin) \
-		$HOME/bin \
-		/usr/local/bin \
-		/usr/local/sbin \
-		$HOME/.yarn/bin \
-		$(cat $(platfile pathBefore) </dev/null) \
-		/usr/bin \
-		/bin \
-		/usr/sbin \
-		/sbin \
-		$(cat $(platfile pathAfter) </dev/null) \
-	)
-	PATH=${(j/:/)${^~path_items}}
+	PATH="$(_BasePath | _JoinPath)"
 	export PATH
-	local more_path_items=(\
-		$(platfile ifcommand |\
-			xargs -I X find X -maxdepth 1 -mindepth 1 -type d |\
-			sed 's,/.*/\([^/]\+\)$,command -v "\1" >/dev/null \&\& echo "&",' |\
-			sh)
-	)
-	if test ${#more_path_items} -gt 0
+	local more_path_items="$(_CondPath | _JoinPath)"
+	if test -n "$more_path_items"
 	then
-		PATH=${(j/:/)${^~path_items}}:${(j/:/)${^~more_path_items}}
+		PATH="$PATH":"$more_path_items"
 		export PATH
 	fi
-	IFS="$oldIFS"
 }
 
 umask 022
