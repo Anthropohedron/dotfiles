@@ -29,6 +29,7 @@ set nopaste
 set t_RV=
 set ttymouse=
 set mouse=
+set foldlevelstart=99
 if version >= 600
 	set foldtext=foldtext()
 "	source ~/.vim/cvsdiff.vim
