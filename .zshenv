@@ -50,7 +50,14 @@ function _BasePath () {
 function _CondPath () {
 	platfile ifcommand |\
 		xargs -I X find X -maxdepth 1 -mindepth 1 -type d |\
-		sed 's,/.*/\([^/]\+\)$,command -v "\1" >/dev/null \&\& echo "&",' |\
+		sed 's,^.*/\([^/]\+\)$,\1 &,' |\
+		awk '{
+			count = split($1, cmds, "@");
+			for (i=1; i<=count; ++i) {
+				printf("command -v %s >/dev/null && ", cmds[i]);
+			}
+			printf("echo %s\n", $2)
+		}' |\
 		sh
 }
 
