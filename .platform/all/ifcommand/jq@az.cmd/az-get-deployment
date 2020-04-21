@@ -1,0 +1,53 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 <resource group> <site>" >&2
+	exit 1
+}
+
+azloginfail () {
+	echo "There is an issue with your Azure login" >&2
+	echo "Please run 'az login' and try again" >&2
+	echo ""
+	usage
+}
+
+if test $# -ne 2
+then
+	usage
+fi
+
+subscription="$(az.cmd account show | jq -r .id)"
+
+if test $? -ne 0 -o -z "$subscription"
+then
+	azloginfail
+fi
+
+token="$(az.cmd account get-access-token | jq -r .accessToken)"
+
+if test $? -ne 0 -o -z "$token"
+then
+	azloginfail
+fi
+
+url="https://management.azure.com/subscriptions/$subscription/resourceGroups/$1/providers/Microsoft.Web/sites/$2/config/publishingcredentials/list?api-version=2016-08-01"
+
+deploy="$(curl -s -X POST -d @/dev/null \
+	-H "Authorization: Bearer $token" \
+	$url)"
+
+if test $? -ne 0 -o\
+	-z "$deploy" -o \
+	"$(echo "$deploy" | jq .error)" != null
+then
+	if test -z "$deploy"
+	then
+		echo "Request failed" >&2
+	else
+		echo "$deploy" | jq -r '.error.code,.error.message' >&2
+	fi
+else
+	echo "$deploy" | jq -r .properties.scmUri
+fi
+
