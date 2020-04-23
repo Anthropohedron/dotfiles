@@ -12,8 +12,8 @@ listoptions () {
 }
 
 selectaccount () {
-	az.cmd account set -s $(sed -n "$1"p $FILTEREDACCOUNTS | cut -f1)
-	exec az.cmd account show
+	az account set -s $(sed -n "$1"p $FILTEREDACCOUNTS | cut -f1)
+	exec az account show
 }
 
 if test $# -gt 1 -o "$(echo x"$1" | cut -c1-2)" = x-
@@ -25,7 +25,7 @@ ALLACCOUNTS=$(mktemp)
 FILTEREDACCOUNTS=$(mktemp)
 trap "rm -f $ALLACCOUNTS $FILTEREDACCOUNTS" EXIT
 
-az.cmd account list |\
+az account list |\
 	jq -r '.[]|[.id, .user.name, .name]|@tsv' > $ALLACCOUNTS
 
 if test $(wc -l < $ALLACCOUNTS) -eq 0

@@ -42,7 +42,7 @@ then
 	INFILE="$(cygpath -wa "$(readlink -f "$INFILE")")"
 fi
 
-exec az.cmd storage blob upload \
+exec az storage blob upload \
 	$ARGS \
 	--auth-mode login \
 	--account-name "$ACCOUNT" \

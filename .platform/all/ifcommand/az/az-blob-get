@@ -38,7 +38,7 @@ then
 	OUTFILE="$(cygpath -wa "$(readlink -f "$OUTFILE")")"
 fi
 
-exec az.cmd storage blob download \
+exec az storage blob download \
 	--auth-mode login \
 	--account-name "$ACCOUNT" \
 	-c "$CONTAINER" \

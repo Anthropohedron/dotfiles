@@ -23,7 +23,7 @@ then
 	usage
 fi
 
-az.cmd storage blob list \
+az storage blob list \
 	--auth-mode login \
 	--prefix "$BLOB" \
 	--account-name "$ACCOUNT" \

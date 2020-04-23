@@ -17,14 +17,14 @@ then
 	usage
 fi
 
-subscription="$(az.cmd account show | jq -r .id)"
+subscription="$(az account show | jq -r .id)"
 
 if test $? -ne 0 -o -z "$subscription"
 then
 	azloginfail
 fi
 
-token="$(az.cmd account get-access-token | jq -r .accessToken)"
+token="$(az account get-access-token | jq -r .accessToken)"
 
 if test $? -ne 0 -o -z "$token"
 then
