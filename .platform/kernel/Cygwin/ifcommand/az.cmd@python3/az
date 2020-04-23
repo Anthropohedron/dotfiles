@@ -1,0 +1,6 @@
+#!/bin/sh
+
+PYTHONPATH="$(dirname "$(dirname "$(command -v az.cmd)")")"/Lib/site-packages
+export PYTHONPATH
+
+exec python3 -m azure.cli "$@"
