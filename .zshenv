@@ -71,12 +71,16 @@ function _JoinPath () {
 function resetpath () {
 	PATH="$(_BasePath | _JoinPath)"
 	export PATH
+	local base_path="$PATH"
+	local prev_path_items=""
 	local more_path_items="$(_CondPath | _JoinPath)"
-	if test -n "$more_path_items"
-	then
-		PATH="$PATH":"$more_path_items"
+	while test "$prev_path_items" != "$more_path_items"
+	do
+		prev_path_items="$more_path_items"
+		PATH="$base_path":"$more_path_items"
 		export PATH
-	fi
+		more_path_items="$(_CondPath | _JoinPath)"
+	done
 }
 
 umask 022
