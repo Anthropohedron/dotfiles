@@ -1,0 +1,66 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 [regex]" >&2
+	exit 1
+}
+
+listoptions () {
+	 awk -F '	' '
+	 { printf("%2d. %s (%s)\n", NR, $3, $2) }
+	 ' $FILTEREDACCOUNTS
+}
+
+selectaccount () {
+	az.cmd account set -s $(sed -n "$1"p $FILTEREDACCOUNTS | cut -f1)
+	exec az.cmd account show
+}
+
+if test $# -gt 1 -o "$(echo x"$1" | cut -c1-2)" = x-
+then
+	usage
+fi
+
+ALLACCOUNTS=$(mktemp)
+FILTEREDACCOUNTS=$(mktemp)
+trap "rm -f $ALLACCOUNTS $FILTEREDACCOUNTS" EXIT
+
+az.cmd account list |\
+	jq -r '.[]|[.id, .user.name, .name]|@tsv' > $ALLACCOUNTS
+
+if test $(wc -l < $ALLACCOUNTS) -eq 0
+then
+	echo 'No accounts found. Are you logged in?' >&2
+	exit 1
+fi
+
+if test $# -eq 1
+then
+	grep "$1" $ALLACCOUNTS > $FILTEREDACCOUNTS
+else
+	cp $ALLACCOUNTS $FILTEREDACCOUNTS
+fi
+
+case $(wc -l < $FILTEREDACCOUNTS) in
+	0) echo "No matching accounts" >&2; exit 1 ;;
+	1) selectaccount 1 ;;
+	*) listoptions ;;
+esac
+
+while true
+do
+	echo ""
+	echo -n "Select: "
+	read choice
+	case "$choice" in
+		q) exit ;;
+		''|*[!0-9]*) listoptions ;;
+		*)
+			if test $choice -gt 0 -a \
+				$choice -le $(wc -l < $FILTEREDACCOUNTS)
+			then
+				selectaccount $choice
+			fi
+	esac
+done
+
