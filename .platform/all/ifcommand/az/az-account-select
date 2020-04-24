@@ -25,8 +25,8 @@ ALLACCOUNTS=$(mktemp)
 FILTEREDACCOUNTS=$(mktemp)
 trap "rm -f $ALLACCOUNTS $FILTEREDACCOUNTS" EXIT
 
-az account list |\
-	jq -r '.[]|[.id, .user.name, .name]|@tsv' > $ALLACCOUNTS
+az account list -o tsv --query \
+	'[].{ id: id, user: user.name, name: name }' > $ALLACCOUNTS
 
 if test $(wc -l < $ALLACCOUNTS) -eq 0
 then

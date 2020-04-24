@@ -1,0 +1,29 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 <resource group> <site>" >&2
+	exit 1
+}
+
+azloginfail () {
+	echo "There is an issue with your Azure login" >&2
+	echo "Please run 'az login' and try again" >&2
+	echo ""
+	usage
+}
+
+if test $# -ne 2
+then
+	usage
+fi
+
+az functionapp deployment list-publishing-credentials --query \
+	"{
+		deployUsername: publishingUserName,
+		deployPassword: publishingPassword,
+		deployUrl: scmUri
+	}" \
+	--resource-group "$1" \
+	--name "$2" |\
+	sed -e 's,"https://[^@]*@,"https://,' \
+		-e '/deployUrl/s;/\?"\(,\?\)$;/api/zipdeploy"\1;'
