@@ -1,0 +1,8 @@
+#!/bin/sh
+
+(
+python3 -m azure.cli --version >/dev/null 2>&1 ||\
+echo "Azure CLI may not be installed; pip install azure.cli" >&2
+) &
+
+exec python3 -m azure.cli "$@"
