@@ -49,8 +49,7 @@ esac
 
 while true
 do
-	echo ""
-	echo -n "Select: "
+	printf '\nSelect: '
 	read choice
 	case "$choice" in
 		q) exit ;;
