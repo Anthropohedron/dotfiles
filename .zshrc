@@ -749,3 +749,4 @@ fi
 # end conditional aliases
 
 mkxsu
+trap savewd EXIT
