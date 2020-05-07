@@ -1,0 +1,27 @@
+#!/bin/sh
+
+CMD="$(command -v jmeter.cmd)"
+
+fail () {
+	echo "Something is wrong with Chocolatey jmeter.cmd" >&2
+	exit 1
+}
+
+if test $? -ne 0 -o -z "$ChocolateyInstall"
+then
+	fail
+fi
+
+CMDWINPATH="$ChocolateyInstall$(sed -n \
+	's/^@\?call %ChocolateyInstall%\(\\.*\)\\jmeter.bat\s.*$/\1/p' \
+	"$CMD")"
+CMDPATH="$(cygpath "$CMDWINPATH")"
+
+if test -z "$CMDWINPATH" \
+	-o -z "$CMDPATH" \
+	-o ! -x "$CMDPATH"/jmeter
+then
+	fail
+fi
+
+exec "$CMDPATH"/jmeter "$@"
