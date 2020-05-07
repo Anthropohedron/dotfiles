@@ -57,3 +57,5 @@
 	insteadOf = github:
 [url "ssh://github443/"]
 	insteadOf = https://github.com/
+[include]
+	path = ~/.local/gitconfig
