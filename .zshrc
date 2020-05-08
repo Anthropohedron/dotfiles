@@ -563,12 +563,12 @@ else
 fi
 
 function fjs () {
-	fpath="${1:-"."}"
+	local findpath="${1:-"."}"
 	if test $# -gt 0
 	then
 		shift
 	fi
-	find "$fpath" \
+	find "$findpath" \
 		-path './node_modules' -prune \
 		-path './css'     -prune \
 		-path './docs'    -prune \
@@ -585,12 +585,12 @@ function fjs () {
 		"$@"
 }
 function fcs () {
-	fpath="${1:-"."}"
+	local findpath="${1:-"."}"
 	if test $# -gt 0
 	then
 		shift
 	fi
-	find "$fpath" \
+	find "$findpath" \
 		-name '*.cs' "$@"
 }
 function cloc () {
@@ -613,21 +613,21 @@ function wiki () {
 alias bt=transmissioncli
 
 function ftilde () {
-	fpath="${1:-"."}"
+	local findpath="${1:-"."}"
 	if test $# -gt 0
 	then
 		shift
 	fi
-	find "$fpath" \
+	find "$findpath" \
 		-name '*~' "$@"
 }
 function rmtilde () {
-	fpath="${1:-"."}"
+	local findpath="${1:-"."}"
 	if test $# -gt 0
 	then
 		shift
 	fi
-	ftilde "$fpath" "$@" -print0 | xargs -0 -r rm
+	ftilde "$findpath" "$@" -print0 | xargs -0 -r rm
 }
 
 # end aliases
