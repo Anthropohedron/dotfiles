@@ -44,7 +44,6 @@ fi
 
 exec az storage blob upload \
 	$ARGS \
-	--auth-mode login \
 	--account-name "$ACCOUNT" \
 	-c "$CONTAINER" \
 	-n "$BLOB" \
