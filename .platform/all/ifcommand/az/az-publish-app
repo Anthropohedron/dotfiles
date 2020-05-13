@@ -14,24 +14,7 @@ then
 	usage
 fi
 
-SCMURI="$(az functionapp deployment list-publishing-credentials \
-	--query scmUri -o tsv \
+exec az functionapp deployment source config-zip \
 	--resource-group "$RESOURCEGROUP" \
-	--name "$APPSERVICE")"
-
-if test $? -ne 0 -o -z "$SCMURI"
-then
-	usage
-fi
-
-set -- -X POST --data-binary @"$PACKAGEFILE" "$SCMURI"/api/zipdeploy
-
-MIME="$(file --mime-type "$PACKAGEFILE" 2>/dev/null |\
-	cut -c$(expr 2 + $(echo "$PACKAGEFILE" | wc -c))-)"
-
-if test $? -eq 0 -a -n "$MIME"
-then
-	set -- -H "Content-Type: $MIME" "$@"
-fi
-
-exec curl "$@"
+	--name "$APPSERVICE" \
+	--src "$PACKAGEFILE"
