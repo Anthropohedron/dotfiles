@@ -1,0 +1,37 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 <resource group> <app service> <package>" >&2
+	exit 1
+}
+
+RESOURCEGROUP="$1"
+APPSERVICE="$2"
+PACKAGEFILE="$3"
+
+if test $# -ne 3 -o ! -r "$3"
+then
+	usage
+fi
+
+SCMURI="$(az functionapp deployment list-publishing-credentials \
+	--query scmUri -o tsv \
+	--resource-group "$RESOURCEGROUP" \
+	--name "$APPSERVICE")"
+
+if test $? -ne 0 -o -z "$SCMURI"
+then
+	usage
+fi
+
+set -- -X POST --data-binary @"$PACKAGEFILE" "$SCMURI"/api/zipdeploy
+
+MIME="$(file --mime-type "$PACKAGEFILE" 2>/dev/null |\
+	cut -c$(expr 2 + $(echo "$PACKAGEFILE" | wc -c))-)"
+
+if test $? -eq 0 -a -n "$MIME"
+then
+	set -- -H "Content-Type: $MIME" "$@"
+fi
+
+exec curl "$@"
