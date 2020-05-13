@@ -1,10 +1,18 @@
 #!/bin/sh
 
 usage () {
-	echo "Usage: $0 <storage account> <blob container> [timespan]" >&2
+	echo "Usage: $0 [-acdlrw] <storage account> <blob container> [timespan]" >&2
 	echo "Timespan examples: 20m, 2h, 31d; default: 1d"
 	exit 1
 }
+
+PERMARGS="--permissions r"
+case "x$1" in
+	x-[acdlrw]*)
+		PERMARGS="--permissions $(echo x$1 | cut -c3-)"
+		shift
+		;;
+esac
 
 test $# -gt 3 -o -z "$1" -o -z "$2" && usage
 
@@ -34,6 +42,7 @@ echo " + $(date +%s)" >> $TMPF
 EXPIRY=$(date -u -d @$(bc < $TMPF) +%FT%TZ)
 
 if ! az storage container generate-sas \
+	$PERMARGS \
 	--account-name $1 -n $2 --expiry $EXPIRY -o tsv \
 	2>$TMPF | sed 's/^./?&/'
 then
