@@ -6,3 +6,4 @@ build
 .vs
 *.user
 sleet.json
+params.json
