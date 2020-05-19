@@ -39,7 +39,6 @@ then
 fi
 
 exec az storage blob download \
-	--auth-mode login \
 	--account-name "$ACCOUNT" \
 	-c "$CONTAINER" \
 	-n "$BLOB" \
