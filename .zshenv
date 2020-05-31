@@ -13,22 +13,26 @@ alias cat="$(PATH=/bin:/usr/bin command -v cat)"
 
 export KERNEL=$(echo $(uname -o 2>/dev/null || uname -s) | /usr/bin/tr / -)
 export ARCH=`uname -m`
+PLATK="$HOME/.platform/kernel/$KERNEL"
+PLATAK="$HOME/.platform/arch-kernel/$ARCH-$KERNEL"
+PLATALL="$HOME/.platform/all"
+PLATLOCAL="$HOME/.local"
 function platfile () {
-	if test -r $HOME/.platform/all/$1
+	if test -r "$PLATALL"/$1
 	then
-		echo $HOME/.platform/all/$1
+		echo "$PLATALL"/$1
 	fi
-	if test -r $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
+	if test -r "$PLATAK"/$1
 	then
-		echo $HOME/.platform/arch-kernel/"$ARCH"-$KERNEL/$1
+		echo "$PLATAK"/$1
 	fi
-	if test -r $HOME/.platform/kernel/$KERNEL/$1
+	if test -r "$PLATK"/$1
 	then
-		echo $HOME/.platform/kernel/$KERNEL/$1
+		echo "$PLATK"/$1
 	fi
-	if test -r $HOME/.local/$1
+	if test -r "$PLATLOCAL"/$1
 	then
-		echo $HOME/.local/$1
+		echo "$PLATLOCAL"/$1
 	fi
 }
 
