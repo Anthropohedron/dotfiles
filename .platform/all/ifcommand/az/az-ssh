@@ -1,0 +1,42 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 <resource group> <webapp name> [subscription]" >&2
+	exit 1
+}
+
+if test $# -gt 3 -o $# -lt 2
+then
+	usage
+fi
+
+RG="$1"
+NAME="$2"
+if test -n "$3"
+then
+	SUBS="--subscription $3"
+fi
+
+if command -v az.cmd >/dev/null
+then
+	AZ=az.cmd
+else
+	AZ=az
+fi
+
+PORT=0
+while test $PORT -le 1024
+do
+	PORT=$(dd if=/dev/random bs=2 count=1 2>/dev/null |\
+		xxd -p -u | sed 's/^.*$/16i & p/' | dc)
+done
+
+echo ""
+echo "ssh -p $PORT root@localhost"
+echo ""
+$AZ webapp create-remote-connection \
+	-p $PORT \
+	-g "$RG" \
+	-n "$NAME" \
+	$SUBS
+
