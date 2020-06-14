@@ -623,11 +623,7 @@ function ftilde () {
 }
 function rmtilde () {
 	local findpath="${1:-"."}"
-	if test $# -gt 0
-	then
-		shift
-	fi
-	ftilde "$findpath" "$@" -print0 | xargs -0 -r rm
+	ftilde "$findpath" -type f -print0 | xargs -0 -r rm
 }
 
 # end aliases
