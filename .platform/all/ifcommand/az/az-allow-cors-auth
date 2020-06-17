@@ -1,0 +1,27 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 <resource group> <app name> [subscription]" >&2
+	exit 1
+}
+
+RESOURCEGROUP="$1"
+APPSERVICE="$2"
+SUBSCRIPTION="$3"
+
+if test $# -lt 2 -o $# -gt 3
+then
+	usage
+fi
+
+if test -n "$SUBSCRIPTION"
+then
+	SUBSCRIPTION="--subscription $SUBSCRIPTION"
+fi
+
+exec az resource update \
+	--name web --namespace Microsoft.Web --resource-type config \
+	--set properties.cors.supportCredentials=true \
+	$SUBSCRIPTION \
+	--resource-group "$RESOURCEGROUP" \
+	--parent sites/"$APPSERVICE"
