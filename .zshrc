@@ -151,6 +151,19 @@ function savewd () {
 	fi
 	writewd > $file
 }
+function setsavewd () {
+	test $# -eq 1 -a -n "$1" || return 1
+	_add_chpwd "savewd '$1'"
+	chpwd
+}
+function initwd () {
+	test $# -eq 1 -a -n "$1" || return 1
+	if test -e "$dirstacks/stack_$1"
+	then
+		cat "$dirstacks/stack_$1" | readwd
+	fi
+	setsavewd "$1"
+}
 function internal_loadwd_handleChoice () {
 	local count=$(lsds | wc -l)
 	local choice="$1"
@@ -645,6 +658,39 @@ function prompt_dirs () {
 	done
 }
 
+function _add_chpwd () {
+	local oldIFS="$IFS"
+	local tmpf=$(mktemp)
+	for func in "$chpwdfuncs[@]"
+	do
+		printf '%s\n' "$func" >> $tmpf
+	done
+	printf '%s\n' "$*" >> $tmpf
+	IFS=$'\n'
+	chpwdfuncs=($(sort -u $tmpf))
+	rm -f $tmpf
+	IFS="$oldIFS"
+}
+function _rm_chpwd () {
+	test $# -eq 1 -a -n "$1" || return 1
+	local oldIFS="$IFS"
+	local tmpf=$(mktemp)
+	for func in "$chpwdfuncs[@]"
+	do
+		printf '%s\n' "$func" >> $tmpf
+	done
+	IFS=$'\n'
+	chpwdfuncs=($(grep -v "$1" $tmpf))
+	rm -f $tmpf
+	IFS="$oldIFS"
+}
+
+function chpwd () {
+	for func in "$chpwdfuncs[@]"
+	do
+		eval "$func"
+	done
+}
 prompt="%m %~ %B%#%b "
 if test -n "$xprompt"
 then
@@ -660,9 +706,7 @@ then
 	}
 	if test "$xprompt" = title
 	then
-		function chpwd () {
-			print -nP '\033]0;%m: %~\007'
-		}
+		_add_chpwd "print -nP '\\033]0;%m: %~\\007'"
 		chpwd
 	fi
 else
