@@ -7,3 +7,4 @@ build
 *.user
 sleet.json
 params.json
+*.params.json
