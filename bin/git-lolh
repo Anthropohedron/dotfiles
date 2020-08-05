@@ -1,0 +1,27 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 [-<number>]" >&2
+	exit 1
+}
+
+if test $# -gt 1
+then
+	usage
+fi
+
+case x"$1" in
+	x) NLINES=5 ;;
+	x-[1-9]|x-[1-9][0-9]|x-[1-9][0-9][0-9]|x-[1-9][0-9][0-9][0-9])
+		NLINES=$(echo x"$1" | cut -c3-) ;;
+	*) usage ;;
+esac
+
+MAXLINES=$(git rev-list HEAD | wc -l)
+
+if test $MAXLINES -le $NLINES
+then
+	exec git lol
+fi
+
+exec git lol HEAD$(seq $NLINES | tr -d '[0-9]' | tr '\n' '^')..HEAD
