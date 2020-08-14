@@ -139,12 +139,14 @@ endif
 
 call plug#begin('~/.vim/plugged')
 Plug 'davidoc/taskpaper.vim'
-Plug 'keith/swift.vim'
+"Plug 'keith/swift.vim'
 Plug 'tpope/vim-fugitive'
 Plug 'xolox/vim-misc'
 Plug 'xolox/vim-easytags'
-Plug 'pangloss/vim-javascript'
-Plug 'maxmellon/vim-jsx-pretty'
+"Plug 'pangloss/vim-javascript'
+"Plug 'maxmellon/vim-jsx-pretty'
+Plug 'machakann/vim-swap'
+Plug 'sheerun/vim-polyglot'
 if filereadable(expand('$HOME/.local/vimplugins'))
 	source $HOME/.local/vimplugins
 endif
