@@ -2,8 +2,8 @@ set nobackup spell
 set comments=sr:<P>,mb:</P><P>,el:</P>,sr:/*,mb:*,el:*/,://,b:#,n:%,:XCOMM,n:>,n:}\ ,fb:-
 map   &r      :source ~/.vim/tb.vim
 imap         [...]
-imap  ©    --Greg
-imap  <C-g>    --Greg
+imap  ©    --Gregory
+imap  <C-g>    --Gregory
 map          :w
 map          cc[...]
 vmap          c[...]
