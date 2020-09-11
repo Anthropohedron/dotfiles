@@ -3,7 +3,12 @@ param (
 	[string]$file,
 	[switch]$WithDependencies
 )
-$assembly = [System.Reflection.Assembly]::ReflectionOnlyLoadFrom($file)
+try {
+	$assembly = [System.Reflection.Assembly]::ReflectionOnlyLoadFrom($file)
+}
+catch [System.Management.Automation.MethodInvocationException] {
+	$assembly = [System.Reflection.Assembly]::LoadFrom($file)
+}
 $version = $assembly.GetName().Version.ToString()
 
 echo "$file version is $version"
