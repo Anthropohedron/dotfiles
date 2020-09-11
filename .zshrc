@@ -568,7 +568,7 @@ else
 		unfunction mkxsu
 		if command -v zshsulogin >/dev/null
 		then
-			alias xsu="`zshsulogin zsh -l`"
+			alias xsu="`zshsulogin`"
 		else
 			alias xsu="echo Error: Define zshsulogin for this platform"
 		fi
