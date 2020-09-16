@@ -658,13 +658,16 @@ function prompt_dirs () {
 	done
 }
 
+function _ls_chpwd () {
+	for func in "$chpwdfuncs[@]"
+	do
+		printf '%s\n' "$func"
+	done
+}
 function _add_chpwd () {
 	local oldIFS="$IFS"
 	local tmpf=$(mktemp)
-	for func in "$chpwdfuncs[@]"
-	do
-		printf '%s\n' "$func" >> $tmpf
-	done
+	_ls_chpwd > $tmpf
 	printf '%s\n' "$*" >> $tmpf
 	IFS=$'\n'
 	chpwdfuncs=($(sort -u $tmpf))
@@ -675,10 +678,7 @@ function _rm_chpwd () {
 	test $# -eq 1 -a -n "$1" || return 1
 	local oldIFS="$IFS"
 	local tmpf=$(mktemp)
-	for func in "$chpwdfuncs[@]"
-	do
-		printf '%s\n' "$func" >> $tmpf
-	done
+	_ls_chpwd > $tmpf
 	IFS=$'\n'
 	chpwdfuncs=($(grep -v "$1" $tmpf))
 	rm -f $tmpf
