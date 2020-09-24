@@ -1,3 +1,4 @@
+# vim: set ft=xdefaults:
 XTerm*utf8: 1
 XTerm*Locale: UTF-8
 XTerm*VT100*utf8Fonts:  True
