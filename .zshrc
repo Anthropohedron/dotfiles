@@ -163,6 +163,7 @@ function initwd () {
 		cat "$dirstacks/stack_$1" | readwd
 	fi
 	setsavewd "$1"
+	HISTFILE="$dirstacks/.zsh_history_$1"
 }
 function internal_loadwd_handleChoice () {
 	local count=$(lsds | wc -l)

@@ -5,3 +5,4 @@ function pg () {
 	ps -efa | grep "$@"
 }
 unsetopt SHARE_HISTORY
+setopt INC_APPEND_HISTORY
