@@ -1,4 +1,4 @@
-set tw=75 incsearch hlsearch
+set tw=75 incsearch hlsearch expandtab
 nnoremap d;     dt;
 nnoremap <ESC>  <ESC>:noh<CR>
 nmap   <C-O>    <C-W>
