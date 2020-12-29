@@ -9,4 +9,4 @@ else
 	args="$args -nolisten tcp"
 fi
 
-exec /bin/run /bin/Xwin "$@" "$args"
+exec /bin/run /bin/Xwin "$@" $args
