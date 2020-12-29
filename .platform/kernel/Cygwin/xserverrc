@@ -1,10 +1,12 @@
 #!/bin/sh
 
-if command -v wsl >/dev/null
+args="-listen unix -nolisten inet6"
+wsl="/cygdrive/c/Windows/system32/wsl"
+if test -x "$wsl" && test $("$wsl" --list --running -v | wc -l) -gt 1
 then
-				args="-listen tcp -listen unix"
+	args="$args -listen tcp"
 else
-				args="-nolisten tcp"
+	args="$args -nolisten tcp"
 fi
 
 exec /bin/run /bin/Xwin "$@" "$args"

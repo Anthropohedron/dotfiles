@@ -11,27 +11,29 @@ PLATALL="$HOME/.platform/all"
 PLATLOCAL="$HOME/.local"
 
 firstexec () {
-				while test $# -gt 0
-				do
-								if test -x "$1"
-								then
-												echo "$1"
-												return
-								fi
-				done
+	while test $# -gt 0
+	do
+		if test -x "$1"
+		then
+			echo "$1"
+			return
+		else
+			shift
+		fi
+	done
 }
 
-server="$(firstexec
-				"$PLATLOCAL"/xserverrc
-				"$PLATAK"/xserverrc
-				"$PLATK"/xserverrc
-				"$PLATALL"/xserverrc
-				/etc/X11/xinit/xserverrc
-				/opt/local/bin/Xquartz
-				/opt/X11/bin/X
-				/usr/X11/bin/X
-				/usr/bin/X
-				)"
+server="$(firstexec \
+	"$PLATLOCAL"/xserverrc \
+	"$PLATAK"/xserverrc \
+	"$PLATK"/xserverrc \
+	"$PLATALL"/xserverrc \
+	/etc/X11/xinit/xserverrc \
+	/opt/local/bin/Xquartz \
+	/opt/X11/bin/X \
+	/usr/X11/bin/X \
+	/usr/bin/X \
+	)"
 
 if test -z "$server"
 then
