@@ -37,8 +37,8 @@ server="$(firstexec \
 
 if test -z "$server"
 then
-				echo "Cannot find an X11 server" >&2
-				exit 1
+	echo "Cannot find an X11 server" >&2
+	exit 1
 fi
 
 export PATH="$oldpath"

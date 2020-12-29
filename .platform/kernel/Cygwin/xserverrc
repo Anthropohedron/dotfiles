@@ -1,6 +1,6 @@
 #!/bin/sh
 
-args="-listen unix -nolisten inet6"
+args="-multiwindow -clipboard -emulate3buttons -nounixkill -nowinkill -listen unix -nolisten inet6"
 wsl="/cygdrive/c/Windows/system32/wsl"
 if test -x "$wsl" && test $("$wsl" --list --running -v | wc -l) -gt 1
 then
@@ -9,4 +9,4 @@ else
 	args="$args -nolisten tcp"
 fi
 
-exec /bin/run /bin/Xwin "$@" $args
+exec /bin/Xwin "$@" $args
