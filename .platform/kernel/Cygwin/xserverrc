@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if command -v wsl >/dev/null
+then
+				args="-listen tcp -listen unix"
+else
+				args="-nolisten tcp"
+fi
+
+exec /bin/run /bin/Xwin "$@" "$args"

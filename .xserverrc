@@ -1,0 +1,43 @@
+#!/bin/sh
+
+oldpath="$PATH"
+export PATH=/bin:/usr/bin
+
+KERNEL=$(echo $(uname -o 2>/dev/null || uname -s) | tr / -)
+ARCH=`uname -m`
+PLATK="$HOME/.platform/kernel/$KERNEL"
+PLATAK="$HOME/.platform/arch-kernel/$ARCH-$KERNEL"
+PLATALL="$HOME/.platform/all"
+PLATLOCAL="$HOME/.local"
+
+firstexec () {
+				while test $# -gt 0
+				do
+								if test -x "$1"
+								then
+												echo "$1"
+												return
+								fi
+				done
+}
+
+server="$(firstexec
+				"$PLATLOCAL"/xserverrc
+				"$PLATAK"/xserverrc
+				"$PLATK"/xserverrc
+				"$PLATALL"/xserverrc
+				/etc/X11/xinit/xserverrc
+				/opt/local/bin/Xquartz
+				/opt/X11/bin/X
+				/usr/X11/bin/X
+				/usr/bin/X
+				)"
+
+if test -z "$server"
+then
+				echo "Cannot find an X11 server" >&2
+				exit 1
+fi
+
+export PATH="$oldpath"
+exec "$server" "$@"
