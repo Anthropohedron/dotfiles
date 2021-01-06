@@ -4,5 +4,17 @@ alias ps=procps
 function pg () {
 	ps -efa | grep "$@"
 }
+function git () {
+	local gitexe="$(whence -p git)"
+	if test "$1" = "clone"
+	then
+		shift
+		set -- clone \
+			--config core.autocrlf=false \
+			--config core.filemode=false \
+			"$@"
+	fi
+	$gitexe "$@"
+}
 unsetopt SHARE_HISTORY
 setopt INC_APPEND_HISTORY
