@@ -7,9 +7,10 @@ for id in $HOME/.ssh/id_rsa
 do
 	if test -r $id
 	then
-		if ssh-add -l | grep $id >/dev/null
+		fingerprint="$(ssh-keygen -l -f $id | cut -d\  -f1-2)"
+		if ssh-add -l | grep '^'"$fingerprint" >/dev/null
 		then
-			false
+			false #NOOP
 		else
 			SSHID="$SSHID $id"
 		fi
