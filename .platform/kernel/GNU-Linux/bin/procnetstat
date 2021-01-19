@@ -1,17 +1,25 @@
 #!/bin/sh
 
 usage () {
-	echo "Usage: $0 [pid]" >&2
+	echo "Usage: $0 [-u] [pid]" >&2
 	exit 1
 }
 
+if test x"$1" = "x-u"
+then
+	proto=udp
+	shift
+else
+	proto=tcp
+fi
+
 case $# in
-	0) tcp=/proc/$(awk '/^PPid:/ {print $2}' /proc/$$/status)/net/tcp ;;
-	1) tcp=/proc/"$1"/net/tcp ;;
+	0) protofile=/proc/$(awk '/^PPid:/ {print $2}' /proc/$$/status)/net/$proto ;;
+	1) protofile=/proc/"$1"/net/$proto ;;
 	*) usage ;;
 esac
 
-test -r "$tcp" || usage
+test -r "$protofile" || usage
 
 # from https://staaldraad.github.io/2017/12/20/netstat-without-netstat/
 
@@ -35,5 +43,5 @@ awk '
 		return ret
 	} 
 	NR > 1 {{if(NR==2)print "Local - Remote";local=getIP($2);remote=getIP($3)}{print local" - "remote}}
-	' "$tcp"
+	' "$protofile"
 
