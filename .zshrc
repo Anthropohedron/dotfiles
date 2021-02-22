@@ -652,17 +652,18 @@ function rmtilde () {
 # end aliases
 # begin prompt
 
-function prompt_git () {
+function _prompt_git () {
 	local branch="$(git cur-pretty 2>/dev/null)"
 	if test -n "$branch"
 	then
 		echo '['"$fg[green]$branch$reset_color"'] '
 	fi
 }
-function prompt_dirs () {
-	(for dir in "$dirstack[@]"; do print "$dir"; done) |\
-		sed -f <(cat $(platfile promptdirs.sed)) \
-			-e 's/^/'"$fg[blue]|$reset_color "/
+function _prompt_dirs () {
+	(pwd; for dir in "$dirstack[@]"; do print "$dir"; done) |\
+		sed -f <(cat $(platfile -l promptdirs.sed)) \
+			-e '1s,^.*$,'"$bg_bold[cyan] & $reset_color," \
+			-e '2,$s/^/'"$fg[blue]|$reset_color "/
 }
 
 function _ls_chpwd () {
@@ -703,13 +704,13 @@ if test -n "$xprompt"
 then
 	function precmd () {
 		local NEWLINE=$'\n'
-		local COMMON="%m $(prompt_git)$bg_bold[cyan] %~ $reset_color${NEWLINE}"
+		local PREFIX=""
+		local COMMON="%m $(_prompt_git)$(_prompt_dirs)${NEWLINE}%# "
 		if test ${#dirstack} -gt 0
 		then
-			prompt="$fg_bold[blue]+$reset_color ${COMMON}$(prompt_dirs)${NEWLINE}%# "
-		else
-			prompt="${COMMON}%# "
+			PREFIX="$fg_bold[blue]+$reset_color "
 		fi
+		prompt="${PREFIX}${COMMON}"
 	}
 	if test "$xprompt" = title
 	then

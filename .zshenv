@@ -18,6 +18,16 @@ PLATAK="$HOME/.platform/arch-kernel/$ARCH-$KERNEL"
 PLATALL="$HOME/.platform/all"
 PLATLOCAL="$HOME/.local"
 function platfile () {
+	local LOCALFIRST=false
+	if test x"$1" = x-l
+	then
+		shift
+		LOCALFIRST=true
+	fi
+	if $LOCALFIRST && test -r "$PLATLOCAL"/$1
+	then
+		echo "$PLATLOCAL"/$1
+	fi
 	if test -r "$PLATALL"/$1
 	then
 		echo "$PLATALL"/$1
@@ -30,7 +40,7 @@ function platfile () {
 	then
 		echo "$PLATK"/$1
 	fi
-	if test -r "$PLATLOCAL"/$1
+	if ! $LOCALFIRST && test -r "$PLATLOCAL"/$1
 	then
 		echo "$PLATLOCAL"/$1
 	fi
