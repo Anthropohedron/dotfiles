@@ -98,6 +98,15 @@ then
 	mknod $cdpipe p || mkfifo $cdpipe
 	chmod 600 $cdpipe
 fi
+if test ! -d "$HOME/.local"
+then
+	mkdir "$HOME/.local"
+fi
+if test ! -r "$HOME/.local/promptdirs.sed"
+then
+	echo 's,^'"$HOME"',~,' > "$HOME/.local/promptdirs.sed"
+fi
+
 
 # begin aliases
 
@@ -651,12 +660,9 @@ function prompt_git () {
 	fi
 }
 function prompt_dirs () {
-	local dir=""
-	local NEWLINE=$'\n'
-	for dir in "$dirstack[@]"
-	do
-		echo -n "$NEWLINE$fg[blue]|$reset_color ${dir/#$HOME/~}"
-	done
+	(for dir in "$dirstack[@]"; do print "$dir"; done) |\
+		sed -f <(cat $(platfile promptdirs.sed)) \
+			-e 's/^/'"$fg[blue]|$reset_color "/
 }
 
 function _ls_chpwd () {
@@ -696,14 +702,14 @@ prompt="%m %~ %B%#%b "
 if test -n "$xprompt"
 then
 	function precmd () {
-		local SPACE=$'\n'
-		local PREFIX=""
-		local dirs="$(prompt_dirs)"
-		if test -n "$dirs"
+		local NEWLINE=$'\n'
+		local COMMON="%m $(prompt_git)$bg_bold[cyan] %~ $reset_color${NEWLINE}"
+		if test ${#dirstack} -gt 0
 		then
-			PREFIX="$fg_bold[blue]+$reset_color "
+			prompt="$fg_bold[blue]+$reset_color ${COMMON}$(prompt_dirs)${NEWLINE}%# "
+		else
+			prompt="${COMMON}%# "
 		fi
-		prompt="${PREFIX}%m $(prompt_git)$bg_bold[cyan] %~ $reset_color${dirs}${SPACE}%# "
 	}
 	if test "$xprompt" = title
 	then
