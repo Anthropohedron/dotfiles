@@ -1,0 +1,1 @@
+s,^~/.platform/all,\\$PLATALL,
