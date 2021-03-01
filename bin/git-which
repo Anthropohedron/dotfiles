@@ -16,7 +16,7 @@ elif command -v "$CMD"
 then
 	exit 0
 elif git config --get-regexp '^alias\.'"$1"'$' |\
-	sed 's/^alias\.\([^\s]\+\)/\1: aliased to /'
+	sed 's/^alias\.\([^ ]\+\)/\1: aliased to /'
 then
 	exit 0
 fi
