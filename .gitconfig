@@ -34,7 +34,7 @@
 	updated = cyan
 [pretty]
 	terse = tformat:%Cred%h%Creset %C(green)%cI%Creset <%C(bold blue)%an%C(reset)> %C(bold black)%s%Creset
-	lol = tformat:%Cred%h%Creset -%C(auto)%d%Creset %s %C(bold green)(%cr) %C(bold blue)<%an>%Creset
+	lol = tformat:%Cred%h%Creset -%C(auto)%d%Creset %s %C(bold green)(%ci) %C(bold blue)<%an>%Creset
 [alias]
 	wtf = blame -w
 	root = rev-parse --show-toplevel
