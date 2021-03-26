@@ -471,7 +471,7 @@ function gdcs () {
 	git diff "$@" "$ref"^.."$ref"
 }
 
-alias master="git checkout master"
+alias master='git checkout $(git default-branch 2>/dev/null || echo master)'
 alias ggg="git checkout"
 alias ggb="git checkout -b"
 alias ggh="git history"
