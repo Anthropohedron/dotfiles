@@ -1,0 +1,43 @@
+#!/bin/sh
+
+UNSAFE=/tmp/.X11-unix
+SAFE=/var/tmp/.X11-unix
+
+if test -d $SAFE -a ! -S $SAFE/X0
+then
+	rm -rf $SAFE
+fi
+
+if test -L $UNSAFE
+then
+	rm -f $UNSAFE
+	if test ! -S $SAFE/X0
+	then
+		echo "No X11 socket found" >&1
+		exit 1
+	fi
+elif test -S $UNSAFE/X0
+then
+	if test -S $SAFE/X0
+	then
+		echo "Cowardly not overwriting valid X11 socket" >&2
+		ls -l $UNSAFE/X0 $SAFE/X0 >&2
+		exit 2
+	fi
+	rm -rf $SAFE
+	mv $UNSAFE $SAFE
+fi
+
+if test -S $SAFE/X0 
+then
+	if test -e $UNSAFE
+	then
+		rm -rf $UNSAFE
+	fi
+	ln -s $SAFE $UNSAFE
+else
+	echo "No X11 socket found" >&1
+	exit 1
+fi
+
+ls -ld $SAFE $UNSAFE $SAFE/X0 $UNSAFE/X0
