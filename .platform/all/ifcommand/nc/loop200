@@ -1,0 +1,27 @@
+#!/bin/sh
+
+if test x"$1" = "x-l"
+then
+	LOCAL="-s 127.0.0.1"
+	shift
+fi
+if test $# -ne 1
+then
+	echo "Usage: $0 [-l] <port>" >&2
+	exit 1
+fi
+
+RESPONSE=$(mktemp -t 200response_XXXX.txt)
+trap "rm -f $RESPONSE" EXIT
+
+sed 's/$/\r/' >$RESPONSE <<EOF
+HTTP/1.1 200 OK
+Connection: Closed
+Content-Length: 0
+
+EOF
+
+while nc -l -p "$1" $LOCAL < $RESPONSE >/dev/null
+do
+	echo > /dev/null
+done
