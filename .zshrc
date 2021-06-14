@@ -79,7 +79,8 @@ setopt PROMPT_SUBST
 
 export CDPATH=.:~
 
-export HISTFILE=~/.zsh_history
+ORIG_HISTFILE=~/.zsh_history
+export HISTFILE=$ORIG_HISTFILE
 export SAVEHIST=500
 export HISTSIZE=500
 
@@ -173,6 +174,9 @@ function initwd () {
 	fi
 	setsavewd "$1"
 	HISTFILE="$dirstacks/.zsh_history_$1"
+	setopt SHARE_HISTORY
+	unsetopt INC_APPEND_HISTORY
+	unsetopt INC_APPEND_HISTORY_TIME
 }
 function internal_loadwd_handleChoice () {
 	local count=$(lsds | wc -l)
