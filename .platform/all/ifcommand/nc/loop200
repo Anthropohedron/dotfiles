@@ -2,7 +2,7 @@
 
 if test x"$1" = "x-l"
 then
-	LOCAL="-s 127.0.0.1"
+	LOCAL="127.0.0.1"
 	shift
 fi
 if test $# -ne 1
@@ -10,6 +10,7 @@ then
 	echo "Usage: $0 [-l] <port>" >&2
 	exit 1
 fi
+PORT=$1
 
 RESPONSE=$(mktemp -t 200response_XXXX.txt)
 trap "rm -f $RESPONSE" EXIT
@@ -21,7 +22,19 @@ Content-Length: 0
 
 EOF
 
-while nc -l -p "$1" $LOCAL < $RESPONSE >/dev/null
+if nc -h 2>&1 | grep "debug socket option" >/dev/null
+then
+	#BSD-ish
+	echo >/dev/null
+else
+	PORT="-p $PORT"
+	if test -n "$LOCAL"
+	then
+		LOCAL="-s $LOCAL"
+	fi
+fi
+
+while nc -l $LOCAL $PORT < $RESPONSE >/dev/null
 do
 	echo > /dev/null
 done
