@@ -1,0 +1,17 @@
+#!/bin/sh
+
+count=$#
+index=1
+while test $index -le $count
+do
+	arg="$1"
+	shift
+	if expr "$arg" : '^/cygdrive/' >/dev/null
+	then
+		arg="$(cygpath -w "$arg")"
+	fi
+	set -- "$@" "$arg"
+	index=$(expr $index + 1)
+done
+
+exec powershell "$@"
