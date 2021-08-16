@@ -15,7 +15,16 @@ TMPF=`mktemp`
 
 xauth "$@" nextract $TMPF "$OLDDISP"
 
-awk -v 'newhost='`echo "$NEWHOST" | tr -d '\012' | xxd -p` '{
+if test -z "$(echo "$NEWHOST" | tr -d '[.0-9]')"
+then
+	#IP address
+	NEWHOSTHEX="$(printf '%02x%02x%02x%02x' $(echo "$NEWHOST" | tr . ' '))"
+else
+	#hostname
+	NEWHOSTHEX="$(printf '%s' "$NEWHOST" | xxd -p)"
+fi
+
+awk -v 'newhost='"$NEWHOSTHEX" '{
 	$2 = sprintf("%04x", length(newhost)/2);
 	$3 = newhost;
 	print;
