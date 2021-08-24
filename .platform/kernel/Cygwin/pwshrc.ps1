@@ -4,6 +4,7 @@
 
 function Set-Title([string]$title) { $host.ui.RawUI.WindowTitle = $title }
 Set-Alias -Name:"title" -Value:"Set-Title" -Description:"" -Option:"None"
+Set-Alias -Name:"which" -Value:"Get-Command" -Description:"" -Option:"None"
 
 if ($host.Name -eq 'ConsoleHost')
 {
