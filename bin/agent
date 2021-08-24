@@ -16,6 +16,35 @@ fi
 
 authsock=$HOME/.ssh/authsock
 authpid=$HOME/.ssh/authpid
+
+if test -z "$SSH_ASKPASS"
+then
+	if test -z "$SSH_CLIENT" -a\
+		-x $HOME/Applications/SSHAskPassword.app/Contents/MacOS/SSHAskPassword
+	then
+		SSH_ASKPASS=$HOME/Applications/SSHAskPassword.app/Contents/MacOS/SSHAskPassword
+	elif test -z "$SSH_CLIENT" -a \
+		-x /Applications/SSHAskPassword.app/Contents/MacOS/SSHAskPassword
+	then
+		SSH_ASKPASS=/Applications/SSHAskPassword.app/Contents/MacOS/SSHAskPassword
+	elif test ! -z "$DISPLAY"
+	then
+		for askpass in \
+			/usr/libexec/openssh/x11-ssh-askpass \
+			/usr/bin/ssh-askpass \
+			/usr/libexec/openssh/ssh-askpass \
+			/usr/libexec/gnome-ssh-askpass \
+			/usr/bin/ksshaskpass \
+			/usr/bin/razor-openssh-askpass
+		do
+			if test -z "$SSH_ASKPASS" -a -x $askpass
+			then
+				SSH_ASKPASS=$askpass
+			fi
+		done
+	fi
+fi
+
 if kill -CONT `cat $authpid` 2>/dev/null && \
 	test -f $authsock -a -O "`cat $authsock`" -a -S "`cat $authsock`"
 then
@@ -26,6 +55,10 @@ then
 	chmod 700 $SSH_AUTH_SOCK
 	chmod 600 $authsock
 else
+	if test -n "$SSH_ASKPASS"
+	then
+		export SSH_ASKPASS
+	fi
 	eval `ssh-agent -s | grep -v '^echo'`
 	chmod 700 $SSH_AUTH_SOCK
 	echo $SSH_AUTH_SOCK > $authsock
@@ -33,11 +66,20 @@ else
 	echo $SSH_AGENT_PID > $authpid
 fi
 
+
 if test x$1 = x-s
 then
 	echo 'SSH_AUTH_SOCK='$SSH_AUTH_SOCK'; export SSH_AUTH_SOCK;'
 	echo 'SSH_AGENT_PID='$SSH_AGENT_PID'; export SSH_AGENT_PID;'
+	if test -n "$SSH_ASKPASS"
+	then
+		echo 'SSH_ASKPASS='$SSH_ASKPASS'; export SSH_ASKPASS;'
+	fi
 else
 	echo 'setenv SSH_AUTH_SOCK '$SSH_AUTH_SOCK';'
 	echo 'setenv SSH_AGENT_PID '$SSH_AGENT_PID';'
+	if test -n "$SSH_ASKPASS"
+	then
+		echo 'setenv SSH_ASKPASS '$SSH_ASKPASS';'
+	fi
 fi
