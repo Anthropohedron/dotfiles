@@ -161,6 +161,9 @@ function savewd () {
 	fi
 	writewd > $file
 }
+function clearsavewd () {
+	_rm_chpwd '^savewd '
+}
 function setsavewd () {
 	test $# -eq 1 -a -n "$1" || return 1
 	_add_chpwd "savewd '$1'"
@@ -168,6 +171,7 @@ function setsavewd () {
 }
 function initwd () {
 	test $# -eq 1 -a -n "$1" || return 1
+	clearsavewd
 	if test -e "$dirstacks/stack_$1"
 	then
 		cat "$dirstacks/stack_$1" | readwd
@@ -232,7 +236,11 @@ function cleanwd () {
 	then
 		pastmax=$(expr 1 + $1)
 	fi
-	lsds | tail -n +$pastmax | tr '\012' '\000' | xargs -0 rm
+	lsds | \
+		grep -v '^'"$dirstacks"stack_ | \
+		tail -n +$pastmax | \
+		tr '\012' '\000' | \
+		xargs -0 rm
 }
 
 alias lwd='writewd > "$cdpipe"'
