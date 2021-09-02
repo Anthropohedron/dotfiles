@@ -1,0 +1,73 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 [-b|-h|-s]... < <JWT data>"
+	exit 1
+}
+
+if test $# -gt 0
+then
+	BODY=0
+	HEADER=0
+	SIG=0
+	for arg in "$@"
+	do
+		case x"$arg" in
+			x-b) BODY=1 ;;
+			x-h) HEADER=1 ;;
+			x-s) SIG=1 ;;
+			*) usage ;;
+		esac
+	done
+else
+	BODY=1
+	HEADER=1
+	SIG=1
+fi
+
+if command -v jq >/dev/null
+then
+	PRETTY='| jq .'
+fi
+
+tr -d '[:space:]' | tr '_.-' '/ +' | awk \
+	-v "pretty=$PRETTY" \
+	-v "showBody=$BODY" \
+	-v "showHeader=$HEADER" \
+	-v "showSig=$SIG" \
+	'function pad(encoded) {
+		switch (length(encoded) % 4) {
+			case 0:
+				break;
+			case 1:
+				encoded = encoded "=";
+			case 2:
+				encoded = encoded "=";
+			case 3:
+				encoded = encoded "=";
+				break;
+		}
+		return encoded;
+	}
+	BEGIN {
+		jsonFormat = "echo %s | base64 -d %s;\n";
+		sigFormat = "echo %s | base64 -d | od -x;\n";
+		secFormat = ((showBody + showHeader + showSig) == 1) ?
+			"" : "echo \"\";\necho %s;\necho \"\";\n";
+	}
+	{ 
+		if (showHeader) {
+			printf(secFormat, "HEADER");
+			printf(jsonFormat, pad($1), pretty);
+		}
+		if (showBody) {
+			printf(secFormat, "BODY");
+			printf(jsonFormat, pad($2), pretty);
+		}
+		if (showSig) {
+			printf(secFormat, "SIGNATURE");
+			printf(sigFormat, pad($3));
+		}
+	}
+	' | sh
+
