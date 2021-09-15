@@ -164,6 +164,9 @@ function savewd () {
 function clearsavewd () {
 	_rm_chpwd '^savewd '
 }
+function getsavewd () {
+	_ls_chpwd | sed -n 's/^savewd '\''\([^'\'']\+\)'\''$/\1/p'
+}
 function setsavewd () {
 	test $# -eq 1 -a -n "$1" || return 1
 	_add_chpwd "savewd '$1'"
@@ -181,6 +184,26 @@ function initwd () {
 	setopt SHARE_HISTORY
 	unsetopt INC_APPEND_HISTORY
 	unsetopt INC_APPEND_HISTORY_TIME
+}
+function edwd () {
+	local wd="$(getsavewd)"
+	local stack="$dirstacks/stack_$wd"
+	if test ! -r "$stack"
+	then
+		echo "No session found" >&2
+		return
+	fi
+	local tmpf=$(mktemp)
+	cp "$stack" $tmpf
+	$EDITOR $tmpf
+	if test -r $tmpf && \
+		! diff "$stack" $tmpf >/dev/null 2>&1 && \
+		test $(wc -l < $tmpf) -gt 1
+	then
+		readwd < $tmpf
+		savewd "$wd"
+	fi
+	rm -f $tmpf 2>/dev/null
 }
 function internal_loadwd_handleChoice () {
 	local count=$(lsds | wc -l)
