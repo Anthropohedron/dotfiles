@@ -1,5 +1,6 @@
 alias open=cygstart
 alias sudo="cygstart --action=runas"
+alias cygsetup='cygwin_setup-x86_64 -n -M'
 alias ps=procps
 function pg () {
 	ps -efa | grep "$@"
