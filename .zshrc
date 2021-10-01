@@ -420,12 +420,18 @@ function gitam () {
 		tr '\012' '\000' |\
 		xargs -0 git add
 }
+function gitmc () {
+	gitst "$@" | grep '^UU' | cut -c4-
+}
 function gitm () {
 	gitst "$@" | grep '^\s\?[?AMU]' | cut -c4-
 }
 alias gitmr=gitm
 function gvi () {
-	ddvim -p `gitmr "$@"`
+	ddvim -p `gitm "$@"`
+}
+function gcvi () {
+	ddvim -p `gitmc "$@"`
 }
 function gitc () {
 	gitst "$@" | grep '^UU' | cut -c4-
@@ -440,7 +446,7 @@ function gvc () {
 	ddvim -p `gitcr "$@"`
 }
 function gitjs () {
-	gitmr "$@" | grep '\.js$'
+	gitm "$@" | grep '\.js$'
 }
 function gjl () {
 	gitjs "$@" | xargs jslint
