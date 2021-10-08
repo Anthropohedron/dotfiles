@@ -1,0 +1,144 @@
+#!/bin/sh
+
+usage () {
+	if test $# -gt 0
+	then
+		printf '%s\n\n' "$*" >&2
+	fi
+	echo "Usage: [profile regex]" >&2
+	exit 1
+}
+
+if test $# -gt 1 -o x"$1" = "x--help" -o x"$1" = "x-h"
+then
+	usage
+fi
+
+AWS_CONFIG_DIR="$HOME/.aws"
+AWS_CONFIG_FILE="$AWS_CONFIG_DIR/config"
+AWS_CRED_FILE="$AWS_CONFIG_DIR/credentials"
+AWS_SSO_DIR="$AWS_CONFIG_DIR/sso/cache"
+
+if test ! -r "$AWS_CONFIG_FILE"
+then
+	echo "Config file not found: '$AWS_CONFIG_FILE'" >&2
+	exit 1
+fi
+
+if test -e "$AWS_CRED_FILE" -a ! \( \
+	-r "$AWS_CRED_FILE" -a -w "$AWS_CRED_FILE" \
+	\)
+then
+	echo "Cannot read/write credentials: '$AWS_CRED_FILE'" >&2
+	exit 1
+fi
+
+TEMPF="$(mktemp)"
+trap "rm -f $TEMPF" EXIT
+
+sed -n 's/^\[profile\s\+\([^[:blank:]]\+\)]\s*$/\1/p' "$AWS_CONFIG_FILE" > "$TEMPF"
+
+if test $(wc -l < "$TEMPF") -eq 0
+then
+	echo "No profiles found in '$AWS_CONFIG_FILE'" >&2
+	exit 1
+fi
+
+if test $# -eq 1
+then
+	set -- -f "$1"
+fi
+
+PROFILE="$(list-select "$TEMPF" "$@" Select profile)"
+
+if test $? -ne 0 -o -z "$PROFILE"
+then
+	usage
+fi
+
+eval "$(awk -F '[=\r 	]+' -v "profileId=$PROFILE]" '
+	mode == 1 && $1 == "sso_account_id" {
+		printf("ACCOUNT_ID=%s;\n", $2)
+	}
+	mode == 1 && $1 == "sso_role_name" {
+		printf("ROLE_NAME=%s;\n", $2)
+	}
+	mode == 1 && $1 == "region" {
+		printf("REGION=%s;\n", $2)
+	}
+	$1 == "[profile" && $2 == profileId { mode = 1; next; }
+	/^\[/ { mode = 0 }
+	' "$AWS_CONFIG_FILE")"
+
+if test -z "$ACCOUNT_ID" -o -z "$ROLE_NAME" -o -z "$REGION"
+then
+	usage Could not find sso_account_id or sso_role_name or region
+fi
+
+if ! aws --no-cli-auto-prompt sso login --profile "$PROFILE"
+then
+	usage Login failed
+fi
+
+find "$AWS_SSO_DIR" -name '*.json' | grep './[0-9a-f]\+\.json$' > "$TEMPF"
+
+if test $(wc -l < "$TEMPF") -ne 1
+then
+	usage Unexpected difficulty finding access token JSON
+fi
+
+ACCESS_TOKEN="$(jq -r .accessToken "$(cat "$TEMPF")")"
+
+if test -z "$ACCESS_TOKEN" -o "$ACCESS_TOKEN" = "null"
+then
+	usage Could not get accessToken
+fi
+
+eval "$(aws --no-cli-auto-prompt \
+	sso get-role-credentials \
+	--region "$REGION" \
+	--account-id "$ACCOUNT_ID" \
+	--role-name "$ROLE_NAME" \
+	--access-token "$ACCESS_TOKEN" |\
+	jq -r '.roleCredentials | [
+		["aws_access_key_id", .accessKeyId],
+		["aws_session_token", .sessionToken],
+		["aws_secret_access_key", .secretAccessKey]
+	] | .[] | @tsv
+	' | sed -e 's/\t/=/' -e 's/$/;/')"
+
+if test -z "$aws_access_key_id" -o \
+	-z "$aws_session_token" -o \
+	-z "$aws_secret_access_key"
+then
+	usage Could not retrieve credentials
+fi
+
+if test ! -e "$AWS_CRED_FILE"
+then
+	cat > "$AWS_CRED_FILE" << "EOF"
+# vim: ft=dosini
+[default]
+EOF
+elif ! grep '^\[default]\s*$' "$AWS_CRED_FILE" >/dev/null
+then
+	cat >> "$AWS_CRED_FILE" << "EOF"
+
+[default]
+EOF
+fi
+
+cp "$AWS_CRED_FILE" "$TEMPF" && awk \
+	-v "id=aws_access_key_id = $aws_access_key_id" \
+	-v "session=aws_session_token = $aws_session_token" \
+	-v "secret=aws_secret_access_key = $aws_secret_access_key" '
+		/^\[default]\s*$/ {
+			print;
+			printf("%s\n%s\n%s\n\n", id, session, secret);
+			mode = 1;
+			next;
+		}
+		/^\[/ { mode = 0 }
+		mode == 0 { print }
+	' "$TEMPF" > "$AWS_CRED_FILE"
+
