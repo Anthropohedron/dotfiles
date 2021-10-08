@@ -1,0 +1,105 @@
+#!/bin/sh
+
+usage () {
+	if test $# -gt 0
+	then
+		echo "$*" >&2
+		echo "" >&2
+	fi
+	echo "Usage: $0 <choices file> [-f regex] <prompt...>" >&2
+	exit -1
+}
+
+if test $# -eq 0
+then
+	usage
+fi
+
+INPUT="$1"
+shift
+
+if test x"$INPUT" = "x-"
+then
+	if tty >/dev/null
+	then
+		usage No list input
+	fi
+elif test ! -r "$INPUT"
+then
+	usage
+fi
+
+CHOICES=$(mktemp)
+trap "rm -f $CHOICES" EXIT
+
+if test x"$1" = "x-f"
+then
+	if test $# -lt 2
+	then
+		usage
+	fi
+	grep "$2" "$INPUT" 2>/dev/null | grep -v '^\s*$' > "$CHOICES"
+	shift
+	shift
+	FILTERED=true
+else
+	grep -v '^\s*$' "$INPUT" > "$CHOICES" 2>/dev/null
+	FILTERED=false
+fi
+
+case $(wc -l < "$CHOICES") in
+	0) 
+		if $FILTERED
+		then
+			echo No choices found >&2
+			exit 1
+		else
+			usage No choices found
+		fi ;;
+	1)
+		if $FILTERED
+		then
+			cat "$CHOICES"
+			exit 0
+		fi ;;
+esac
+
+if ! tty >/dev/null 2>&1
+then
+	if test -r /dev/tty
+	then
+		exec 0</dev/tty
+	else
+		usage No TTY available
+	fi
+fi
+
+if test $# -gt 0
+then
+	PROMPT="$*"
+else
+	PROMPT="Select"
+fi
+
+listoptions () {
+	 awk '{ printf("%2d. %s\n", NR, $0) }' "$CHOICES" >&2
+}
+
+while true
+do
+	listoptions
+	printf '\n%s: ' "$PROMPT" >&2
+	read choice
+	case "$choice" in
+		q) exit 1 ;;
+		''|*[!0-9]*) ;;
+		*)
+			if test $choice -gt 0 -a \
+				$choice -le $(wc -l < $CHOICES)
+			then
+				sed -n "$choice"p "$CHOICES"
+				exit 0
+			fi
+	esac
+done
+
