@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 usage () {
 	test $# -gt 0 && printf '%s\n\n' "$*" >&2
@@ -57,7 +57,7 @@ then
 		}
 		{
 			fname=$NF;
-			sub("/[^/]*", "");
+			sub("/[^/]*$", "");
 			if ($0 == "") {
 				$0="/"
 				sep=""
@@ -75,7 +75,7 @@ then
 		FILE=""
 		DIR="$1"
 	fi
-	DIR="$(cd "$DIR" && pwd)"
+	DIR="$(cd "$DIR" >/dev/null 2>&1 && pwd)"
 else
 	DIR="$(pwd)"
 fi
