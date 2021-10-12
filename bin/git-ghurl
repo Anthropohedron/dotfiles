@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 usage () {
 	test $# -gt 0 && printf '%s\n\n' "$*" >&2
