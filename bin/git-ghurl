@@ -1,0 +1,112 @@
+#!/bin/sh
+
+usage () {
+	test $# -gt 0 && printf '%s\n\n' "$*" >&2
+	echo "Usage: $0 [-m] [path]" >&2
+	exit 1
+}
+
+p () {
+	printf '%s' "$*"
+}
+
+TMPF=$(mktemp)
+trap "rm -f $TMPF" EXIT
+
+if test x"$1" = "x-m"
+then
+	BRANCH="$(git-default-branch 2>/dev/null)"
+fi
+
+git remote -v 2>/dev/null > $TMPF
+
+if test $? -ne 0 -o $# -gt 1 -o x"$1" = "x-h" -o x"$1" = "x--help"
+then
+	usage
+fi
+
+eval "$(awk -v 'q="' '
+	/\<github\.com\>/ {
+		sub("\\.git$", "", $2);
+		repo=gensub("^.*\\<([^/]+/[^/]+)?$", "\\1", "g", $2);
+		printf("REPO=%s%s%s;\n",
+			q, repo, q);
+		exit 0;
+	}
+	' $TMPF)"
+
+if test -z "$REPO"
+then
+	usage "No GitHub remote found"
+fi
+
+ROOT="$(git rev-parse --show-toplevel)"
+ROOTLEN=$(p "$ROOT" | wc -c)
+
+if test $# -eq 1
+then
+	if test ! -e "$1"
+	then
+		usage "Path not found: '$1'"
+	fi
+	if test ! -d "$1"
+	then
+		eval $(p "$1" | awk -v 'q="' -F / '
+		NF == 1 {
+			
+		}
+		{
+			fname=$NF;
+			sub("/[^/]*", "");
+			if ($0 == "") {
+				$0="/"
+				sep=""
+			} else if ($0 == fname) {
+				$0="."
+				sep="/"
+			} else {
+				sep="/"
+			}
+			printf("FILE=%s%s%s%s;\nDIR=%s%s%s;\n",
+				q, sep, fname, q,
+				q, $0, q);
+		}')
+	else
+		FILE=""
+		DIR="$1"
+	fi
+	DIR="$(cd "$DIR" && pwd)"
+else
+	DIR="$(pwd)"
+fi
+
+if test x"$ROOT" != x"$(p "$DIR" | cut -c-$ROOTLEN)"
+then
+	usage "Prefix mismatch: '$DIR' is not under '$ROOT'"
+fi
+PATHSUFFIX="$(p "$DIR$FILE" | cut -c$(expr $ROOTLEN + 2)-)"
+
+if test -z "$BRANCH"
+then
+	BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+	if test "$BRANCH" = HEAD
+	then
+		BRANCH="$(git rev-parse HEAD)"
+	else
+		BRANCH="$(p "$BRANCH" | awk -F '' '
+		BEGIN {
+			for (i=0; i<256; ++i) {
+				c = sprintf("%c", i);
+				ord[c] = (c ~ "[[:alnum:]]") ? c : sprintf("%%%02X", i)
+			}
+		}
+		{
+			for (i=1; i<=NF; ++i) {
+				printf("%s", ord[$i])
+			}
+		}
+		')"
+	fi
+fi
+
+printf 'https://github.com/%s/blob/%s/%s\n' "$REPO" "$BRANCH" "$PATHSUFFIX"
