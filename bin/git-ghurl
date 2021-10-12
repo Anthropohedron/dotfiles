@@ -16,6 +16,7 @@ trap "rm -f $TMPF" EXIT
 if test x"$1" = "x-m"
 then
 	BRANCH="$(git-default-branch 2>/dev/null)"
+	shift
 fi
 
 git remote -v 2>/dev/null > $TMPF
