@@ -14,6 +14,6 @@ else
 	DIR=.
 fi
 
-find "$DIR" -name '*[cf]sproj' -print0 | xargs sed -i \
+find "$DIR" -name '*[cf]sproj' -print0 | xargs -0 sed -i \
 	's/\(<PackageReference\s\+Include="'"$1"'"\s\+Version=\)"[0-9.]\+[^"]*"/\1"'"$2"'"/'
 
