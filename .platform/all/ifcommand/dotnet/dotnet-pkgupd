@@ -1,0 +1,19 @@
+#!/bin/sh
+
+if test $# -lt 2 -o $# -gt 3
+then
+	echo "Usage: $0 [toplevel dir] <package regex> <new version>" >&2
+	exit 1
+fi
+
+if test $# -eq 3
+then
+	DIR="$1"
+	shift
+else
+	DIR=.
+fi
+
+find "$DIR" -name '*[cf]sproj' -print0 | xargs sed -i \
+	's/\(<PackageReference\s\+Include="'"$1"'"\s\+Version=\)"[0-9.]\+[^"]*"/\1"'"$2"'"/'
+
