@@ -59,14 +59,6 @@ setopt GLOB_COMPLETE
 setopt LIST_AMBIGUOUS
 setopt LIST_TYPES
 
-setopt SHARE_HISTORY
-setopt EXTENDED_HISTORY
-setopt HIST_FCNTL_LOCK
-setopt HIST_FIND_NO_DUPS
-setopt HIST_IGNORE_ALL_DUPS
-setopt HIST_NO_STORE
-setopt HIST_REDUCE_BLANKS
-
 setopt CORRECT
 setopt PRINT_EXIT_VALUE
 
@@ -79,10 +71,21 @@ setopt PROMPT_SUBST
 
 export CDPATH=.:~
 
-ORIG_HISTFILE=~/.zsh_history
-export HISTFILE=$ORIG_HISTFILE
-export SAVEHIST=500
-export HISTSIZE=500
+if test -z "$ORIG_HISTFILE"
+then
+	setopt SHARE_HISTORY
+	setopt EXTENDED_HISTORY
+	setopt HIST_FCNTL_LOCK
+	setopt HIST_FIND_NO_DUPS
+	setopt HIST_IGNORE_ALL_DUPS
+	setopt HIST_NO_STORE
+	setopt HIST_REDUCE_BLANKS
+
+	ORIG_HISTFILE=~/.zsh_history
+	export HISTFILE=$ORIG_HISTFILE
+	export SAVEHIST=500
+	export HISTSIZE=500
+fi
 
 #end options
 
