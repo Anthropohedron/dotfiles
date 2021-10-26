@@ -39,7 +39,7 @@
 	wtf = blame -w
 	root = rev-parse --show-toplevel
 	ignored = ls-files --others --ignored --exclude-standard
-	tags = tag -l --format='%(refname)\t%(creatordate:iso8601)'
+	tags = tag -l --sort=-creatordate --format='%(refname)\t%(creatordate:iso8601)'
 	confgrep = config --show-origin --get-regexp
 	cur = rev-parse --abbrev-ref HEAD
 	pick = cherry-pick
