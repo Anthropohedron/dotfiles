@@ -49,7 +49,32 @@ then
 	set -- -f "$1"
 fi
 
-PROFILE="$(list-select "$TEMPF" "$@" Select profile)"
+if command -v list-select >/dev/null
+then
+	PROFILE="$(list-select "$TEMPF" "$@" Select profile)"
+elif test $# -eq 2
+then
+	case $(grep -c -e "$2" "$TEMPF") in
+		0)
+			echo "No profiles match:" >&2
+			sed 's/^/\t/' "$TEMPF" >&2
+			usage Please try a different profile regex
+			;;
+		1) PROFILE="$(grep -e "$2" "$TEMPF")" ;;
+		*)
+			echo "Found multiple profiles:" >&2
+			grep -e "$2" "$TEMPF" | sed 's/^/\t/' >&2
+			usage Please use a '(more specific)' profile regex
+			;;
+	esac
+elif test $(wc -l < "$TEMPF") -ne 1
+then
+	echo "There are multiple profiles:" >&2
+	sed 's/^/\t/' "$TEMPF" >&2
+	usage Please use a profile regex
+else
+	PROFILE="$(cat "$TEMPF")"
+fi
 
 if test $? -ne 0 -o -z "$PROFILE"
 then
