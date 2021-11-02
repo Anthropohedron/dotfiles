@@ -88,7 +88,7 @@ eval "$(awk -F '[=\r 	]+' -v "profileId=$PROFILE]" '
 	mode == 1 && $1 == "sso_role_name" {
 		printf("ROLE_NAME=%s;\n", $2)
 	}
-	mode == 1 && $1 == "region" {
+	mode == 1 && $1 == "sso_region" {
 		printf("REGION=%s;\n", $2)
 	}
 	$1 == "[profile" && $2 == profileId { mode = 1; next; }
@@ -97,7 +97,7 @@ eval "$(awk -F '[=\r 	]+' -v "profileId=$PROFILE]" '
 
 if test -z "$ACCOUNT_ID" -o -z "$ROLE_NAME" -o -z "$REGION"
 then
-	usage Could not find sso_account_id or sso_role_name or region
+	usage Could not find sso_account_id or sso_role_name or sso_region
 fi
 
 if ! aws --no-cli-auto-prompt sso login --profile "$PROFILE"
