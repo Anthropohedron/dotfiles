@@ -1,9 +1,13 @@
 #!/bin/sh
 
+usage () {
+	echo "Usage: $0 <-a|-h|-m|-s> [--showdots]" >&2
+	exit 1
+}
+
 if test $# -eq 0
 then
-	echo "Usage: $0 <-a|-h|-s>" >&2
-	exit 1
+	usage
 fi
 
 case "$1" in
@@ -27,7 +31,6 @@ case "$1" in
 		sa-learn --spam --mbox "$@"
 		;;
 	*)
-		echo "Usage: $0 <-a|-s>" >&2
-		exit 1
+		usage
 		;;
 esac
