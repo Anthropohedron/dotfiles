@@ -696,11 +696,19 @@ function rmtilde () {
 # end aliases
 # begin prompt
 
+function _prompt_savewd () {
+	local wd="$(getsavewd)"
+	if test -n "$wd"
+	then
+		printf '(%s%s%s) ' "$fg[yellow]" "$wd" "$reset_color"
+	fi
+}
 function _prompt_git () {
 	local branch="$(git cur-pretty 2>/dev/null)"
-	if test -n "$branch"
+	if test -n "$branch" -a \
+		"$(git rev-parse --show-toplevel 2>/dev/null)" != "$HOME"
 	then
-		echo '['"$fg[green]$branch$reset_color"'] '
+		printf '[%s%s%s] ' "$fg[green]" "$branch" "$reset_color"
 	fi
 }
 function _prompt_dirs () {
@@ -749,7 +757,7 @@ then
 	function precmd () {
 		local NEWLINE=$'\n'
 		local PREFIX=""
-		local COMMON="%m $(_prompt_git)$(_prompt_dirs)${NEWLINE}%# "
+		local COMMON="%m $(_prompt_savewd)$(_prompt_git)$(_prompt_dirs)${NEWLINE}%# "
 		if test ${#dirstack} -gt 0
 		then
 			PREFIX="$fg_bold[blue]+$reset_color "
