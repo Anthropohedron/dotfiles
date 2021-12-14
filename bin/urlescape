@@ -1,0 +1,46 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 [-f]" >&2
+	exit 1
+}
+
+if test $# -gt 1
+then
+	usage
+fi
+
+x26='&'
+x2F='/'
+x3A=':'
+x3D='='
+x3F='?'
+x40='@'
+if test $# -eq 1
+then
+	if test x"$1" != "x-f"
+	then
+		usage
+	fi
+	x26='%26'
+	x2F='%2F'
+	x3A='%3A'
+	x3D='%3D'
+	x3F='%3F'
+	x40='%40'
+fi
+
+STR=''
+for ch in `od -t x1 | cut -s -d\  -f2- | tr '[a-f]' '[A-F]'`
+do
+	case $ch in
+		[01][0-9A-F]) ;;
+		26|2F|3A|3D|3F|40) STR="$STR""$(eval "printf '%s' \"\$x$ch\"")" ;;
+		3[0-9]|[46][1-9A-F]|[57][0-9A]|2[DE]|5F|7E)
+			STR="$STR""$(printf '\x'$ch)" ;;
+		*) STR="$STR"'%'"$ch" ;;
+	esac
+done
+
+printf '%s\n' "$STR"
+
