@@ -1,8 +1,14 @@
 # vim: set ft=make:
 
-SRCDIR=ssh_config.d
+BASEDIR=ssh_config.d
+PRIVATEDIR=$(HOME)/.dotprivate/ssh_config.d
+LOCALDIR=$(HOME)/.local/ssh_config.d
 
-config: $(SRCDIR) $(SRCDIR)/*.conf
+BASECONF=$(wildcard ssh_config.d/*.conf)
+PRIVATECONF=$(wildcard $(HOME)/.dotprivate/ssh_config.d/*.conf)
+LOCALCONF=$(wildcard $(HOME)/.local/ssh_config.d/*.conf)
+
+config: $(BASECONF) $(PRIVATECONF) $(LOCALCONF)
 	echo '# vim: set ft=sshconfig:' > $@
 	(                                          \
 		   command -v /usr/bin/xauth       \
@@ -13,6 +19,10 @@ config: $(SRCDIR) $(SRCDIR)/*.conf
 		|| command -v /usr/local/bin/xauth \
 		|| command -v xauth                \
 	) | sed 's/^/XAuthLocation /' >> $@
-	ls -1 $(SRCDIR)/*.conf | sort | xargs cat >> $@
+	ls -1 $^ | \
+		awk -F / '{ print $$NF " " $$0 }' | \
+		sort | \
+		cut -d\  -f2 | \
+		xargs cat >> $@
 	chmod 600 $@
 
