@@ -1,6 +1,6 @@
 *~
-[%.]*.swp
-.swp
+[%.]*.sw[op]
+.sw[op]
 *.bak
 build
 *Session*.vim

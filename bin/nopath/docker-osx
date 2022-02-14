@@ -1,0 +1,10 @@
+#!/bin/sh
+
+exec sudo docker run -it \
+    --device /dev/kvm \
+    -p 50922:10022 \
+    -p 5999:5999 \
+    -v /mnt/macOS/mac_hdd_ng_auto.img:/image \
+    -e TERMS_OF_USE=i_agree \
+    -e EXTRA="-display none -vnc 0.0.0.0:99,password=on" \
+    sickcodes/docker-osx:latest

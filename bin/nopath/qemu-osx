@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -eux
+
+BASE_DIR="${BASE_DIR:-/mnt/macOS/mediaserver}"
+IMAGE_PATH="${IMAGE_PATH:-"$BASE_DIR/mac_hdd_ng.img"}"
+VNCSOCK="${VNCSOCK:-"$BASE_DIR/.vncsock"}"
+NETWORKING="${NETWORKING:-"e1000-82545em"}"
+#MAC_ADDRESS="${MAC_ADDRESS:-"00:26:B0:DC:AB:FE"}"
+RAM=8
+
+case "${NETDEV:-"user"}" in
+	user) netdev="user,id=net0,ipv6=off" ;;
+	tap?) netdev="tap,id=net0,ifname=$NETDEV,script=no,downscript=no" ;;
+	*) echo "Bad NETDEV=\"$NETDEV\"" >&1; exit 1 ;;
+esac
+
+if test -n "${INSTALL_MEDIA:-""}"
+then
+	if test "$INSTALL_MEDIA" = default
+	then
+		INSTALL_MEDIA="$BASE_DIR/Monterey-BaseSystem.img"
+	fi
+	install_args="-drive id=InstallMedia,if=none,file=$INSTALL_MEDIA,format=${BASESYSTEM_FORMAT:-qcow2} -device ide-hd,bus=sata.3,drive=InstallMedia"
+	boot_menu="on"
+else
+	install_args=""
+	boot_menu="off"
+fi
+
+exec qemu-system-x86_64 -m ${RAM:-4}000 \
+	-cpu ${CPU:-Penryn},${CPUID_FLAGS:-vendor=GenuineIntel,+invtsc,vmware-cpuid-freq=on,+ssse3,+sse4.2,+popcnt,+avx,+aes,+xsave,+xsaveopt,check,} \
+	-machine q35,${KVM-"accel=kvm:tcg"} \
+	-smp ${CPU_STRING:-${SMP:-4},cores=${CORES:-4}} \
+	-usb -device usb-kbd -device usb-tablet \
+	-device isa-applesmc,osk=ourhardworkbythesewordsguardedpleasedontsteal\(c\)AppleComputerInc \
+	-drive if=pflash,format=raw,readonly=on,file=$BASE_DIR/OVMF_CODE.fd \
+	-drive if=pflash,format=raw,readonly=on,file=$BASE_DIR/OVMF_VARS-1024x768.fd \
+	-smbios type=2 \
+	-audiodev none,id=hda \
+	-device ich9-ahci,id=sata \
+	-drive id=OpenCoreBoot,if=none,snapshot=on,format=qcow2,file=${BOOTDISK:-$BASE_DIR/OpenCore.qcow2} \
+	-device ide-hd,bus=sata.2,drive=OpenCoreBoot \
+	-drive id=MacHDD,if=none,file=${IMAGE_PATH:-$BASE_DIR/mac_hdd_ng.img},format=${IMAGE_FORMAT:-qcow2} \
+	$install_args \
+	-device ide-hd,bus=sata.4,drive=MacHDD \
+	-netdev "$netdev" \
+	-device ${NETWORKING:-vmxnet3},netdev=net0,id=net0,mac=${MAC_ADDRESS:-52:54:00:09:49:17} \
+	-monitor none \
+	-boot menu=$boot_menu \
+	-vga vmware \
+	-name mediaserver \
+	-display none -vnc unix:$VNCSOCK,audiodev=hda
+
