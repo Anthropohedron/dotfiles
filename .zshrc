@@ -440,10 +440,15 @@ function gitc () {
 	gitst "$@" | grep '^UU' | cut -c4-
 }
 function gitcr () {
-	local count=$(git pwd | tr -cd / | wc -c)
-	gitst "$@" |\
-		grep '^UU' |\
-		sed 's,...\([^/]\+/\)\{'$count'\},,'
+	local count=$(expr $(git pwd | tr -cd / | wc -c) - 1)
+	if test $count -gt 0
+	then
+		gitst "$@" |\
+			sed -n 's,^UU.\([^/]\+/\)\{'$count'\},,p'
+	else
+		gitst "$@" |\
+			sed -n 's,^UU\s\+,,p'
+	fi
 }
 function gvc () {
 	ddvim -p `gitcr "$@"`
