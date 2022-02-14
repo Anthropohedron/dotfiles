@@ -1,5 +1,5 @@
 *~
-.*.swp
+[%.]*.swp
 .swp
 *.bak
 build
