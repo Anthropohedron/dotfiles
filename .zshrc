@@ -120,8 +120,8 @@ alias cdlf='cd "`xargs -0 dirname < $cdpipe`"'
 alias pdlf='pd "`xargs -0 dirname < $cdpipe`"'
 alias lcd='pwd > $cdpipe'
 
-dirstacks="$HOME/.dirstacks/"
-alias lsds='find "$dirstacks" -name '"'stack*'"' | sort -r'
+dirstacks="$HOME/.dirstacks"
+alias lswd='find "$dirstacks" -name '"'stack*'"' | sort -r'
 alias catdirstack='for d in "${(@)dirstack}"; do echo "$d"; done'
 function writewd () {
 	pwd
@@ -209,7 +209,7 @@ function edwd () {
 	rm -f $tmpf 2>/dev/null
 }
 function internal_loadwd_handleChoice () {
-	local count=$(lsds | wc -l)
+	local count=$(lswd | wc -l)
 	local choice="$1"
 	local show=false
 	local file
@@ -231,12 +231,12 @@ function internal_loadwd_handleChoice () {
 
 	if $show || test 0 -ge "$choice" -o "$count" -lt "$choice"
 	then
-		lsds | awk -F/ '{ print NR, $NF }'
-		count=$(lsds | wc -l)
+		lswd | awk -F/ '{ print NR, $NF }'
+		count=$(lswd | wc -l)
 		echo ""
 		if $show
 		then
-			file="$(lsds | tail -n +$choice | head -1)"
+			file="$(lswd | tail -n +$choice | head -1)"
 			echo "$file":
 			echo ""
 			cat $file
@@ -244,7 +244,7 @@ function internal_loadwd_handleChoice () {
 		fi
 		return 0
 	else
-		file="$(lsds | tail -n +$choice | head -1)"
+		file="$(lswd | tail -n +$choice | head -1)"
 		readwd < "$file"
 		return 1
 	fi
@@ -262,8 +262,8 @@ function cleanwd () {
 	then
 		pastmax=$(expr 1 + $1)
 	fi
-	lsds | \
-		grep -v '^'"$dirstacks"stack_ | \
+	lswd | \
+		grep -v '^'"$dirstacks/"stack_ | \
 		tail -n +$pastmax | \
 		tr '\012' '\000' | \
 		xargs -0 rm
