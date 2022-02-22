@@ -351,6 +351,14 @@ alias edenv="edtr ~/.zshenv"
 alias edssh="edtr ~/.ssh/config"
 alias edk="edtr ~/.ssh/known_hosts"
 
+if test "$HOST" != roadkill -a "$HOST" != "peterbilt"
+then
+	alias tun='tunnel; son anthropohedron.net'
+	alias tunr='tunnel -ms; son anthropohedron.net -port 443'
+	alias tunrr='tunnel -m; son anthropohedron.net'
+	alias tunw='tunnel -w; son anthropohedron.net -port 443'
+fi
+
 function md5hostkey () {
 	if test $# -ne 1
 	then

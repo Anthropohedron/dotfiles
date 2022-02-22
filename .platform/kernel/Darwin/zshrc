@@ -10,29 +10,3 @@ function p () {
 	qlmanage -p "$@" >/dev/null 2>&1 &
 }
 
-alias media='ssh -N media bin/nopath/donothing 1 > /dev/null &'
-alias tun='tunnel; son anthropohedron.net'
-alias tunh='tunnel -l; son 192.168.1.201'
-alias tunm='tunnel; son anthropohedron.net'
-alias tunr='tunnel -ms; son anthropohedron.net -port 443'
-alias tunrr='tunnel -m; son anthropohedron.net'
-alias tunw='tunnel -w; son anthropohedron.net -port 443'
-
-if test -L $HOME/work/firefox/latest-sdk
-then
-	function cfx () {
-		(
-		if test "$1" = "test"
-		then
-			set -- --static-args='{ "supportMockXPCOM": true }' "$@"
-		fi
-		unset DYLD_FORCE_FLAT_NAMESPACE
-		unset DYLD_INSERT_LIBRARIES
-		BASE=$HOME/work/firefox/latest-sdk
-		PATH="$BASE/bin":"$PATH" \
-			CUDDLEFISH_ROOT=$BASE \
-			PYTHONPATH="$BASE/python-lib":"$PYTHONPATH" \
-			$BASE/bin/cfx $staticArgs "$@"
-		)
-	}
-fi
