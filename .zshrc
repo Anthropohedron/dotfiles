@@ -184,6 +184,7 @@ function initwd () {
 	fi
 	setsavewd "$1"
 	HISTFILE="$dirstacks/.zsh_history_$1"
+	fc -R
 	setopt SHARE_HISTORY
 	unsetopt INC_APPEND_HISTORY
 	unsetopt INC_APPEND_HISTORY_TIME
