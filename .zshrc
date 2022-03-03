@@ -161,6 +161,7 @@ function savewd () {
 		file="$dirstacks/stack$(stamp)_$$"
 	else
 		file="$dirstacks/stack_$1"
+		fc -W
 	fi
 	writewd > $file
 }
