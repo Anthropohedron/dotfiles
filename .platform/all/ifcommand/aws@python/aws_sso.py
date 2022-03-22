@@ -9,6 +9,7 @@ from subprocess import check_call, check_output
 import sys
 ### Some things must be manually installed on Python2.7
 if sys.version_info.major == 2:
+    input = raw_input
     try:
         from configparser import ConfigParser
     except(ImportError):
@@ -132,7 +133,7 @@ if __name__ == "__main__":
         while selection < 1 or selection > profile_count:
             for n, p in enumerate(profiles):
                 print("\t%2d. %s" % (n+1, p))
-            selection = raw_input("Selection (or q to quit): ")
+            selection = input("Selection (or q to quit): ")
             if selection == "q":
                 sys.exit(0)
             try:
