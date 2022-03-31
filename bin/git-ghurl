@@ -98,7 +98,7 @@ then
 		BEGIN {
 			for (i=0; i<256; ++i) {
 				c = sprintf("%c", i);
-				ord[c] = (c ~ "[[:alnum:]]") ? c : sprintf("%%%02X", i)
+				ord[c] = (c ~ "[-_/.[:alnum:]]") ? c : sprintf("%%%02X", i)
 			}
 		}
 		{
