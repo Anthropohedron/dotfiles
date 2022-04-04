@@ -530,6 +530,38 @@ function gdcs () {
 	git diff "$@" "$ref"^.."$ref"
 }
 
+function gbr () {
+	local branch="$(git branch --show-current 2>/dev/null)"
+	if test -z "$branch"
+	then
+		echo "Not on a git branch" >&2
+		return 1
+	fi
+	local tmpf=$(mktemp)
+	printf %s "$branch" > $tmpf
+	$EDITOR $tmpf
+	if test ! -e $tmpf
+	then
+		echo "Temp file went missing"
+		return 1
+	fi
+	local newbranch="$(cat $tmpf)"
+	local lines="$(wc -l <$tmpf)"
+	rm -f $tmpf
+	if test x"$newbranch" = "x" -o x"$newbranch" = x"$branch"
+	then
+		echo "Unchanged"
+		return 0
+	fi
+	if test "$lines" -gt 1
+	then
+		echo "Rename the branch on a single line" >&2
+		return 1
+	fi
+	printf '+git branch -m "%s" "%s"\n' "$branch" "$newbranch"
+	git branch -m "$branch" "$newbranch"
+}
+
 alias master='git checkout $(git default-branch 2>/dev/null || echo master)'
 alias ggg="git checkout"
 alias ggb="git checkout -b"
