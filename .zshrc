@@ -295,7 +295,7 @@ function msh () {
 		command)
 			local cmd="`whence -p $1`"
 			local filetype="$(file -Lb "$cmd")"
-			if expr "$filetype" : '.*\(script\|text\).*' >/dev/null
+			if printf '%s\n' "$filetype"" | grep '.*\(script\|text\).*' >/dev/null
 			then
 				$PAGER "$cmd"
 			else
