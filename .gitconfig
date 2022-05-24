@@ -61,3 +61,6 @@
 	path = ~/.local/gitconfig
 [pull]
 	ff = only
+[merge]
+	conflictstyle = diff3
+
