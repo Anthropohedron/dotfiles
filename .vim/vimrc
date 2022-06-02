@@ -137,6 +137,7 @@ endif
 "	let spell_language_list = "american"
 "endif
 
+packadd matchit
 call plug#begin('~/.vim/plugged')
 Plug 'davidoc/taskpaper.vim'
 "Plug 'keith/swift.vim'
