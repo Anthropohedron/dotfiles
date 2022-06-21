@@ -527,7 +527,7 @@ function gdcs () {
 	else
 		local ref='stash@{0}'
 	fi
-	git diff "$@" "$ref"^.."$ref"
+	gdc "$@" "$ref"^.."$ref"
 }
 
 function gbr () {
@@ -570,7 +570,21 @@ function gg- () {
 	git checkout @{-"${1:-"1"}"}
 }
 alias gg..="git checkout -"
-alias gdc="git diff"
+
+_batcat=$(command -v bat || command -v batcat)
+if test -n "$_batcat" && $_batcat --version |\
+	awk -F '[ .]' '/^bat / { if (!($2 > 0 || $3 >= 20)) exit 1 }'
+then
+	function gdc () {
+		git diff "$@" --name-only --diff-filter=d |\
+			xargs $_batcat --diff
+	}
+else
+	function gdc () {
+		git diff "$@"
+	}
+fi
+
 alias gdf="git diff --name-status"
 alias gds="git diff --stat"
 function gthisweek () {
@@ -867,6 +881,9 @@ for s in $sourceExtra
 do
 	. $s
 done
+
+export BAT_THEME=ansi
+export BAT_STYLE=rule
 
 # begin conditional aliases
 
