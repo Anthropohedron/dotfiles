@@ -446,9 +446,6 @@ function gvi () {
 function gcvi () {
 	ddvim -p `gitmc "$@"`
 }
-function gitc () {
-	gitst "$@" | grep '^UU' | cut -c4-
-}
 function gitcr () {
 	local count=$(expr $(git pwd | tr -cd / | wc -c) - 1)
 	if test $count -gt 0
