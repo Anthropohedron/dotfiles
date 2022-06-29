@@ -571,17 +571,16 @@ function gg- () {
 }
 alias gg..="git checkout -"
 
+function gdc () {
+	git diff "$@"
+}
 _batcat=$(command -v bat || command -v batcat)
 if test -n "$_batcat" && $_batcat --version |\
 	awk -F '[ .]' '/^bat / { if (!($2 > 0 || $3 >= 20)) exit 1 }'
 then
-	function gdc () {
+	function gdbc () {
 		git diff "$@" --name-only --diff-filter=d |\
-			xargs $_batcat --diff
-	}
-else
-	function gdc () {
-		git diff "$@"
+			xargs -o $_batcat --diff --diff-context=3
 	}
 fi
 
