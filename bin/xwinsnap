@@ -48,8 +48,13 @@ then
 	eval "$(xwininfo -id "$WINDOW" | awk -F ': *' '
 		/Width:/ { printf("WIDTH=%d;\n", $2) }
 		/Height:/ { printf("HEIGHT=%d;\n", $2) }
-		/Absolute.* X:/ { printf("X=%d;\n", $2) }
-		/Absolute.* Y:/ { printf("Y=%d;\n", $2) }
+		/-geometry / { if (split($0, geom, "[+]") == 3) {
+			X=geom[2];
+			Y=geom[3];
+		} }
+		/Absolute.* X:/ { X=$2 }
+		/Absolute.* Y:/ { Y=$2 }
+		END { printf("X=%d;\nY=%d\n", X, Y) }
 		')"
 	xprop -id "$WINDOW" \
 		-f XWINSNAP_X 16c -set XWINSNAP_X $X
