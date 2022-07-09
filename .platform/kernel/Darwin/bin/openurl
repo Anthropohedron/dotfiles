@@ -9,7 +9,19 @@ export PATH
 
 if test $# -eq 0
 then
-	set `xselection PRIMARY`
+	if command -v xclip >/dev/null
+	then
+		set $(xclip -out)
+	elif command -v xsel >/dev/null
+	then
+		set $(xsel -o)
+	elif command -v xselection >/dev/null
+	then
+		set $(xselection PRIMARY)
+	else
+		echo "No access to X11 selection" >&2
+		exit 1
+	fi
 fi
 
 if test $# -gt 10
