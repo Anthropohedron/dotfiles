@@ -24,10 +24,13 @@ function loadConnections(filename) {
     }
     function makeFindFuzzy(obj, list, prefix) {
         return function(fuzzy) {
+            if (typeof(fuzzy) === "string") {
+                fuzzy = fuzzy.toLocaleLowerCase();
+            }
             var name = list.find(
                 (fuzzy instanceof RegExp) ?
                 i => fuzzy.test(i) :
-                i => i.indexOf(fuzzy) >= 0
+                i => i.toLocaleLowerCase().indexOf(fuzzy) >= 0
             );
             return name && obj[prefix+name]();
         }
