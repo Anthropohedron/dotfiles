@@ -32,6 +32,15 @@ function loadConnections(filename) {
             return name && obj[prefix+name]();
         }
     }
+    function fuzzyPath(path) {
+        const segments = path.split('.');
+        let obj = this;
+        for (let i=0; i<segments.length; ++i) {
+            if (!(obj && obj.fuzzy)) return null;
+            obj = obj.fuzzy(segments[i]);
+        }
+        return obj;
+    }
     function makeGettersByName(obj, list, prefix, byName) {
         const len = list.length;
         for (let i=0; i<len; ++i) {
@@ -39,6 +48,7 @@ function loadConnections(filename) {
             obj[prefix+name] = lazy(byName, name);
         }
         obj.fuzzy = makeFindFuzzy(obj, list, prefix);
+        obj.fuzzyPath = fuzzyPath;
     }
     function Database(db) {
         const prefix = "coll_";
