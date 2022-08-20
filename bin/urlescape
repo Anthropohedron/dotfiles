@@ -37,7 +37,7 @@ do
 		[01][0-9A-F]) ;;
 		26|2F|3A|3D|3F|40) STR="$STR""$(eval "printf '%s' \"\$x$ch\"")" ;;
 		3[0-9]|[46][1-9A-F]|[57][0-9A]|2[DE]|5F|7E)
-			STR="$STR""$(printf '\x'$ch)" ;;
+			STR="$STR""$(printf \\$(printf %o 0x$ch))" ;;
 		*) STR="$STR"'%'"$ch" ;;
 	esac
 done
