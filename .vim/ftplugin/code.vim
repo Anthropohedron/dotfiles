@@ -19,6 +19,9 @@ else
 	"imap   <C-U>    :cp<CR>
 endif
 inoremap <Tab> <C-P>
+if !exists("code_indent_is_reformat")
+	let code_indent_is_reformat=1
+endif
 if code_indent_is_reformat != 0
 	noremap   >>   ==
 	vmap   <Tab>   =
