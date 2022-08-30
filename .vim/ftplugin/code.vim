@@ -19,9 +19,11 @@ else
 	"imap   <C-U>    :cp<CR>
 endif
 inoremap <Tab> <C-P>
-noremap   >>   ==
-vmap   <Tab>   =
-vmap   <C-T>   =
+if code_indent_is_reformat != 0
+	noremap   >>   ==
+	vmap   <Tab>   =
+	vmap   <C-T>   =
+endif
 nmap   (       lbi(<ESC>
 nmap   )       hea)<ESC>
 nmap   <C-K>   ^d%

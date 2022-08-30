@@ -1,3 +1,5 @@
+let code_indent_is_reformat=0
+source ~/.vim/ftplugin/code.vim
 map @ 0i-- <ESC>
 set iskeyword=@,48-57,_,192-255
 set comments=:--
@@ -10,7 +12,7 @@ iabbr F FUNCTION
 iabbr R REFERENCES
 iabbr U UNIQUE
 iabbr II INSERT INTO
-inoreabbr V VALUES ();<Left><Left>
+inoreabbr v VALUES ();<Left><Left>
 iabbr n null
 iabbr nn not null
 iabbr dn default null
