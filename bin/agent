@@ -9,7 +9,8 @@ fi
 #echo "$0 was run on `tty`" > /dev/ttyp2
 
 #echo "SSH_AUTH_SOCK = $SSH_AUTH_SOCK" >&2
-if test ! -z "$SSH_AUTH_SOCK" -a -S "$SSH_AUTH_SOCK"
+if test ! -z "$SSH_AUTH_SOCK" -a -S "$SSH_AUTH_SOCK" ||\
+	ssh-add -l >/dev/null 2>/dev/null
 then
 	exit 0
 fi
