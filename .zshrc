@@ -31,6 +31,7 @@ then
 	    zplug install
 	fi
 	zplug load
+	resetpath
 fi
 
 zstyle ':completion:*' verbose yes
