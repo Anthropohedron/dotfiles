@@ -64,6 +64,11 @@
 	ff = only
 [merge]
 	conflictstyle = diff3
-
 [init]
 	defaultBranch = main
+[diff]
+	tool = ddvim
+[difftool]
+	prompt = false
+[difftool "ddvim"]
+	cmd = ddvim -f -d \"$LOCAL\" \"$REMOTE\"
