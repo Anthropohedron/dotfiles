@@ -285,6 +285,9 @@ alias w='whence -c'
 alias whichall='whence -c -a'
 alias m="$PAGER"
 
+function mjq () {
+	jq -C . "$1" | less -R
+}
 function msh () {
 	case `whence -w $1 | cut -d\  -f2` in
 		none)
