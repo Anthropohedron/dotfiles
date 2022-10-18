@@ -1,0 +1,3 @@
+# vi: ft=dosini
+[main]
+table_format = csv
