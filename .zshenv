@@ -17,6 +17,12 @@ PLATK="$HOME/.platform/kernel/$KERNEL"
 PLATAK="$HOME/.platform/arch-kernel/$ARCH-$KERNEL"
 PLATALL="$HOME/.platform/all"
 PLATLOCAL="$HOME/.local"
+PLATWSL=""
+if test -r /proc/version && grep -i microsoft /proc/version >/dev/null
+then
+	PLATWSL="$HOME/.platform/wsl2"
+fi
+
 function platfile () {
 	local LOCALFIRST=false
 	if test x"$1" = x-l
@@ -31,6 +37,10 @@ function platfile () {
 	if test -r "$PLATALL"/$1
 	then
 		echo "$PLATALL"/$1
+	fi
+	if test -n "$PLATWSL" -a -r "$PLATWSL"/$1
+	then
+		echo "$PLATWSL"/$1
 	fi
 	if test -r "$PLATAK"/$1
 	then

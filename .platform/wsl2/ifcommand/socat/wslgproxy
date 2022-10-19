@@ -1,0 +1,34 @@
+#!/bin/sh
+
+X11SOCKET=/tmp/.X11-unix/X0
+NETSH=/mnt/c/Windows/System32/netsh.exe
+ADDR="$(ip addr show |\
+	sed -n 's,^\s\+inet\s\+\([0-9.]\+\)/.*$,\1,p' |\
+	grep -v '^127\.0\.0\.1$')"
+
+if test ! -S "$X11SOCKET"
+then
+	echo "No X11 socket at '$X11SOCKET'!" >&2
+	exit 1
+fi
+if test ! -x "$NETSH"
+then
+	echo "Cannot find netsh at '$NETSH'!" >&2
+	exit 2
+fi
+if test -z "$ADDR"
+then
+	echo "Could not determine IP address" >&2
+	exit 3
+fi
+
+
+"$NETSH" interface portproxy add v4tov4 \
+	listenport=6000 \
+	listenaddress=127.0.0.1 \
+	connectport=6000 \
+	connectaddress="$ADDR"
+exec <&-
+exec >&-
+exec 2>&-
+nohup socat TCP-LISTEN:6000,reuseaddr,form UNIX-CONNECT:"$X11SOCKET" &
