@@ -636,6 +636,9 @@ then
 		DISPLAY=$(echo $DISPLAY | sed 's,^.*/com\.apple\.launchd[^:]*:,:,')
 		export DISPLAY
 	fi
+	function xrdbm () {
+		platfile Xresources | xargs -r -L 1 xrdb -merge
+	}
 	function mkxsu () {
 		unfunction mkxsu
 		if command -v zshsulogin >/dev/null
