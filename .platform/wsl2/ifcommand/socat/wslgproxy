@@ -2,9 +2,12 @@
 
 X11SOCKET=/tmp/.X11-unix/X0
 NETSH=/mnt/c/Windows/System32/netsh.exe
+NETSHPROXY="$NETSH interface portproxy"
 ADDR="$(ip addr show |\
 	sed -n 's,^\s\+inet\s\+\([0-9.]\+\)/.*$,\1,p' |\
 	grep -v '^127\.0\.0\.1$')"
+X11PORT=6000
+PROXYPORT=6000
 
 if test ! -S "$X11SOCKET"
 then
@@ -22,13 +25,27 @@ then
 	exit 3
 fi
 
+EXISTING_PROXY="$($NETSHPROXY show v4tov4 | sed -n \
+	's/^127\.0\.0\.1\s\+'"$X11PORT"'\s\+\([0-9.]\+\)\s\+\([0-9]\+\)\s*$/\1:\2/p')"
 
-"$NETSH" interface portproxy add v4tov4 \
-	listenport=6000 \
-	listenaddress=127.0.0.1 \
-	connectport=6000 \
-	connectaddress="$ADDR"
+if test "$EXISTING_PROXY" != "$ADDR":"$PROXYPORT"
+then
+	if test -n "$EXISTING_PROXY"
+	then
+		$NETSHPROXY delete v4tov4 \
+			listenport="$X11PORT" \
+			listenaddress=127.0.0.1 \
+			protocol=tcp
+	fi
+	$NETSHPROXY add v4tov4 \
+		listenport="$X11PORT" \
+		listenaddress=127.0.0.1 \
+		connectport="$PROXYPORT" \
+		connectaddress="$ADDR" \
+		protocol=tcp
+fi
+
 exec <&-
 exec >&-
 exec 2>&-
-nohup socat TCP-LISTEN:6000,reuseaddr,form UNIX-CONNECT:"$X11SOCKET" &
+nohup socat TCP-LISTEN:"$PROXYPORT",reuseaddr,fork UNIX-CONNECT:"$X11SOCKET" &
