@@ -2,11 +2,12 @@
 
 X11SOCKET=/tmp/.X11-unix/X0
 NETSH=/mnt/c/Windows/System32/netsh.exe
-NETSHPROXY="$NETSH interface portproxy"
+POWERSHELL=/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
 ADDR="$(ip addr show |\
 	sed -n 's,^\s\+inet\s\+\([0-9.]\+\)/.*$,\1,p' |\
 	grep -v '^127\.0\.0\.1$')"
 X11PORT=6000
+ADMINUSER="${WINDOWS_ADMIN_USER:-"Administrator"}"
 PROXYPORT=6000
 
 if test ! -S "$X11SOCKET"
@@ -19,25 +20,35 @@ then
 	echo "Cannot find netsh at '$NETSH'!" >&2
 	exit 2
 fi
+if test ! -x "$POWERSHELL"
+then
+	echo "Cannot find powershell at '$POWERSHELL!" >&2
+	exit 2
+fi
 if test -z "$ADDR"
 then
 	echo "Could not determine IP address" >&2
 	exit 3
 fi
 
-EXISTING_PROXY="$($NETSHPROXY show v4tov4 | sed -n \
+netshproxy () {
+	$POWERSHELL -Command \
+		'Start-Process netsh -verb runAs -ArgumentList { interface portproxy '"$*"' }'
+}
+
+EXISTING_PROXY="$($NETSH interface portproxy show v4tov4 | sed -n \
 	's/^127\.0\.0\.1\s\+'"$X11PORT"'\s\+\([0-9.]\+\)\s\+\([0-9]\+\)\s*$/\1:\2/p')"
 
 if test "$EXISTING_PROXY" != "$ADDR":"$PROXYPORT"
 then
 	if test -n "$EXISTING_PROXY"
 	then
-		$NETSHPROXY delete v4tov4 \
-			listenport="$X11PORT" \
+		netshproxy delete v4tov4 \
+			listenport=\"$X11PORT\" \
 			listenaddress=127.0.0.1 \
 			protocol=tcp
 	fi
-	$NETSHPROXY add v4tov4 \
+	netshproxy add v4tov4 \
 		listenport="$X11PORT" \
 		listenaddress=127.0.0.1 \
 		connectport="$PROXYPORT" \
