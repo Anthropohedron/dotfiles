@@ -6,13 +6,21 @@ setopt SH_WORD_SPLIT
 unsetopt BG_NICE
 unsetopt HUP
 
-unalias uname 2>/dev/null
-alias uname="$(PATH=/bin:/usr/bin command -v uname)"
-unalias cat 2>/dev/null
-alias cat="$(PATH=/bin:/usr/bin command -v cat)"
+_SHELL_BASICS="uname cat grep sed awk tr find xargs"
 
-export KERNEL=$(echo $(uname -o 2>/dev/null || uname -s) | /usr/bin/tr / -)
-export ARCH=`uname -m`
+function _alias_basics () {
+	local add_alias=$(test $# -gt 0 && echo true || echo false)
+	for cmd in $_SHELL_BASICS
+	do
+		unalias "$cmd" 2>/dev/null
+		$add_alias && alias "$cmd"="$(PATH=/bin:/usr/bin command -v "$cmd")"
+	done
+}
+
+_alias_basics -a
+
+export KERNEL=$(echo $(uname -o 2>/dev/null || uname -s) | tr / -)
+export ARCH=$(uname -m)
 PLATK="$HOME/.platform/kernel/$KERNEL"
 PLATAK="$HOME/.platform/arch-kernel/$ARCH-$KERNEL"
 PLATALL="$HOME/.platform/all"
@@ -59,10 +67,10 @@ function platfile () {
 function _BasePath () {
 	cat $(platfile pathPrepend) </dev/null
 	platfile bin
-	echo $HOME/bin
+	echo "$HOME"/bin
 	echo /usr/local/bin
 	echo /usr/local/sbin
-	echo $HOME/.yarn/bin
+	echo "$HOME"/.yarn/bin
 	cat $(platfile pathBefore) </dev/null
 	echo /usr/bin
 	echo /bin
@@ -82,7 +90,7 @@ function _CondPath () {
 			}
 			printf("echo %s\n", $2)
 		}' |\
-		sh
+		/bin/sh
 }
 
 function _JoinPath () {
@@ -113,6 +121,8 @@ then
 	systempath="$PATH"
 	resetpath
 fi
+
+_alias_basics
 
 eval `$HOME/bin/agent -s`
 
