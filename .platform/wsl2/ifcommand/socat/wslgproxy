@@ -1,5 +1,20 @@
 #!/bin/sh
 
+INSTALL=true
+REMOVE=false
+if test x"$1" = "x-r"
+then
+	shift
+	INSTALL=false
+	REMOVE=true
+fi
+
+if test $# -gt 0
+then
+	echo "Usage: $0 [-r]" >&2
+	exit 1
+fi
+
 X11SOCKET=/tmp/.X11-unix/X0
 NETSH=/mnt/c/Windows/System32/netsh.exe
 POWERSHELL=/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
@@ -10,25 +25,25 @@ X11PORT=6000
 ADMINUSER="${WINDOWS_ADMIN_USER:-"Administrator"}"
 PROXYPORT=6000
 
-if test ! -S "$X11SOCKET"
+if $INSTALL && test ! -S "$X11SOCKET"
 then
 	echo "No X11 socket at '$X11SOCKET'!" >&2
-	exit 1
+	exit 2
 fi
 if test ! -x "$NETSH"
 then
 	echo "Cannot find netsh at '$NETSH'!" >&2
-	exit 2
+	exit 3
 fi
 if test ! -x "$POWERSHELL"
 then
 	echo "Cannot find powershell at '$POWERSHELL!" >&2
-	exit 2
+	exit 4
 fi
-if test -z "$ADDR"
+if $INSTALL && test -z "$ADDR"
 then
 	echo "Could not determine IP address" >&2
-	exit 3
+	exit 5
 fi
 
 netshproxy () {
@@ -39,7 +54,7 @@ netshproxy () {
 EXISTING_PROXY="$($NETSH interface portproxy show v4tov4 | sed -n \
 	's/^127\.0\.0\.1\s\+'"$X11PORT"'\s\+\([0-9.]\+\)\s\+\([0-9]\+\)\s*$/\1:\2/p')"
 
-if test "$EXISTING_PROXY" != "$ADDR":"$PROXYPORT"
+if $REMOVE || test "$EXISTING_PROXY" != "$ADDR":"$PROXYPORT"
 then
 	if test -n "$EXISTING_PROXY"
 	then
@@ -48,13 +63,17 @@ then
 			listenaddress=127.0.0.1 \
 			protocol=tcp
 	fi
-	netshproxy add v4tov4 \
+	$INSTALL && netshproxy add v4tov4 \
 		listenport="$X11PORT" \
 		listenaddress=127.0.0.1 \
 		connectport="$PROXYPORT" \
 		connectaddress="$ADDR" \
 		protocol=tcp
 fi
+
+pkill -f "socat TCP-LISTEN:$PROXYPORT"
+
+$INSTALL || exit 0
 
 exec <&-
 exec >&-
