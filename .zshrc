@@ -707,7 +707,7 @@ function fjs () {
 		-path './ext'     -prune \
 		-path './images'  -prune \
 		-path './WEB_INF' -prune \
-		-o \( \
+		-o -type f \( \
 			-name '*.jsx' \
 			-o -name '*.js' \
 			-o -name '*.tsx' \
@@ -722,6 +722,7 @@ function fcs () {
 		shift
 	fi
 	find "$findpath" \
+		-type f \
 		-name '*.cs' "$@"
 }
 function cloc () {
@@ -750,6 +751,7 @@ function ftilde () {
 		shift
 	fi
 	find "$findpath" \
+		-type f \
 		-name '*~' "$@"
 }
 function rmtilde () {
