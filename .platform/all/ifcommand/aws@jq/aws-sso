@@ -105,7 +105,9 @@ then
 	usage Login failed
 fi
 
-find "$AWS_SSO_DIR" -name '*.json' | grep './[0-9a-f]\+\.json$' > "$TEMPF"
+find "$AWS_SSO_DIR" -name '*.json' |\
+	xargs grep -l '"accessToken"' |\
+	grep './[0-9a-f]\+\.json$' > "$TEMPF"
 
 if test $(wc -l < "$TEMPF") -ne 1
 then
