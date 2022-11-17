@@ -17,6 +17,10 @@ if sys.version_info.major == 2:
 else:
     from configparser import ConfigParser
 
+def has_access_key(filename):
+    with open(filename, "r") as f:
+        return '"accessToken"' in f.read()
+
 class AwsCliSso:
     """A class to collect AWS CLI SSO functionality.
 
@@ -105,6 +109,7 @@ class AwsCliSso:
         files = filter(self._.CACHE_REGEX.match, files)
         files = map(lambda f: path_join(self.sso_dir, f), files)
         files = filter(isfile, files)
+        files = filter(has_access_key, files)
         return list(files)
 
 
