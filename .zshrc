@@ -357,13 +357,25 @@ alias edenv="edtr ~/.zshenv"
 alias edssh="edtr ~/.ssh/config"
 alias edk="edtr ~/.ssh/known_hosts"
 
-if test "$HOST" != roadkill -a "$HOST" != "peterbilt"
-then
-	alias tun='tunnel; son anthropohedron.net'
-	alias tunr='tunnel -ms; son anthropohedron.net -port 443'
-	alias tunrr='tunnel -m; son anthropohedron.net'
-	alias tunw='tunnel -w; son anthropohedron.net -port 443'
-fi
+function swapagent () {
+	if test -z "$SSH_AUTH_SOCK" -o ! -S "$SSH_AUTH_SOCK"
+	then
+		eval `agent -s`
+	elif test -z "$SSH_ALT_SOCK"
+	then
+		SSH_ALT_SOCK="$SSH_AUTH_SOCK"
+		unset SSH_AUTH_SOCK
+		eval `agent -s`
+	else
+		if test "$SSH_AUTH_SOCK" = "$SSH_ALT_SOCK"
+		then
+			unset SSH_AUTH_SOCK
+			eval `agent -s`
+		else
+			export SSH_AUTH_SOCK="$SSH_ALT_SOCK"
+		fi
+	fi
+}
 
 function md5hostkey () {
 	if test $# -ne 1
