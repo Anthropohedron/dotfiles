@@ -628,6 +628,15 @@ function localip () {
 }
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 
+function mksshtoggle () {
+	local _prefix=$1
+	local _line=$2
+	unalias "$_prefix"on 2>/dev/null
+	unalias "$_prefix"off 2>/dev/null
+	alias "$_prefix"on='sed -i '\'$_line's/^#//'\'' $HOME/.ssh/authorized_keys'
+	alias "$_prefix"off='sed -i '\'$_line's/^[^#]/#&/'\'' $HOME/.ssh/authorized_keys'
+}
+
 if test -n "$DISPLAY"
 then
 	if test -z "$DISPLAY_ORIG"
