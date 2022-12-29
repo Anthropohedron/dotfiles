@@ -1,9 +1,9 @@
 #!/usr/bin/env pwsh
 
 param (
-	[Parameter(Mandatory,Position=0)]
+	[Parameter(Position=0)]
 	[string]
-	$SelectedProfile,
+	$SelectedProfile = "",
 	[System.IO.FileInfo]
 	[ValidateScript({ $_.Exists })]
 	$Profiles = (Join-Path (Join-Path $HOME ".local") "audioprofiles.ini")
@@ -27,7 +27,17 @@ function Ensure-Module {
 Ensure-Module AudioDeviceCmdlets
 Ensure-Module PsIni
 
-$profileConfig = (Get-IniContent $Profiles)[$SelectedProfile]
+$allProfiles = Get-IniContent $Profiles
+
+if (-not $allProfiles.Contains($SelectedProfile))
+{
+	Write-Output "Available profiles:"
+	$allProfiles.Keys | select { "`t$_" } |`
+		Format-Table -HideTableHeaders
+	return
+}
+
+$profileConfig = $allProfiles[$SelectedProfile]
 
 if ($profileConfig -eq $null)
 {
