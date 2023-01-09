@@ -1,11 +1,19 @@
 #!/usr/bin/env pwsh
 
 param (
-	[Parameter(Position=0)]
+	[Parameter(Position=0, ParameterSetName = "UseProfile")]
 	[string]
 	$SelectedProfile = "",
+	[Parameter(Mandatory, ParameterSetName = "CreateProfile")]
+	[string]
+	$NewProfile,
+	[Parameter(ParameterSetName = "CreateProfile")]
+	[switch]
+	$OverwriteProfile,
+	[Parameter(ParameterSetName = "UseProfile")]
+	[Parameter(ParameterSetName = "CreateProfile")]
 	[System.IO.FileInfo]
-	[ValidateScript({ $_.Exists })]
+	[ValidateScript({ $PSCmdlet.ParameterSetName -eq "CreateProfile" -or $_.Exists })]
 	$Profiles = (Join-Path (Join-Path $HOME ".local") "audioprofiles.ini")
 )
 
@@ -27,24 +35,41 @@ function Ensure-Module {
 Ensure-Module AudioDeviceCmdlets
 Ensure-Module PsIni
 
-$allProfiles = Get-IniContent $Profiles
-
-if (-not $allProfiles.Contains($SelectedProfile))
+function Get-AvailableAudioDevices
 {
-	Write-Output "Available profiles:"
-	$allProfiles.Keys | select { "`t$_" } |`
-		Format-Table -HideTableHeaders
-	return
+	$recording = [System.Collections.Generic.List[System.String]]::new()
+	$playback = [System.Collections.Generic.List[System.String]]::new()
+	Get-AudioDevice -List | foreach {
+		if ($_.Type -eq "Playback")
+		{
+			$playback.Add($_.Name)
+		}
+		elseif ($_.Type -eq "Recording")
+		{
+			$recording.Add($_.Name)
+		}
+	}
+	return $recording,$playback
 }
 
-$profileConfig = $allProfiles[$SelectedProfile]
-
-if ($profileConfig -eq $null)
-{
-	throw "Cannot find profile: '$SelectedProfile'"
+function Select-Option {
+	param (
+		[Parameter(Mandatory,Position=0)]
+		[string[]]$options,
+		[Parameter(Mandatory,Position=1)]
+		[string]$choicePrompt
+	)
+	[System.Management.Automation.Host.ChoiceDescription[]]$choices = `
+		$options | % {$index=0}{
+			$index++
+			"&$index $_"
+		}
+	$choice = $Host.UI.PromptForChoice("$choicePrompt", $null, $choices, -1)
+	$options[$choice]
 }
 
-function Get-NamedAudioDevices {
+function Get-NamedAudioDevices
+{
 	param (
 		[string]$Search,
 		[switch]$Like
@@ -59,53 +84,102 @@ function Get-NamedAudioDevices {
 	}
 }
 
-if (-not [string]::IsNullOrWhitespace($profileConfig.Both))
+function Use-AudioProfile
 {
-	if ($profileConfig.Search -eq "Like")
+	$allProfiles = Get-IniContent $Profiles
+	if (-not $allProfiles.Contains($SelectedProfile))
 	{
-		$devices = Get-NamedAudioDevices $profileConfig.Both -Like
+		Write-Output "Available profiles:"
+		$allProfiles.Keys | select { "`t$_" } |`
+			Format-Table -HideTableHeaders
+		return
+	}
+
+	$profileConfig = $allProfiles[$SelectedProfile]
+
+	if ($profileConfig -eq $null)
+	{
+		throw "Cannot find profile: '$SelectedProfile'"
+	}
+
+	if (-not [string]::IsNullOrWhitespace($profileConfig.Both))
+	{
+		if ($profileConfig.Search -eq "Like")
+		{
+			$devices = Get-NamedAudioDevices $profileConfig.Both -Like
+		}
+		else
+		{
+			$devices = Get-NamedAudioDevices $profileConfig.Both
+		}
+	}
+	elseif (-not ([string]::IsNullOrWhitespace($profileConfig.Input) -or `
+		[string]::IsNullOrWhitespace($profileConfig.Output)))
+	{
+		if ($profileConfig.Search -eq "Like")
+		{
+			$inputDevice = Get-NamedAudioDevices $profileConfig.Input -Like |`
+				where Type -CEQ "Recording"
+			$outputDevice = Get-NamedAudioDevices $profileConfig.Output -Like |`
+				where Type -CEQ "Playback"
+		}
+		else
+		{
+			$inputDevice = Get-NamedAudioDevices $profileConfig.Input |`
+				where Type -CEQ "Recording"
+			$outputDevice = Get-NamedAudioDevices $profileConfig.Output |`
+				where Type -CEQ "Playback"
+		}
+		$devices = $inputDevice,$outputDevice
 	}
 	else
 	{
-		$devices = Get-NamedAudioDevices $profileConfig.Both
+		throw "Invalid profile: '$SelectedProfile'"
 	}
-}
-elseif (-not ([string]::IsNullOrWhitespace($profileConfig.Input) -or `
-	[string]::IsNullOrWhitespace($profileConfig.Output)))
-{
-	if ($profileConfig.Search -eq "Like")
+
+	$inputId = $devices | where Type -CEQ "Recording" | select -ExpandProperty ID
+	$outputId = $devices | where Type -CEQ "Playback" | select -ExpandProperty ID
+
+	if ($inputId -isnot [string])
 	{
-		$inputDevice = Get-NamedAudioDevices $profileConfig.Input -Like |`
-			where Type -CEQ "Recording"
-		$outputDevice = Get-NamedAudioDevices $profileConfig.Output -Like |`
-			where Type -CEQ "Playback"
+		throw "Cannot find singular microphone in '$devices'"
+	}
+	if ($outputId -isnot [string])
+	{
+		throw "Cannot find singular speaker in '$devices'"
+	}
+
+	Set-AudioDevice -ID $inputId | Out-Null
+	Set-AudioDevice -ID $outputId -DefaultOnly | Out-Null
+}
+
+function Create-AudioProfile
+{
+	if ($Profiles.Exists)
+	{
+		$allProfiles = Get-IniContent $Profiles
 	}
 	else
 	{
-		$inputDevice = Get-NamedAudioDevices $profileConfig.Input |`
-			where Type -CEQ "Recording"
-		$outputDevice = Get-NamedAudioDevices $profileConfig.Output |`
-			where Type -CEQ "Playback"
+		$allProfiles = [System.Collections.Specialized.OrderedDictionary]::new()
 	}
-	$devices = $inputDevice,$outputDevice
-}
-else
-{
-	throw "Invalid profile: '$SelectedProfile'"
-}
-
-$inputId = $devices | where Type -CEQ "Recording" | select -ExpandProperty ID
-$outputId = $devices | where Type -CEQ "Playback" | select -ExpandProperty ID
-
-if ($inputId -isnot [string])
-{
-	throw "Cannot find singular microphone in '$devices'"
-}
-if ($outputId -isnot [string])
-{
-	throw "Cannot find singular speaker in '$devices'"
+	if (-not $OverwriteProfile -and $allProfiles.Contains($NewProfile))
+	{
+		throw "Profile '$NewProfile' already exists`nUse the '-OverwriteProfile' flag to overwrite it"
+	}
+	$inputNames,$outputNames = Get-AvailableAudioDevices
+	$profile = [System.Collections.Specialized.OrderedDictionary]::new()
+	$profile["Input"] = Select-Option $inputNames "Select audio input device:"
+	$profile["Output"] = Select-Option $outputNames "Select audio output device:"
+	$allProfiles[$NewProfile] = $profile
+	Out-IniFile $Profiles -Force -InputObject $allProfiles
+	Write-Output "Created profile '$NewProfile':"
+	Format-Table -HideTableHeaders -InputObject $profile
 }
 
-Set-AudioDevice -ID $inputId | Out-Null
-Set-AudioDevice -ID $outputId -DefaultOnly | Out-Null
+switch ($PSCmdlet.ParameterSetName)
+{
+	"UseProfile" { Use-AudioProfile }
+	"CreateProfile" { Create-AudioProfile }
+}
 
