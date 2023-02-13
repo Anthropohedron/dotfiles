@@ -6,3 +6,4 @@ set_rails_ignores
 tunnel
 openurl
 xselection
+__pycache__
