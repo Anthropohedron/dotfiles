@@ -27,7 +27,7 @@ then
 fi
 
 eval "$(awk -v 'q="' '
-	/\<github\.com\>/ {
+	/\<github(u[1-9])?\>/ {
 		sub("\\.git$", "", $2);
 		repo=gensub("^.*\\<([^/]+/[^/]+)?$", "\\1", "g", $2);
 		printf("REPO=%s%s%s;\n",
