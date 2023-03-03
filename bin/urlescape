@@ -5,42 +5,28 @@ usage () {
 	exit 1
 }
 
+if test x"$1" = "x-f"
+then
+	#######   &  /  :  =  ?  @
+	SPECIAL="26,2F,3A,3D,3F,40"
+	shift
+fi
+
 if test $# -gt 1
 then
 	usage
 fi
 
-x26='&'
-x2F='/'
-x3A=':'
-x3D='='
-x3F='?'
-x40='@'
-if test $# -eq 1
-then
-	if test x"$1" != "x-f"
-	then
-		usage
-	fi
-	x26='%26'
-	x2F='%2F'
-	x3A='%3A'
-	x3D='%3D'
-	x3F='%3F'
-	x40='%40'
-fi
-
-STR=''
-for ch in `od -t x1 | cut -s -d\  -f2- | tr '[a-f]' '[A-F]'`
-do
-	case $ch in
-		[01][0-9A-F]) ;;
-		26|2F|3A|3D|3F|40) STR="$STR""$(eval "printf '%s' \"\$x$ch\"")" ;;
-		3[0-9]|[46][1-9A-F]|[57][0-9A]|2[DE]|5F|7E)
-			STR="$STR""$(printf \\$(printf %o 0x$ch))" ;;
-		*) STR="$STR"'%'"$ch" ;;
-	esac
-done
-
-printf '%s\n' "$STR"
+tr -d '\012\015' | od -t x1 | cut -s -d\  -f2- | tr '[a-f] ' '[A-F]\012' |\
+	awk -v "special=$SPECIAL" -v "digit=0123456789ABCDEF" '
+		/[01][0-9A-F]/ { next }
+		{
+			value = index(digit, substr($0, 1, 1)) - 1;
+			value *= 16;
+			value += index(digit, substr($0, 2, 1)) - 1;
+		}
+		/3[0-9]|[46][1-9A-F]|[57][0-9A]|2[DE]|5F|7E/ { printf("%c", value); next }
+		index(special, $0) > 0 { printf("%c", value); next }
+		{ printf("%%%s", $0) }
+		END { printf("\n") }'
 
