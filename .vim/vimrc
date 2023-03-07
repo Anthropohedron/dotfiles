@@ -152,6 +152,8 @@ Plug 'xolox/vim-easytags'
 "Plug 'maxmellon/vim-jsx-pretty'
 Plug 'machakann/vim-swap'
 Plug 'sheerun/vim-polyglot'
+Plug 'vito-c/jq.vim'
+Plug 'yasuhiroki/github-actions-yaml.vim'
 if filereadable(expand('$HOME/.local/vimplugins'))
 	source $HOME/.local/vimplugins
 endif
