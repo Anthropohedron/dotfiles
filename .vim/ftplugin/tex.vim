@@ -8,7 +8,14 @@ else
 	let b:fname=expand("%:r")
 endif
 let $TEXTARGET=b:fname
-let &makeprg="latex $TEXTARGET"
+let b:targetdir=fnamemodify(b:fname, ":h")
+if filereadable(b:targetdir . "/Makefile")
+	let &makeprg="make -C " . b:targetdir
+elseif executable('pdflatex')
+	let &makeprg="pdflatex $TEXTARGET"
+else
+	let &makeprg="latex $TEXTARGET"
+endif
 nmap   &r      :let &makeprg="latex $TEXTARGET && dvips -Ppdf -G0 $TEXTARGET -o"<CR>
 nmap   &R      :let &makeprg="pdflatex $TEXTARGET"<CR>
 nmap   @       0i%%<ESC>
