@@ -81,6 +81,7 @@ imap <C-A> <ESC>I
 imap <C-E> <ESC>A
 imap <C-B> <ESC>bi
 imap <C-F> <ESC>ea
+inoremap <C-X><C-F> <C-X><C-F>
 vmap <Tab> >
 nmap ö "*P
 imap ö <C-O>"*p
