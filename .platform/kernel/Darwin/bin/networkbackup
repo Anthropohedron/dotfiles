@@ -1,0 +1,38 @@
+#!/bin/sh
+
+PATH=/usr/bin:/bin:/sbin
+export PATH
+
+usage () {
+	echo "Usage: $0" >&2
+	exit 1
+}
+
+if test $# -ne 0
+then
+	usage
+fi
+
+TMPF=$(mktemp)
+trap "rm -f $TMPF" EXIT
+
+tmutil destinationinfo > $TMPF 2>&1
+
+if ! grep -q '^Kind\s*:\s\+Network$' $TMPF
+then
+	# no network time machine destination
+	exit 1
+fi
+
+TMHOST="$(sed -E -n -e 's,\._,/,' \
+		-e 's,^URL[[:space:]]*:[[:space:]]+(smb|afp):/*([^@]+@)?([^/]+)(/.*)?$,\3,p' \
+		$TMPF)"
+
+if route -n get "$TMHOST" 2>&1 |\
+	grep -q 'gateway:\|not in table|\bad address:'
+then
+	# not on LAN
+	exit 0
+fi
+
+tmutil startbackup
