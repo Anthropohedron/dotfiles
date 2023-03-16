@@ -43,6 +43,10 @@ case $UI in
 		exec 0</dev/null
 		exec 1>/dev/null
 		exec 2>&1
+		if xdpyinfo | grep -q Apple-WM
+		then
+			addp="$addp -geometry +${x11mainX:-"0"}+${x11mainY:-"0"}"
+		fi
 		if test `uname` = Darwin && ! $isf
 		then
 			gvim $addp "$@" &
