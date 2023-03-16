@@ -4,9 +4,17 @@ PATH=/usr/bin:/bin:/sbin
 export PATH
 
 usage () {
-	echo "Usage: $0" >&2
+	echo "Usage: $0 [--install]" >&2
 	exit 1
 }
+
+if test x"$1" = x--install
+then
+	INSTALL=true
+	shift
+else
+	INSTALL=false
+fi
 
 if test $# -ne 0
 then
@@ -15,6 +23,25 @@ fi
 
 TMPF=$(mktemp)
 trap "rm -f $TMPF" EXIT
+
+if $INSTALL
+then
+	#crontab -l 2>/dev/null >$TMPF
+	if test -x "$0" -a "$(dirname "$0")" = .
+	then
+		exe="$(command -v $0)"
+	else
+		exe="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)/$(basename "$0")"
+	fi
+	if grep -F "$exe" $TMPF >&2
+	then
+		exit 1
+	else
+		printf '23 1,5,9,13,17,21 * * * %s\n' "$exe" | tee -a $TMPF >&2
+		crontab < $TMPF
+	fi
+	exit 0
+fi
 
 tmutil destinationinfo > $TMPF 2>&1
 
