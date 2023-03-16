@@ -115,6 +115,12 @@ function resetpath () {
 	done
 }
 
+function isZshArray () {
+	declare -p "$1" 2>/dev/null |\
+		sed -n 's/^\(typeset\|declare\) *.* -a .*'"$1"'=(.*$/YES/p' |\
+		grep -q '^YES$'
+}
+
 umask 022
 if test -z "$systempath"
 then

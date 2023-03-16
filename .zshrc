@@ -676,8 +676,7 @@ then
 	alias xcr='(xterm -geometry 80x55 -bg black -fg white -e "screen -D -R" &)'
 	alias ibg='ppmmake gray 50 50 > /tmp/g$$.ppm; xsetbg -onroot /tmp/g$$.ppm; rm -f /tmp/g$$.ppm'
 	alias vnc='vncviewer -PreferredEncoding ZRLE -LowColourLevel 2 -MenuKey F9'
-	MAILFOLDERS=($HOME/Maildir $HOME/Maildir/.alerts $HOME/Maildir/.lists)
-	if test -d ${(pj: -a -d :)MAILFOLDERS[@]}
+	if isZshArray MAILFOLDERS && test -d ${(pj: -a -d :)MAILFOLDERS[@]}
 	then
 		COOLARGS="-once \
 			 ${(ps: :)MAILFOLDERS[@]:s/\//-f \//} \
