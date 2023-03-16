@@ -26,14 +26,14 @@ trap "rm -f $TMPF" EXIT
 
 if $INSTALL
 then
-	#crontab -l 2>/dev/null >$TMPF
+	crontab -l 2>/dev/null >$TMPF
 	if test -x "$0" -a "$(dirname "$0")" = .
 	then
 		exe="$(command -v $0)"
 	else
 		exe="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)/$(basename "$0")"
 	fi
-	if grep -F "$exe" $TMPF >&2
+	if grep -v '^#' $TMPF | grep -F "$exe" >&2
 	then
 		exit 1
 	else
