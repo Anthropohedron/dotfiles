@@ -32,6 +32,7 @@ redirect=
 command=
 ls=-ls
 ls=
+geom=
 continue=:
 while $continue; do
 	case $1 in
@@ -58,6 +59,11 @@ while $continue; do
 #		shift
 #		xhost +$target
 #		;;
+	-geometry)
+		shift
+		geom="-geometry $1"
+		shift
+		;;
 	-port)
 		shift
 		args="$args -p $1"
@@ -101,9 +107,9 @@ rcmd="ssh $args $disconnect $target $username"
 #rcmd="ssh +x $disconnect $target $username"
 case $# in
 0)
-	$rcmd 'sh -c '"'$vars"' xterm '$ls' -name "'"$resource"'" -T "'"$label"'" -n "'"$label"'" '"$redirect'"
+	$rcmd 'sh -c '"'$vars xterm $geom $ls -name $resource -T $label -n $label $redirect'"
 	;;
 *)
-	$rcmd 'sh -c '"'$vars"' '"$*$redirect'"
+	$rcmd 'sh -c '"'$vars $* $redirect'"
 	;;
 esac
