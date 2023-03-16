@@ -651,6 +651,10 @@ function mksshtoggle () {
 
 if test -n "$DISPLAY"
 then
+	export x11mainX=${x11mainX:-"0"}
+	export x11mainY=${x11mainY:-"0"}
+	export x11mainWidth=${x11mainWidth:-"$(xdpyinfo | sed -n 's/^ *dimensions:[^0-9]*\([0-9]\+\)x.*$/\1/p')"}
+	export x11mainHeight=${x11mainHeight:-"$(xdpyinfo | sed -n 's/^ *dimensions:[^0-9]*[0-9]\+x\([0-9]\+\).*$/\1/p')"}
 	if test -z "$DISPLAY_ORIG"
 	then
 		DISPLAY_ORIG="$DISPLAY"
@@ -684,13 +688,8 @@ then
 		then
 			alias osxbiff="kstart --window coolmail --tosystray coolmail -geometry 55x55-0+21 $COOLARGS </dev/null >/dev/null 2>&1"
 		else
-			alias osxbiff="(coolmail -geometry 55x55+0-0 $COOLARGS </dev/null >/dev/null 2>&1 &)"
+			alias osxbiff="(coolmail -geometry 55x55+${x11mainX}+$(expr $x11mainY + $x11mainHeight - 55) $COOLARGS </dev/null >/dev/null 2>&1 &)"
 		fi
-	fi
-	if command -v xdotool xdpyinfo >/dev/null && \
-		xdpyinfo | grep '\<XTEST\>' >/dev/null 2>&1
-	then
-		alias fosxbiff="xdotool search --name coolmail windowmove 0 970"
 	fi
 	if command -v xprop >/dev/null
 	then
