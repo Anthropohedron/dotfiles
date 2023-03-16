@@ -69,6 +69,12 @@ if &diff
 else
 	set columns=80
 endif
+""" Maybe better, but so far unnecessary
+"if &diff
+"	autocmd GUIEnter * :set lines=45 columns=170
+"else
+"	autocmd GUIEnter * :set lines=45 columns=80
+"endif
 set guioptions=aegimlrt
 set laststatus=2
 set ruler
