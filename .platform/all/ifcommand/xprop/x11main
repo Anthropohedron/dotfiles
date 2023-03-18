@@ -1,0 +1,103 @@
+#!/bin/sh
+
+usage () {
+	if test $# -gt 0
+	then
+		printf '%s\n' "$*" >&2
+	fi
+	cat >&2 <<EOF
+Usage:
+ Write (or overwrite) properties:
+	$0 -w [-f]
+ Read properties for the main/given screen:
+	$0 [-s screen]
+ Test whether properties have been set:
+	$0 -t
+EOF
+	exit 1
+}
+
+TIMID=true
+WRITE=true
+ISTEST=false
+case $# in
+	0) WRITE=false ;;
+	1)
+		if test x"$1" = x-t
+		then
+			ISTEST=true
+		elif test x"$1" != x-w
+		then
+			usage
+		fi
+		;;
+	2)
+		if test x"$1" = x-w -a x"$2" = x-f
+		then
+			TIMID=false
+		elif test x"$1" = x-s -a "$2" -ge 0
+		then
+			WRITE=false
+			SCREEN=$2
+		else
+			usage
+		fi
+		;;
+	*) usage
+esac
+
+eval "$(xprop -root -notype \
+		16c SCREEN_SCREENS \
+		16c SCREEN_MAIN |\
+	sed -n 's/^SCREEN_\([A-Z]\+\) = \([0-9]\+\)$/\1=\2/p')"
+
+if $ISTEST
+then
+	exec test -n "$MAIN" -a -n "$SCREENS"
+elif $WRITE
+then
+	if $TIMID && test -n "$MAIN" -o -n "$SCREENS"
+	then
+		usage "Not overwriting without the -f flag"
+	fi
+	(
+	read MAIN
+	printf 'xprop -root -f SCREEN_MAIN 16c -set SCREEN_MAIN %d\n' "$MAIN"
+	awk '
+		BEGIN {
+			label[1] = "X";
+			label[2] = "Y";
+			label[3] = "WIDTH";
+			label[4] = "HEIGHT";
+		}
+		/^[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]+$/ {
+			for (i=1;i<=4;++i)
+				printf("xprop -root -f SCREEN%d_%s 16c -set SCREEN%d_%s %d\n",
+					NR-1, label[i], NR-1, label[i], $i)
+		}
+		END { printf("xprop -root -f SCREEN_SCREENS 16c -set SCREEN_SCREENS %d\n", NR) }
+	') | sh
+elif test -z "$MAIN" -o -z "$SCREENS"
+then
+	usage "Missing X11 properties for x11main; did you set them?"
+else
+	if test -z "$SCREEN"
+	then
+		SCREEN=$MAIN
+	fi
+	if ! test "$SCREEN" -lt "$SCREENS" -a "$SCREEN" -ge 0 2>/dev/null
+	then
+		usage "Screen $SCREEN isn't one of the zero-indexed $SCREENS screens"
+	fi
+	eval "$(xprop -root -notype \
+			16c SCREEN"$SCREEN"_X \
+			16c SCREEN"$SCREEN"_Y \
+			16c SCREEN"$SCREEN"_WIDTH \
+			16c SCREEN"$SCREEN"_HEIGHT |\
+		sed -n 's/^SCREEN'$SCREEN'_\([A-Z]\+\) = \([0-9]\+\)$/\1=\2/p')"
+	if test -z "$X" -o -z "$Y" -o -z "$WIDTH" -o -z "$HEIGHT"
+	then
+		usage "Missing X11 properties for screen $SCREEN"
+	fi
+	printf '%d %d %d %d\n' "$X" "$Y" "$WIDTH" "$HEIGHT"
+fi
