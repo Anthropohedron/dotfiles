@@ -183,6 +183,12 @@ export RSYNC_RSH=ssh
 
 NUGETEXE=`whence -p nuget || whence -p dotnet`
 
+NEED_GEOMETRY=false
+if test -n "$DISPLAY" && xdpyinfo | grep -q Apple-WM
+then
+	NEED_GEOMETRY=true
+fi
+
 for s in $(platfile zshenv)
 do
 	. $s
