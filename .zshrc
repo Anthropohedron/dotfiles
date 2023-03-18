@@ -651,16 +651,16 @@ function mksshtoggle () {
 
 if test -n "$DISPLAY"
 then
-	export x11mainX=${x11mainX:-"0"}
-	export x11mainY=${x11mainY:-"0"}
-	export x11mainWidth=${x11mainWidth:-"$(xdpyinfo | sed -n 's/^ *dimensions:[^0-9]*\([0-9]\+\)x.*$/\1/p')"}
-	export x11mainHeight=${x11mainHeight:-"$(xdpyinfo | sed -n 's/^ *dimensions:[^0-9]*[0-9]\+x\([0-9]\+\).*$/\1/p')"}
 	if test -z "$DISPLAY_ORIG"
 	then
 		DISPLAY_ORIG="$DISPLAY"
 		DISPLAY=$(echo $DISPLAY | sed 's,^.*/com\.apple\.launchd[^:]*:,:,')
 		export DISPLAY
 	fi
+	export x11mainX=${x11mainX:-"0"}
+	export x11mainY=${x11mainY:-"0"}
+	export x11mainWidth=${x11mainWidth:-"$(xdpyinfo | sed -n 's/^ *dimensions:[^0-9]*\([0-9]\+\)x.*$/\1/p')"}
+	export x11mainHeight=${x11mainHeight:-"$(xdpyinfo | sed -n 's/^ *dimensions:[^0-9]*[0-9]\+x\([0-9]\+\).*$/\1/p')"}
 	function xrdbm () {
 		platfile Xresources | xargs -r -L 1 xrdb -merge
 	}
