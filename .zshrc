@@ -900,8 +900,7 @@ bindkey '\E[4~'  end-of-line
 #WORDCHARS='*?_-.[]~=/&;!#$%^(){}<>'
 WORDCHARS=\'\"'[]{}()<>^$%~_.'
 
-sourceExtra="`platfile zshrc`"
-for s in $sourceExtra
+for s in $(platfile zshrc)
 do
 	. $s
 done

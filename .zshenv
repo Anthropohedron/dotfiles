@@ -183,12 +183,7 @@ export RSYNC_RSH=ssh
 
 NUGETEXE=`whence -p nuget || whence -p dotnet`
 
-sourceExtra="`platfile zshenv`"
-if test -r $HOME/.zshlocal
-then
-	sourceExtra="$sourceExtra $HOME/.zshlocal"
-fi
-for s in $sourceExtra
+for s in $(platfile zshenv)
 do
 	. $s
 done
