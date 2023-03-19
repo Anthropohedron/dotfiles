@@ -17,14 +17,42 @@ EOF
 	exit 1
 }
 
+eval_read_prop () {
+	_prop="$1"
+	shift
+	_type=16
+	_format=""
+	_i=0
+	for _var in "$@"
+	do
+		_type="$_type"c
+		_format="$_format $_var"'=$'"$_i"
+		_i=$(expr $_i + 1)
+	done
+	_eval="$(xprop -root -notype $_type "$_format"'\n' "$_prop" |\
+		sed -n 's/^'"$_prop"' \(.*\)$/\1/p')"
+	if test -z "$_eval"
+	then
+		return 1
+	else
+		eval "$_eval"
+	fi
+}
+
+write_prop () {
+	_prop="$1"
+	shift
+	_type=16
+	_value="$(printf '%s' "$*" | tr ' ' ',')"
+	for _var in "$@"
+	do
+		_type="$_type"c
+	done
+	xprop -root -f "$_prop" $_type -set "$_prop" "$_value"
+}
+
 read_screen () {
-	eval "$(xprop -root -notype \
-			16c SCREEN"$1"_X \
-			16c SCREEN"$1"_Y \
-			16c SCREEN"$1"_WIDTH \
-			16c SCREEN"$1"_HEIGHT |\
-		sed -n 's/^SCREEN'$1'_\([A-Z]\+\) = \([0-9]\+\)$/\1=\2/p')"
-	if test -z "$X" -o -z "$Y" -o -z "$WIDTH" -o -z "$HEIGHT"
+	if ! eval_read_prop SCREEN$1 X Y WIDTH HEIGHT
 	then
 		usage "Missing X11 properties for screen $1"
 	fi
@@ -64,40 +92,33 @@ case $# in
 	*) usage
 esac
 
-eval "$(xprop -root -notype \
-		16c SCREEN_SCREENS \
-		16c SCREEN_MAIN |\
-	sed -n 's/^SCREEN_\([A-Z]\+\) = \([0-9]\+\)$/\1=\2/p')"
+if eval_read_prop SCREEN_INFO SCREENS MAIN
+then
+	HASPROPS=true
+else
+	HASPROPS=false
+fi
 
 if $ISTEST
 then
-	exec test -n "$MAIN" -a -n "$SCREENS"
+	exec $HASPROPS
 elif $WRITE
 then
-	if $TIMID && test -n "$MAIN" -o -n "$SCREENS"
+	if $TIMID && $HASPROPS
 	then
 		usage "Not overwriting without the -f flag"
 	fi
-	(
-	read MAIN
-	printf 'xprop -root -f SCREEN_MAIN 16c -set SCREEN_MAIN %d\n' "$MAIN"
-	awk '
-		BEGIN {
-			label[1] = "X";
-			label[2] = "Y";
-			label[3] = "WIDTH";
-			label[4] = "HEIGHT";
-		}
+	eval "$(read MAIN;
+	awk -v "MAIN=$MAIN" '
 		/^[0-9]+\s+[0-9]+\s+[0-9]+\s+[0-9]+$/ {
-			for (i=1;i<=4;++i)
-				printf("xprop -root -f SCREEN%d_%s 16c -set SCREEN%d_%s %d\n",
-					NR-1, label[i], NR-1, label[i], $i)
-		}
-		END { printf("xprop -root -f SCREEN_SCREENS 16c -set SCREEN_SCREENS %d\n", NR) }
-	') | sh
-elif test -z "$MAIN" -o -z "$SCREENS"
+			printf("write_prop SCREEN%d %d %d %d %d\n",
+				NR-1, $1, $2, $3, $4);
+			}
+		END { printf("write_prop SCREEN_INFO %d %d\n", NR, MAIN) }
+	')"
+elif ! $HASPROPS
 then
-	usage "Missing X11 properties for x11main; did you set them?"
+	usage "Missing X11 properties for $(basename "$0"); did you set them?"
 else
 	if test -z "$SCREEN"
 	then
