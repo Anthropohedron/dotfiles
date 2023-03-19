@@ -1,0 +1,81 @@
+#!/bin/sh
+
+usage () {
+	if test $# -gt 0
+	then
+		printf '%s\n' "$*" >&2
+	fi
+	echo "Usage: $0 [<geometry>]" >&2
+	exit 1
+}
+
+if test $# -gt 1
+then
+	usage
+fi
+
+if test -z "$DISPLAY"
+then
+	usage "No DISPLAY set"
+fi
+
+if ! xdpyinfo | grep -q Apple-WM
+then
+	# don't need anything special
+	printf '%s' "$1"
+	exit 0
+fi
+
+if ! command -v xprop >/dev/null
+then
+	usage "xprop not found in PATH"
+fi
+
+if ! command -v x11screens >/dev/null &&\
+	test -x $HOME/.platform/all/ifcommand/xprop/x11screens
+then
+	PATH="$PATH":$HOME/.platform/all/ifcommand/xprop
+	export PATH
+fi
+
+if ! command -v x11screens >/dev/null
+then
+	usage "x11screens not found in PATH"
+fi
+
+eval "$(x11screens -m | awk '{
+	printf("LEFT=%d TOP=%d WIDTH=%d HEIGHT=%d", $1, $2, $3, $4) }')"
+
+XOFFSET="+""$LEFT"
+YOFFSET="+""$TOP"
+GEOM=""
+
+if test $# -eq 1
+then
+	_eval="$(printf '%s' "$1" | sed -E -n \
+		's/([0-9]+x[0-9]+)?(([-+])([0-9]+)([-+])([0-9]+))?/GEOM="\1" X_SIGN="\3" X="\4" Y_SIGN="\5" Y="\6"/p')"
+	if test -z "$_eval"
+	then
+		usage
+	fi
+	eval "$_eval"
+fi
+
+if test -n "$X_SIGN"
+then
+	if test x"$X_SIGN" = "x+"
+	then
+		XOFFSET="+"$(expr "$LEFT" + "$X")
+	else
+		XOFFSET="-$X"
+	fi
+	if test x"$Y_SIGN" = "x+"
+	then
+		YOFFSET="+"$(expr "$TOP" + "$Y")
+	else
+		YOFFSET="-$Y"
+	fi
+fi
+
+printf '%s %s%s%s\n' "-geometry" "$GEOM" "$XOFFSET" "$YOFFSET"
+

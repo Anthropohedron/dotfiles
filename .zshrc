@@ -657,25 +657,6 @@ then
 		DISPLAY=$(echo $DISPLAY | sed 's,^.*/com\.apple\.launchd[^:]*:,:,')
 		export DISPLAY
 	fi
-	export x11mainX=${x11mainX:-"0"}
-	export x11mainY=${x11mainY:-"0"}
-	export x11mainWidth=${x11mainWidth:-"$(xdpyinfo | sed -n 's/^ *dimensions:[^0-9]*\([0-9]\+\)x.*$/\1/p')"}
-	export x11mainHeight=${x11mainHeight:-"$(xdpyinfo | sed -n 's/^ *dimensions:[^0-9]*[0-9]\+x\([0-9]\+\).*$/\1/p')"}
-	if $NEED_GEOMETRY
-	then
-		function xterm_cmd () {
-			printf "xterm -geometry %s+%d+%d" "$1" $x11mainX $x11mainY
-		}
-	else
-		function xterm_cmd () {
-			if test $# -eq 1
-			then
-				printf "xterm -geometry %s" "$1"
-			else
-				printf xterm
-			fi
-		}
-	fi
 	function xrdbm () {
 		platfile Xresources | xargs -r -L 1 xrdb -merge
 	}
@@ -683,12 +664,12 @@ then
 		unfunction mkxsu
 		if command -v zshsulogin >/dev/null
 		then
-			alias xsu="($(xterm_cmd) -T root@$HOST -e `zshsulogin DISPLAY=$DISPLAY XAUTHORITY=$HOME/.Xauthority` &)"
+			alias xsu="(xterm $(xgeom) -T root@$HOST -e `zshsulogin DISPLAY=$DISPLAY XAUTHORITY=$HOME/.Xauthority` &)"
 		else
 			alias xsu="echo Error: Define zshsulogin for this platform"
 		fi
 	}
-	alias xcr="($(xterm_cmd 80x55) -bg black -fg white -e "'"screen -D -R" &)'
+	alias xcr="(xterm $(xgeom 80x55) -bg black -fg white -e "'"screen -D -R" &)'
 	alias ibg='ppmmake gray 50 50 > /tmp/g$$.ppm; xsetbg -onroot /tmp/g$$.ppm; rm -f /tmp/g$$.ppm'
 	alias vnc='vncviewer -PreferredEncoding ZRLE -LowColourLevel 2 -MenuKey F9'
 	if isZshArray MAILFOLDERS && test -d ${(pj: -a -d :)MAILFOLDERS[@]}
