@@ -16,6 +16,6 @@ else
 	TERM=xterm
 	LANG="en_US.UTF-8"
 	export TERMINFO TERM XUSERFILESEARCHPATH LANG
-	exec xterm -T mutt -geometry ${MAILTERM_GEOMETRY:-"80x45"} -bg black -fg white -name mutt -e sh -c 'eval `resize -u`;  stty erase 0x7F; '"$0 1"
+	exec xterm -T mutt $(xgeom 80x45) -bg black -fg white -name mutt -e sh -c 'eval `resize -u`;  stty erase 0x7F; '"$0 1"
 fi
 
