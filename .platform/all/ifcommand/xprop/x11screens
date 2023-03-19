@@ -10,11 +10,25 @@ Usage:
  Write (or overwrite) properties:
 	$0 -w [-f]
  Read properties for the main/given screen:
-	$0 [-s screen]
+	$0 [-s <screen|ALL>]
  Test whether properties have been set:
 	$0 -t
 EOF
 	exit 1
+}
+
+read_screen () {
+	eval "$(xprop -root -notype \
+			16c SCREEN"$1"_X \
+			16c SCREEN"$1"_Y \
+			16c SCREEN"$1"_WIDTH \
+			16c SCREEN"$1"_HEIGHT |\
+		sed -n 's/^SCREEN'$1'_\([A-Z]\+\) = \([0-9]\+\)$/\1=\2/p')"
+	if test -z "$X" -o -z "$Y" -o -z "$WIDTH" -o -z "$HEIGHT"
+	then
+		usage "Missing X11 properties for screen $1"
+	fi
+	printf '%d %d %d %d\n' "$X" "$Y" "$WIDTH" "$HEIGHT"
 }
 
 TIMID=true
@@ -35,8 +49,12 @@ case $# in
 		if test x"$1" = x-w -a x"$2" = x-f
 		then
 			TIMID=false
-		elif test x"$1" = x-s -a "$2" -ge 0
+		elif test x"$1" = x-s
 		then
+			if test "$2" != ALL && test "$2" -lt 0
+			then
+				usage
+			fi
 			WRITE=false
 			SCREEN=$2
 		else
@@ -85,19 +103,19 @@ else
 	then
 		SCREEN=$MAIN
 	fi
+	if test "$SCREEN" = ALL
+	then
+		SCREEN=0
+		while test $SCREEN -lt $SCREENS
+		do
+			read_screen $SCREEN
+			SCREEN=$(expr $SCREEN + 1)
+		done
+		exit 0
+	fi
 	if ! test "$SCREEN" -lt "$SCREENS" -a "$SCREEN" -ge 0 2>/dev/null
 	then
 		usage "Screen $SCREEN isn't one of the zero-indexed $SCREENS screens"
 	fi
-	eval "$(xprop -root -notype \
-			16c SCREEN"$SCREEN"_X \
-			16c SCREEN"$SCREEN"_Y \
-			16c SCREEN"$SCREEN"_WIDTH \
-			16c SCREEN"$SCREEN"_HEIGHT |\
-		sed -n 's/^SCREEN'$SCREEN'_\([A-Z]\+\) = \([0-9]\+\)$/\1=\2/p')"
-	if test -z "$X" -o -z "$Y" -o -z "$WIDTH" -o -z "$HEIGHT"
-	then
-		usage "Missing X11 properties for screen $SCREEN"
-	fi
-	printf '%d %d %d %d\n' "$X" "$Y" "$WIDTH" "$HEIGHT"
+	read_screen $SCREEN
 fi
