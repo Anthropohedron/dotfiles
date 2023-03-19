@@ -5,13 +5,54 @@ usage() {
 	exit 2
 }
 
+eval_read_prop () {
+	_prop="$1"
+	shift
+	_type=16
+	_format=""
+	_i=0
+	for _var in "$@"
+	do
+		_type="$_type"c
+		_format="$_format $_var"'=$'"$_i"
+		_i=$(expr $_i + 1)
+	done
+	_eval="$(xprop -id "$WINDOW" -notype $_type "$_format"'\n' "$_prop" |\
+		sed -n 's/^'"$_prop"' \(.*\)$/\1/p')"
+	if test -z "$_eval"
+	then
+		return 1
+	else
+		eval "$_eval"
+	fi
+}
+
+write_prop () {
+	_prop="$1"
+	shift
+	_type=16
+	_value="$(printf '%s' "$*" | tr ' ' ',')"
+	for _var in "$@"
+	do
+		_type="$_type"c
+	done
+	xprop -id "$WINDOW" -f "$_prop" $_type -set "$_prop" "$_value"
+}
+
+read_screen_info () {
+	eval "$(x11screens -s $1 2>/dev/null | awk '{
+		printf("S_X=%d S_Y=%d S_W=%d S_HW=%d S_H=%d\n",
+			$1, $2, $3, $3/2, $4);
+		}')"
+}
+
 test $# -eq 1 || usage
 
 case x"$1" in
-	x[lL]*) SNAP=snapLeft  ;;
+	x[lL]*) SNAP=snapLeft ;;
 	x[rR]*) SNAP=snapRight ;;
-	x[fF]*) SNAP=snapFull  ;;
-	x[uU]*) SNAP=snapUndo  ;;
+	x[fF]*) SNAP=snapFull ;;
+	x[uU]*) SNAP=snapUndo ;;
 	*) usage ;;
 esac
 
@@ -35,15 +76,17 @@ then
 	exit 1
 fi
 
-eval "$(xprop -id "$WINDOW" -notype \
-		16c XWINSNAP_X \
-		16c XWINSNAP_Y \
-		16c XWINSNAP_WIDTH \
-		16c XWINSNAP_HEIGHT |\
-	sed -n 's/^XWINSNAP_\([A-Z]*\) = \([0-9]*\)$/\1=\2;/p' \
-		)"
+if ! command -v x11screens >/dev/null &&\
+	test -d $HOME/.platform/all/ifcommand/xprop
+then
+	PATH="$PATH":$HOME/.platform/all/ifcommand/xprop
+	export PATH
+fi
 
-if test -z "$X" -o -z "$Y" -o -z "$WIDTH" -o -z "$HEIGHT"
+SCREENS=$(x11screens -s ALL 2>/dev/null | wc -l)
+
+# check for properties
+if ! eval_read_prop XWINSNAP_ORIG X Y WIDTH HEIGHT
 then
 	eval "$(xwininfo -id "$WINDOW" | awk -F ': *' '
 		/Width:/ { printf("WIDTH=%d;\n", $2) }
@@ -56,42 +99,144 @@ then
 		/Absolute.* Y:/ { Y=$2 }
 		END { printf("X=%d;\nY=%d\n", X, Y) }
 		')"
-	xprop -id "$WINDOW" \
-		-f XWINSNAP_X 16c -set XWINSNAP_X $X
-	xprop -id "$WINDOW" \
-		-f XWINSNAP_Y 16c -set XWINSNAP_Y $Y
-	xprop -id "$WINDOW" \
-		-f XWINSNAP_WIDTH 16c -set XWINSNAP_WIDTH $WIDTH
-	xprop -id "$WINDOW" \
-		-f XWINSNAP_HEIGHT 16c -set XWINSNAP_HEIGHT $HEIGHT
+	write_prop XWINSNAP_ORIG $X $Y $WIDTH $HEIGHT
 fi
 
-snapLeft() {
-	xdotool windowsize "$WINDOW" 50% 100%
-	xdotool windowmove "$WINDOW" 0 0
-}
+if test $SCREENS -gt 0
+then
+	if ! eval_read_prop XWINSNAP_SCREEN SCREEN POSITION
+	then
+		POSITION=0
+		eval "$(x11screens -s ALL 2>/dev/null | awk -v X=$X -v Y=$Y '{
+			if (X < $1 ||
+				Y < $2 ||
+				X >= ($1 + $3) ||
+				Y >= ($2 + $4)) next;
+			printf("SCREEN=%d\n", NR-1);
+			nextfile;
+			}')"
+	fi
+	case $POSITION in
+		0)
+			read_screen_info $SCREEN
+			snapLeft() {
+				xdotool windowsize "$WINDOW" $S_HW $S_H
+				xdotool windowmove "$WINDOW" $S_X $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 1
+			}
 
-snapRight() {
-	xdotool windowsize "$WINDOW" 50% 100%
-	WIDTH=$(xwininfo -id "$WINDOW" |\
-		awk '/Width:/ { print $2 }')
-	xdotool windowmove "$WINDOW" $WIDTH 0
-}
+			snapRight() {
+				xdotool windowsize "$WINDOW" $S_HW $S_H
+				xdotool windowmove "$WINDOW" $(expr $S_X + $S_HW) $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 2
+			}
 
-snapFull() {
-	xdotool windowsize "$WINDOW" 100% 100%
-	xdotool windowmove "$WINDOW" 0 0
-}
+			snapFull() {
+				xdotool windowsize "$WINDOW" $S_W $S_H
+				xdotool windowmove "$WINDOW" $S_X $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 3
+			}
+			;;
+		1)
+			snapLeft() {
+				SCREEN=$(expr \( $SCREEN + $SCREENS - 1 \) % $SCREENS)
+				read_screen_info $SCREEN
+				xdotool windowsize "$WINDOW" $S_HW $S_H
+				xdotool windowmove "$WINDOW" $(expr $S_X + $S_HW) $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 2
+			}
 
-snapUndo() {
-	xdotool windowsize "$WINDOW" $WIDTH $HEIGHT
-	xdotool windowmove "$WINDOW" $X $Y
-	xprop -id "$WINDOW" \
-		-remove XWINSNAP_X \
-		-remove XWINSNAP_Y \
-		-remove XWINSNAP_WIDTH \
-		-remove XWINSNAP_HEIGHT
-}
+			snapRight() {
+				read_screen_info $SCREEN
+				xdotool windowsize "$WINDOW" $S_HW $S_H
+				xdotool windowmove "$WINDOW" $(expr $S_X + $S_HW) $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 2
+			}
+
+			snapFull() {
+				read_screen_info $SCREEN
+				xdotool windowsize "$WINDOW" $S_W $S_H
+				xdotool windowmove "$WINDOW" $S_X $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 3
+			}
+			;;
+		2)
+			snapLeft() {
+				read_screen_info $SCREEN
+				xdotool windowsize "$WINDOW" $S_HW $S_H
+				xdotool windowmove "$WINDOW" $S_X $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 1
+			}
+
+			snapRight() {
+				SCREEN=$(expr \( $SCREEN + 1 \) % $SCREENS)
+				read_screen_info $SCREEN
+				xdotool windowsize "$WINDOW" $S_HW $S_H
+				xdotool windowmove "$WINDOW" $S_X $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 1
+			}
+
+			snapFull() {
+				read_screen_info $SCREEN
+				xdotool windowsize "$WINDOW" $S_W $S_H
+				xdotool windowmove "$WINDOW" $S_X $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 3
+			}
+			;;
+		3)
+			snapLeft() {
+				SCREEN=$(expr \( $SCREEN + $SCREENS - 1 \) % $SCREENS)
+				read_screen_info $SCREEN
+				xdotool windowsize "$WINDOW" $S_W $S_H
+				xdotool windowmove "$WINDOW" $S_X $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 3
+			}
+
+			snapRight() {
+				SCREEN=$(expr \( $SCREEN + 1 \) % $SCREENS)
+				read_screen_info $SCREEN
+				xdotool windowsize "$WINDOW" $S_W $S_H
+				xdotool windowmove "$WINDOW" $S_X $S_Y
+				write_prop XWINSNAP_SCREEN $SCREEN 3
+			}
+
+			snapFull() {
+				true #NOOP
+			}
+			;;
+	esac
+
+	snapUndo() {
+		xdotool windowsize "$WINDOW" $WIDTH $HEIGHT
+		xdotool windowmove "$WINDOW" $X $Y
+		xprop -id "$WINDOW" -remove XWINSNAP_ORIG 2>/dev/null
+		xprop -id "$WINDOW" -remove XWINSNAP_SCREEN 2>/dev/null
+	}
+else
+	snapLeft() {
+		xdotool windowsize "$WINDOW" 50% 100%
+		xdotool windowmove "$WINDOW" 0 0
+	}
+
+	snapRight() {
+		xdotool windowsize "$WINDOW" 50% 100%
+		NEWWIDTH=$(xwininfo -id "$WINDOW" |\
+			awk '/Width:/ { print $2 }')
+		xdotool windowmove "$WINDOW" $NEWWIDTH 0
+	}
+
+	snapFull() {
+		xdotool windowsize "$WINDOW" 100% 100%
+		xdotool windowmove "$WINDOW" 0 0
+	}
+
+	snapUndo() {
+		xdotool windowsize "$WINDOW" $WIDTH $HEIGHT
+		xdotool windowmove "$WINDOW" $X $Y
+		xprop -id "$WINDOW" -remove XWINSNAP_ORIG 2>/dev/null
+	}
+fi
+
 
 $SNAP
-
+xdotool windowfocus "$WINDOW"
