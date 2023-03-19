@@ -22,7 +22,10 @@ fi
 if ! xdpyinfo | grep -q Apple-WM
 then
 	# don't need anything special
-	printf '%s' "$1"
+	if test -n "$1"
+	then
+		printf ' -geometry %s' "$1"
+	fi
 	exit 0
 fi
 
@@ -77,5 +80,5 @@ then
 	fi
 fi
 
-printf '%s %s%s%s\n' "-geometry" "$GEOM" "$XOFFSET" "$YOFFSET"
+printf ' -geometry %s%s%s\n' "$GEOM" "$XOFFSET" "$YOFFSET"
 
