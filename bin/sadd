@@ -3,7 +3,7 @@
 eval `$HOME/bin/agent -s`
 
 SSHID=
-for id in $HOME/.ssh/id_rsa
+for id in $(cat $HOME/.local/ssh_keys 2>/dev/null || echo $HOME/.ssh/id_rsa)
 do
 	if test -r $id
 	then
