@@ -683,7 +683,7 @@ then
 		then
 			alias osxbiff="kstart --window coolmail --tosystray coolmail -geometry 55x55-0+21 $COOLARGS </dev/null >/dev/null 2>&1"
 		else
-			alias osxbiff="(coolmail -geometry 55x55+${x11mainX}+$(expr $x11mainY + $x11mainHeight - 55) $COOLARGS </dev/null >/dev/null 2>&1 &)"
+			alias osxbiff="(coolmail $(xgeom 55x55+0-0) $COOLARGS </dev/null >/dev/null 2>&1 &)"
 		fi
 	fi
 	if command -v xprop >/dev/null
