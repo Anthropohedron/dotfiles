@@ -44,3 +44,6 @@ autocmd BufEnter .*rc :source ~/.vim/ftplugin/sh.vim
 """""definitely filetype triggers
 autocmd FileType mail :source ~/.vim/mail.vim
 "set verbose=0
+if $TERM == "xterm-256color"
+  autocmd BufEnter * :syn on
+endif
