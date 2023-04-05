@@ -638,7 +638,8 @@ function localip () {
 			-e 's/^ *//' \
 			-e 's/ .*$//'
 }
-alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
+#alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
+alias myip='curl https://ipinfo.io/ip'
 
 function mksshtoggle () {
 	local _prefix=$1
