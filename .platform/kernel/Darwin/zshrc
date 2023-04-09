@@ -10,3 +10,7 @@ function p () {
 	qlmanage -p "$@" >/dev/null 2>&1 &
 }
 
+function tmexclusions () {
+	local _sudo=$(test x"$1" = "x-a" && echo "sudo")
+	$_sudo mdfind "com_apple_backup_excludeItem = 'com.apple.backupd'"
+}
