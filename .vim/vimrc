@@ -143,18 +143,20 @@ packadd matchit
 
 """ This is vim-plug config: https://github.com/junegunn/vim-plug
 call plug#begin('~/.vim/plugged')
-Plug 'vim-scripts/Tab-Menu'
-Plug 'davidoc/taskpaper.vim'
-"Plug 'keith/swift.vim'
-Plug 'tpope/vim-fugitive'
-Plug 'xolox/vim-misc'
-Plug 'xolox/vim-easytags'
-"Plug 'pangloss/vim-javascript'
-"Plug 'maxmellon/vim-jsx-pretty'
-Plug 'machakann/vim-swap'
-Plug 'sheerun/vim-polyglot'
-Plug 'vito-c/jq.vim'
-Plug 'yasuhiroki/github-actions-yaml.vim'
+if !exists("g:vscode")
+	Plug 'vim-scripts/Tab-Menu'
+	Plug 'davidoc/taskpaper.vim'
+"	Plug 'keith/swift.vim'
+	Plug 'tpope/vim-fugitive'
+	Plug 'xolox/vim-misc'
+	Plug 'xolox/vim-easytags'
+"	Plug 'pangloss/vim-javascript'
+"	Plug 'maxmellon/vim-jsx-pretty'
+	Plug 'machakann/vim-swap'
+	Plug 'sheerun/vim-polyglot'
+	Plug 'vito-c/jq.vim'
+	Plug 'yasuhiroki/github-actions-yaml.vim'
+endif
 if filereadable(expand('$HOME/.local/vimplugins'))
 	source $HOME/.local/vimplugins
 endif
