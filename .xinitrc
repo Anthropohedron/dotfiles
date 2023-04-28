@@ -11,13 +11,6 @@ do
 	test -d "$XINIT" && break
 done
 
-localresources=$HOME/.local/Xresources
-localmodmap=$HOME/.local/Xmodmap
-userresources=$HOME/.Xresources
-usermodmap=$HOME/.Xmodmap
-sysresources=$XINIT/.Xresources
-sysmodmap=$XINIT/.Xmodmap
-
 cd $HOME
 PATH="`zsh -c 'echo $PATH'`"
 export PATH
@@ -29,33 +22,25 @@ xset fp+ $HOME/Library/Fonts/
 
 # merge in defaults and keymaps
 
-if [ -f "$sysresources" ]; then
-    xrdb -merge "$sysresources"
-fi
+PREFIXES="\
+	$XINIT/. \
+	$HOME/. \
+	$(sed -E 's,/?$,/,' $HOME/.local/PLATK 2>/dev/null) \
+	$(sed -E 's,/?$,/,' $HOME/.local/PLATAK 2>/dev/null) \
+	$HOME/.local/ \
+	"
 
-if [ -f "$sysmodmap" ]; then
-    xmodmap "$sysmodmap"
-fi
-
-if [ -f "$userresources" ]; then
-    xrdb -merge "$userresources"
-fi
-
-if [ -f "$usermodmap" ]; then
-    xmodmap "$usermodmap"
-fi
-
-if [ -f "$localresources" ]; then
-    xrdb -merge "$localresources"
-fi
-
-if [ -f "$localmodmap" ]; then
-    xmodmap "$localmodmap"
-fi
-
-#tcsh -c 'growling_pidgin.py &'
-
-#USERWM=/opt/local/bin/openbox
+for p in $PREFIXES
+do
+	if test -r "$p"XResources
+	then
+		xrdb -merge "$p"XResources
+	fi
+	if test -r "$p"Xmodmap
+	then
+		xmodmap "$p"Xmodmap
+	fi
+done
 
 # start some nice programs
 
@@ -72,7 +57,4 @@ if [ -d $XINIT/xinitrc.d ] ; then
 	done
 	unset f
 fi
-
-# start the window manager
-#exec quartz-wm
 
