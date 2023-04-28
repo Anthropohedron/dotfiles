@@ -103,10 +103,6 @@ then
 	mknod $cdpipe p || mkfifo $cdpipe
 	chmod 600 $cdpipe
 fi
-if test ! -d "$HOME/.local"
-then
-	mkdir "$HOME/.local"
-fi
 if test ! -r "$HOME/.local/promptdirs.sed"
 then
 	echo 's,^'"$HOME"',~,' > "$HOME/.local/promptdirs.sed"

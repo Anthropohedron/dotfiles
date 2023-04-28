@@ -19,6 +19,10 @@ function _alias_basics () {
 
 _alias_basics -a
 
+if test ! -d "$HOME/.local"
+then
+	mkdir "$HOME/.local"
+fi
 export KERNEL=$(echo $(uname -o 2>/dev/null || uname -s) | tr / -)
 export ARCH=$(uname -m)
 PLATK="$HOME/.platform/kernel/$KERNEL"
