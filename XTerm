@@ -1,4 +1,4 @@
-# vim: set ft=xdefaults:
+! vim: set ft=xdefaults:
 XTerm*utf8: 1
 XTerm*Locale: UTF-8
 XTerm*VT100*utf8Fonts:  True
@@ -195,9 +195,23 @@ XTerm.vt100.translations:	#override \n\
         None<Key>Next:	scroll-forw(1 , page) \n\
         None<Key>Home:	scroll-back(99 , page) \n\
         None<Key>End:	scroll-forw(99 , page) \n
-mutt.vt100.translations: #merge \n\
+mutt.vt100.translations: #override \n\
+        None<Key>SunCut:     select-set(CLIPBOARD) \n\
+        None<Key>SunCopy:    select-set(CLIPBOARD) \n\
+        None<Key>SunPaste:   insert-selection(CLIPBOARD) \n\
+        None<Key>F11:    select-start() select-end(SECONDARY, CUT_BUFFER1) \n\
+	None<Key>F12:    start-extend() select-end(SECONDARY, CUT_BUFFER1) \n\
+        Shift<Key>F11:    select-start() select-end(SECONDARY, CUT_BUFFER2) \n\
+	Shift<Key>F12:    start-extend() select-end(SECONDARY, CUT_BUFFER2) \n\
+        Ctrl<Key>F11:    insert-selection(CUT_BUFFER1) \n\
+        Ctrl<Key>F12:    insert-selection(CUT_BUFFER2) \n\
+        Shift<Key>Help:    insert-selection(CUT_BUFFER0) \n\
+        None<Key>Help:    insert-selection(CUT_BUFFER1) \n\
+        Ctrl<Key>Help:    insert-selection(CUT_BUFFER2) \n\
+	Ctrl<Key>KP_F1:	secure() \n\
         None<Btn4Down>:	string(<) \n\
-        None<Btn5Down>:	string(>) \n
+        None<Btn5Down>:	string(>) \n\
+        None<Key>End:	string($) \n
 XTerm*tek4014.Translations:	#override               @Num_Lock<Key>KP_0: string(0)\n\
         @Num_Lock<Key>KP_1: string(1)\n\
         @Num_Lock<Key>KP_2: string(2)\n\
