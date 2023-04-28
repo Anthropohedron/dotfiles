@@ -26,9 +26,12 @@ PLATAK="$HOME/.platform/arch-kernel/$ARCH-$KERNEL"
 PLATALL="$HOME/.platform/all"
 PLATLOCAL="$HOME/.local"
 PLATWSL=""
+printf '%s' "$PLATK" > "$HOME/.local/PLATK"
+printf '%s' "$PLATAK" > "$HOME/.local/PLATAK"
 if test -r /proc/version && grep -i microsoft /proc/version >/dev/null
 then
 	PLATWSL="$HOME/.platform/wsl2"
+	printf '%s' "$PLATWSL" > "$HOME/.local/PLATWSL"
 fi
 
 function platfile () {
