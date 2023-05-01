@@ -32,7 +32,7 @@ redirect=
 command=
 ls=-ls
 ls=
-geom=
+geom="$(xgeom)"
 continue=:
 while $continue; do
 	case $1 in
@@ -61,7 +61,7 @@ while $continue; do
 #		;;
 	-geometry)
 		shift
-		geom="-geometry $1"
+		geom="$(xgeom $1)"
 		shift
 		;;
 	-port)
