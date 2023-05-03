@@ -2,7 +2,7 @@
 
 if test x"$1" = "x-x"
 then
-	DISPLAY="${DISPLAY:-":0"}"
+	DISPLAY=":0"
 	export DISPLAY
 	shift
 fi
