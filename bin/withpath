@@ -1,0 +1,19 @@
+#!/bin/sh
+
+if test x"$1" = "x-x"
+then
+	DISPLAY="${DISPLAY:-":0"}"
+	export DISPLAY
+	shift
+fi
+
+if test $# -eq 0 -o x"$1" = "x-h" -o x"$1" = "x--help"
+then
+	echo "Usage: $0 [-x] <command> [args...]" >&2
+	exit 1
+fi
+
+PATH="`zsh -c 'echo $PATH'`"
+export PATH
+
+exec "$@"
