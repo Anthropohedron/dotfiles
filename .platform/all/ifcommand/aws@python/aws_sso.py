@@ -62,6 +62,9 @@ class AwsCliSso:
 
     def set_profile(self, profile_name):
         section = self.config["profile " + profile_name]
+        if "sso_session" in section:
+            sso_session = self.config["sso-session " + section["sso_session"]]
+            section.update(sso_session)
         missing = self._.SSO_KEYS - set(section.keys())
         if len(missing) > 0:
             raise RuntimeError(
