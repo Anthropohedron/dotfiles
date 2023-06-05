@@ -111,4 +111,4 @@ then
 fi
 
 printf 'https://github.com/%s/blob/%s/%s\n' \
-	"$REPO" "$BRANCH" "$PATHSUFFIX" | urlescape
+	"$REPO" "$BRANCH" "$PATHSUFFIX" | urlescape -f
