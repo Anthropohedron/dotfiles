@@ -11,6 +11,7 @@ fpath=($homefpath $systemfpath)
 autoload -U ${^homefpath}/*(:t)
 autoload -U compinit && compinit
 autoload -U colors && colors
+autoload -U add-zsh-hook
 
 if test ! -r ~/.zplug/init.zsh
 then
@@ -153,29 +154,32 @@ function savewd () {
 		return
 	fi
 	local file
-	if test -z "$1"
+	if test -z "$1" -a -z "$_CURWDSESSION_"
 	then
 		file="$dirstacks/stack$(stamp)_$$"
 	else
-		file="$dirstacks/stack_$1"
+		file="$dirstacks/stack_${1:-"$_CURWDSESSION_"}"
 		fc -W
 	fi
 	writewd > $file
 }
 function clearsavewd () {
-	_rm_chpwd '^savewd '
+	add-zsh-hook -D chpwd savewd
 }
 function getsavewd () {
-	_ls_chpwd | sed -n 's/^savewd '\''\([^'\'']\+\)'\''$/\1/p'
+	if test -n "$_CURWDSESSION_"
+	then
+		printf '%s\n' "$_CURWDSESSION_"
+	fi
 }
 function setsavewd () {
 	test $# -eq 1 -a -n "$1" || return 1
-	_add_chpwd "savewd '$1'"
+	_CURWDSESSION_="$1"
+	add-zsh-hook chpwd savewd
 	chpwd
 }
 function initwd () {
 	test $# -eq 1 -a -n "$1" || return 1
-	clearsavewd
 	if test -e "$dirstacks/stack_$1"
 	then
 		cat "$dirstacks/stack_$1" | readwd
@@ -188,8 +192,7 @@ function initwd () {
 	unsetopt INC_APPEND_HISTORY_TIME
 }
 function edwd () {
-	local wd="$(getsavewd)"
-	local stack="$dirstacks/stack_$wd"
+	local stack="$dirstacks/stack_$_CURWDSESSION_"
 	if test ! -r "$stack"
 	then
 		echo "No session found" >&2
@@ -203,7 +206,7 @@ function edwd () {
 		test $(wc -l < $tmpf) -gt 1
 	then
 		readwd < $tmpf
-		savewd "$wd"
+		savewd
 	fi
 	rm -f $tmpf 2>/dev/null
 }
@@ -775,10 +778,9 @@ function rmtilde () {
 # begin prompt
 
 function _prompt_savewd () {
-	local wd="$(getsavewd)"
-	if test -n "$wd"
+	if test -n "$_CURWDSESSION_"
 	then
-		printf '(%s%s%s) ' "$fg[yellow]" "$wd" "$reset_color"
+		printf '(%s%s%s) ' "$fg[yellow]" "$_CURWDSESSION_" "$reset_color"
 	fi
 }
 function _prompt_git () {
@@ -796,40 +798,10 @@ function _prompt_dirs () {
 			-e '2,$s/^/'"$fg[blue]|$reset_color "/
 }
 
-function _ls_chpwd () {
-	for func in "$chpwdfuncs[@]"
-	do
-		printf '%s\n' "$func"
-	done
-}
-function _add_chpwd () {
-	local oldIFS="$IFS"
-	local tmpf=$(mktemp)
-	_ls_chpwd > $tmpf
-	printf '%s\n' "$*" >> $tmpf
-	IFS=$'\n'
-	chpwdfuncs=($(sort -u $tmpf))
-	rm -f $tmpf
-	IFS="$oldIFS"
-}
-function _rm_chpwd () {
-	test $# -eq 1 -a -n "$1" || return 1
-	local oldIFS="$IFS"
-	local tmpf=$(mktemp)
-	_ls_chpwd > $tmpf
-	IFS=$'\n'
-	chpwdfuncs=($(grep -v "$1" $tmpf))
-	rm -f $tmpf
-	IFS="$oldIFS"
-}
-
-function chpwd () {
-	for func in "$chpwdfuncs[@]"
-	do
-		eval "$func"
-	done
-}
 prompt="%m %~ %B%#%b "
+function term_title () {
+	print -nP '\033]0;%m: %~\007'
+}
 if test -n "$xprompt"
 then
 	function precmd () {
@@ -844,8 +816,8 @@ then
 	}
 	if test "$xprompt" = title
 	then
-		_add_chpwd "print -nP '\\033]0;%m: %~\\007'"
-		chpwd
+		add-zsh-hook chpwd term_title
+		term_title
 	fi
 else
 	function precmd () { }
