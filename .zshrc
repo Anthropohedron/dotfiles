@@ -176,7 +176,6 @@ function setsavewd () {
 	test $# -eq 1 -a -n "$1" || return 1
 	_CURWDSESSION_="$1"
 	add-zsh-hook chpwd savewd
-	chpwd
 }
 function initwd () {
 	test $# -eq 1 -a -n "$1" || return 1
