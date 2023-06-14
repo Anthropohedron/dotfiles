@@ -157,6 +157,8 @@ if !exists("g:vscode")
 	Plug 'vito-c/jq.vim'
 	Plug 'yasuhiroki/github-actions-yaml.vim'
 endif
+Plug 'sbdchd/neoformat'
+let g:neoformat_try_node_exe = 1
 if filereadable(expand('$HOME/.local/vimplugins'))
 	source $HOME/.local/vimplugins
 endif
