@@ -1,0 +1,27 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 <globs...>" >&2
+	exit 1
+}
+
+if test $# -lt 1
+then
+	usage
+fi
+
+GLOB="$*"
+TMPF=$(mktemp)
+trap "rm -f $TMPF" EXIT
+
+OLDWD=.
+CURWD="$(pwd)"
+while test "$CURWD" != "$OLDWD" -a $(wc -l < $TMPF) -eq 0
+do
+	eval "ls -1d $GLOB" 2>/dev/null |\
+		tee $TMPF |\
+		sed -e "s|^|$CURWD/|" -e 's,^//,/,'
+	OLDWD="$CURWD"
+	cd ..
+	CURWD="$(pwd)"
+done
