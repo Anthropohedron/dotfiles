@@ -27,7 +27,7 @@ set comments=sr:<P>,mb:</P><P>,el:</P>,sr:/*,mb:*,el:*/,://,b:#,n:%,:XCOMM,n:>,n
 set statusline=%<%f\ %h%m%r%=%{\"[\".(&ff).\",\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}%k\ %-14.(%l,%c%V%)\ %P
 set nopaste
 set t_RV=
-set ttymouse=
+"set ttymouse=
 set mouse=
 set foldlevelstart=99
 if version >= 600

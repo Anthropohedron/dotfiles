@@ -1,10 +1,10 @@
 set wrapmargin=5
 set showmode
-set redraw
+"set redraw
 set shell=/bin/sh
 set ai
 set sw=8 ts=8
-set noflash
+"set noflash
 source ~/.vim/abbr.vim
 map   K        k
 map          :next
