@@ -1,13 +1,3 @@
-#compdef msh
-
 _msh() {
-  exec >/dev/pts/0
-  exec 2>&1
-  setopt XTRACE
-  echo $curcontext
-  print -l "$@"
-  unsetopt XTRACE
+	service=which curcontext=which words[1]=which _which "$@"
 }
-
-_msh "$@"
-
