@@ -12,6 +12,8 @@ bind pager <Tab> next-new
 bind compose v view-attach
 bind compose \n send-message
 bind compose s send-message
+bind compose <Enter> send-message
+bind compose <Return> send-message
 bind compose S edit-subject
 bind index - previous-page
 bind index , delete-subthread
