@@ -1,0 +1,55 @@
+#!/bin/sh
+
+usage () {
+	if test $# -gt 0
+	then
+		echo "$*" >&2
+	fi
+	echo "Usage: $0 [-i] [-f]" >&2
+	exit 1
+}
+
+FOCUSED=false
+CHOOSE=true
+
+while test $# -gt 0
+do
+	case x"$1" in
+		x-f) FOCUSED=true; shift ;;
+		x-i) CHOOSE=false; shift ;;
+		*) usage ;;
+	esac
+done
+
+if $FOCUSED
+then
+	WINDOW="$(xdotool getactivewindow)"
+else
+	echo "Click on a window" >&2
+	WINDOW=$(xwininfo | sed -E -n \
+		's/^[[:space:]]*xwininfo: Window id:[[:space:]]*([xa-f0-9]+)[[:space:]].*$/\1/p')
+fi
+if test -z "$WINDOW"
+then
+	usage "Cannot find window"
+fi
+
+xwininfo -id $WINDOW | awk -v "CHOOSE=$CHOOSE" '
+	BEGIN { NEEDED=5 }
+	/xwininfo: Window id:/ { ID = $4; --NEEDED }
+	/^\s*Absolute upper-left X:/ { X = $NF; --NEEDED }
+	/^\s*Absolute upper-left Y:/ { Y = $NF; --NEEDED }
+	/^\s*Width:/ { WIDTH = $NF; --NEEDED }
+	/^\s*Height:/ { HEIGHT = $NF; --NEEDED }
+	END {
+		if (NEEDED) exit 1;
+		if (CHOOSE=="true") {
+			printf("xdotool selectwindow windowmove --sync %d %d windowsize %d %d\n",
+				X, Y,
+				WIDTH, HEIGHT);
+		} else {
+			printf("xdotool windowmove --sync %s %d %d windowsize %s %d %d\n",
+				ID, X, Y,
+				ID, WIDTH, HEIGHT);
+		}
+	}'
