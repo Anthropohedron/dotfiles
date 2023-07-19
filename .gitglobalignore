@@ -10,3 +10,4 @@ sleet.json
 params.json
 *.params.json
 .DS_Store
+.coverage
