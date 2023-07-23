@@ -779,7 +779,16 @@ function rmtilde () {
 function _prompt_savewd () {
 	if test -n "$_CURWDSESSION_"
 	then
-		printf '(%s%s%s) ' "$fg[yellow]" "$_CURWDSESSION_" "$reset_color"
+		local _coloron="$fg[yellow]"
+		local _coloroff="$reset_color"
+		local _fmt='(%s%s%s) '
+		if test x"$1" = x-c
+		then
+			_coloron=""
+			_coloroff=""
+			_fmt=' (%s%s%s)'
+		fi
+		printf "$_fmt" "$_coloron" "$_CURWDSESSION_" "$_coloroff"
 	fi
 }
 function _prompt_git () {
@@ -799,7 +808,9 @@ function _prompt_dirs () {
 
 prompt="%m %~ %B%#%b "
 function term_title () {
-	print -nP '\033]0;%m: %~\007'
+	print -nP '\033]0;%m: %~'
+	_prompt_savewd -c
+	printf '\007'
 }
 if test -n "$xprompt"
 then
