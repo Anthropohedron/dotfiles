@@ -5,23 +5,68 @@ usage () {
 	then
 		echo "$*" >&2
 	fi
-	echo "Usage: $0 [-i] [-f]" >&2
+	echo "Usage: $0 [[-i] [-f]|-a]" >&2
 	exit 1
 }
 
+generate () {
+	xwininfo -id $1 | awk -v "CHOOSE=$CHOOSE" '
+		BEGIN { NEEDED=5 }
+		/xwininfo: Window id:/ { ID = $4; --NEEDED }
+		/^\s*Absolute upper-left X:/ { X = $NF; --NEEDED }
+		/^\s*Absolute upper-left Y:/ { Y = $NF; --NEEDED }
+		/^\s*Width:/ { WIDTH = $NF; --NEEDED }
+		/^\s*Height:/ { HEIGHT = $NF; --NEEDED }
+		END {
+			if (NEEDED) exit 1;
+			if (CHOOSE=="true") {
+				printf("xdotool selectwindow windowmove --sync %d %d windowsize %d %d\n",
+					X, Y,
+					WIDTH, HEIGHT);
+			} else {
+				printf("xdotool windowmove --sync %s %d %d windowsize %s %d %d\n",
+					ID, X, Y,
+					ID, WIDTH, HEIGHT);
+			}
+		}'
+}
+
+ALL=false
 FOCUSED=false
 CHOOSE=true
 
+nargs=$#
 while test $# -gt 0
 do
 	case x"$1" in
-		x-f) FOCUSED=true; shift ;;
-		x-i) CHOOSE=false; shift ;;
+		x-a)
+			test $nargs -gt 1 && usage
+			ALL=true
+			CHOOSE=false
+			shift
+			;;
+		x-f)
+			$ALL && usage
+			FOCUSED=true
+			shift
+			;;
+		x-i)
+			$ALL && usage
+			CHOOSE=false
+			shift
+			;;
 		*) usage ;;
 	esac
 done
 
-if $FOCUSED
+if $ALL
+then
+	for WINDOW in $(xdotool search --name .)
+	do
+		generate $WINDOW
+	done
+	exit 0
+elif $FOCUSED
 then
 	WINDOW="$(xdotool getactivewindow)"
 else
@@ -34,22 +79,4 @@ then
 	usage "Cannot find window"
 fi
 
-xwininfo -id $WINDOW | awk -v "CHOOSE=$CHOOSE" '
-	BEGIN { NEEDED=5 }
-	/xwininfo: Window id:/ { ID = $4; --NEEDED }
-	/^\s*Absolute upper-left X:/ { X = $NF; --NEEDED }
-	/^\s*Absolute upper-left Y:/ { Y = $NF; --NEEDED }
-	/^\s*Width:/ { WIDTH = $NF; --NEEDED }
-	/^\s*Height:/ { HEIGHT = $NF; --NEEDED }
-	END {
-		if (NEEDED) exit 1;
-		if (CHOOSE=="true") {
-			printf("xdotool selectwindow windowmove --sync %d %d windowsize %d %d\n",
-				X, Y,
-				WIDTH, HEIGHT);
-		} else {
-			printf("xdotool windowmove --sync %s %d %d windowsize %s %d %d\n",
-				ID, X, Y,
-				ID, WIDTH, HEIGHT);
-		}
-	}'
+generate $WINDOW
