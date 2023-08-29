@@ -1,0 +1,22 @@
+-- vim: ft=sql
+
+-- You probably want to set up a local-only ~/.pg_service.conf, which is a
+-- DOS INI file. For config in that file for `psql service=arbitrary_name`
+-- to work, for example:
+--
+--   [arbitrary_name]
+--   host=dbhost.provider.com
+--   port=5432
+--   dbname=mydb
+--   user=notAdmin
+--   password=hunter2
+--   sslmode=require
+--   sslcompression=1
+--   options=--search_path=schema1,schema2,schema3
+
+-- Get .psqlrc ideas from:
+--   https://gist.github.com/jaytaylor/e5aa89c8f3aaab3f576f
+--   http://www.if-not-true-then-false.com/2009/postgresql-psql-psqlrc-tips-and-tricks/
+--   http://opensourcedbms.com/dbms/psqlrc-psql-startup-file-for-postgres/
+
+\set COMP_KEYWORD_CASE upper
