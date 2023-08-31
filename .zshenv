@@ -40,12 +40,17 @@ fi
 
 function platfile () {
 	local LOCALFIRST=false
+	local LOCAL=true
 	if test x"$1" = x-l
 	then
 		shift
 		LOCALFIRST=true
+	elif test x"$1" = x-L
+	then
+		shift
+		LOCAL=false
 	fi
-	if $LOCALFIRST && test -r "$PLATLOCAL"/$1
+	if $LOCAL && $LOCALFIRST && test -r "$PLATLOCAL"/$1
 	then
 		echo "$PLATLOCAL"/$1
 	fi
@@ -65,7 +70,7 @@ function platfile () {
 	then
 		echo "$PLATK"/$1
 	fi
-	if ! $LOCALFIRST && test -r "$PLATLOCAL"/$1
+	if $LOCAL && ! $LOCALFIRST && test -r "$PLATLOCAL"/$1
 	then
 		echo "$PLATLOCAL"/$1
 	fi
