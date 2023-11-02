@@ -234,6 +234,7 @@ else
 		xdotool windowsize "$WINDOW" $WIDTH $HEIGHT
 		xdotool windowmove "$WINDOW" $X $Y
 		xprop -id "$WINDOW" -remove XWINSNAP_ORIG 2>/dev/null
+		xprop -id "$WINDOW" -remove XWINSNAP_SCREEN 2>/dev/null
 	}
 fi
 
