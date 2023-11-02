@@ -273,6 +273,24 @@ function cleanwd () {
 alias lwd='writewd > "$cdpipe"'
 alias wdl='readwd < "$cdpipe"'
 
+if test -r "$INIT_NVM" && source "$INIT_NVM"
+then
+	function chpwd_nvm_use () {
+		local _nvmrc="$(findup .nvmrc)"
+		if test -z "$_nvmrc"
+		then
+			return 0
+		fi
+		local _nvmver="$(cat "$_nvmrc")"
+		if test "$_nvmver" != "$_PREVIOUS_NVM_VER"
+		then
+			nvm use
+			_PREVIOUS_NVM_VER="$_nvmver"
+		fi
+	}
+	add-zsh-hook chpwd chpwd_nvm_use
+fi
+
 alias ..='cd ..'
 alias cd..='cd ..'
 alias edtr=ddvim

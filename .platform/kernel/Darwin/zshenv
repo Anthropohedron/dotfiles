@@ -5,6 +5,8 @@ then
 	export DISPLAY=`echo "$DISPLAY" | sed 's/^.*:/:/'`
 fi
 
+INIT_NVM=/opt/local/share/nvm/init-nvm.sh
+
 export DOTFONTPATH=/usr/X11R6/lib/X11/fonts/TTF:/System/Library/Fonts
 export NO_AT_BRIDGE=1
 
