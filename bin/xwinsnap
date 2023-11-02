@@ -107,6 +107,7 @@ then
 	if ! eval_read_prop XWINSNAP_SCREEN SCREEN POSITION
 	then
 		POSITION=0
+		SCREEN=0
 		eval "$(x11screens -s ALL 2>/dev/null | awk -v X=$X -v Y=$Y '{
 			if (X < $1 ||
 				Y < $2 ||
