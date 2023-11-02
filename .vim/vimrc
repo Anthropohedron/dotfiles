@@ -156,6 +156,7 @@ if !exists("g:vscode")
 	Plug 'sheerun/vim-polyglot'
 	Plug 'vito-c/jq.vim'
 	Plug 'yasuhiroki/github-actions-yaml.vim'
+	Plug 'lifepillar/pgsql.vim'
 endif
 Plug 'sbdchd/neoformat'
 let g:neoformat_try_node_exe = 1
