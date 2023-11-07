@@ -118,6 +118,7 @@ alias cdlf='cd "`xargs -0 dirname < $cdpipe`"'
 alias pdlf='pd "`xargs -0 dirname < $cdpipe`"'
 alias lcd='pwd > $cdpipe'
 
+# initwd
 dirstacks="$HOME/.dirstacks"
 alias lswd='find "$dirstacks" -name '"'stack*'"' | sort -r'
 alias catdirstack='for d in "${(@)dirstack}"; do echo "$d"; done'
@@ -177,6 +178,10 @@ function setsavewd () {
 	_CURWDSESSION_="$1"
 	add-zsh-hook chpwd savewd
 }
+if ! (( ${${customhooktypes}[(I)initwd]} ))
+then
+	set -A customhooktypes $customhooktypes initwd
+fi
 function initwd () {
 	test $# -eq 1 -a -n "$1" || return 1
 	if test -e "$dirstacks/stack_$1"
@@ -189,6 +194,10 @@ function initwd () {
 	setopt SHARE_HISTORY
 	unsetopt INC_APPEND_HISTORY
 	unsetopt INC_APPEND_HISTORY_TIME
+	for f in ${initwd_functions}
+	do
+		"$f" "$1"
+	done
 }
 function edwd () {
 	local stack="$dirstacks/stack_$_CURWDSESSION_"
