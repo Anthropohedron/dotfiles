@@ -300,6 +300,31 @@ then
 	add-zsh-hook chpwd chpwd_nvm_use
 fi
 
+# taskwarrior
+if command -v task >/dev/null
+then
+	TASKRC_auto="$PLATLOCAL/taskrc.autogen"
+	TASKRC="$PLATLOCAL/taskrc"
+	function _make_taskrc {
+		printf 'include "~/.taskrc"\n'
+		platfile -L taskrc | sed 's/^.*$/include "&"/'
+	}
+	if ! _make_taskrc | diff "$TASKRC_auto" - >/dev/null 2>&1
+	then
+		_make_taskrc > "$TASKRC_auto"
+	fi
+	unfunction _make_taskrc
+	if test ! -r "$TASKRC"
+	then
+		echo "include \"$TASKRC_auto\"" > "$TASKRC"
+	fi
+	function _initwd_task_context () {
+		task context "$1" >/dev/null 2>&1 || \
+			task context none >/dev/null 2>&1 || true
+	}
+	add-zsh-hook initwd _initwd_task_context
+fi
+
 alias ..='cd ..'
 alias cd..='cd ..'
 alias edtr=ddvim
