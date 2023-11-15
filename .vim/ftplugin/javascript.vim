@@ -1,6 +1,6 @@
 source ~/.vim/ftplugin/c_like.vim
 set smartindent
-set sw=4 ts=4
+set sw=2 ts=2
 inoreabbr  try      try {<CR>} catch (ex) { }<ESC>O<Left>
 inoreabbr  finally  } finally {<CR><Del>
 "nmap!  <C-P>    3.1415927
