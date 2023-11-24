@@ -1,3 +1,6 @@
+if &ft == "markdown"
+	finish
+endif
 source ~/.vim/ftplugin/xml.vim
 iunmap  <Tab>
 nmap   `        F"i
