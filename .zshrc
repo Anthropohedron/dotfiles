@@ -305,9 +305,13 @@ if command -v task >/dev/null
 then
 	TASKRC_auto="$PLATLOCAL/taskrc.autogen"
 	TASKRC="$PLATLOCAL/taskrc"
+	export TASKRC
 	function _make_taskrc {
-		printf 'include "~/.taskrc"\n'
-		platfile -L taskrc | sed 's/^.*$/include "&"/'
+		printf 'include ~/.taskrc\n'
+		platfile -L taskrc | sed \
+			-e 's,^'"$HOME"',~,' \
+			-e 's/\s/\\&/g' \
+			-e 's/^.*$/include &/'
 	}
 	if ! _make_taskrc | diff "$TASKRC_auto" - >/dev/null 2>&1
 	then
@@ -316,7 +320,10 @@ then
 	unfunction _make_taskrc
 	if test ! -r "$TASKRC"
 	then
-		echo "include \"$TASKRC_auto\"" > "$TASKRC"
+		printf '%s\n' "$TASKRC_auto" | sed \
+			-e 's,^'"$HOME"',~,' \
+			-e 's/\s/\\&/g' \
+			-e 's/^.*$/include &/' > "$TASKRC"
 	fi
 	function _initwd_task_context () {
 		task context "$1" >/dev/null 2>&1 || \
