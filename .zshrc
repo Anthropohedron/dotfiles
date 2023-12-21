@@ -326,8 +326,13 @@ then
 			-e 's/^.*$/include &/' > "$TASKRC"
 	fi
 	function _initwd_task_context () {
-		task context "$1" >/dev/null 2>&1 || \
-			task context none >/dev/null 2>&1 || true
+		if command -v "task-$1" >/dev/null
+		then
+			alias task="task-$1"
+		elif test "$(whence -w task)" = "task: alias"
+		then
+			unalias task
+		fi
 	}
 	add-zsh-hook initwd _initwd_task_context
 fi
