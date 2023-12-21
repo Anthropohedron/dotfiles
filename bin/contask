@@ -1,0 +1,50 @@
+#!/bin/sh
+
+usage () {
+	cat >&2 <<"EOF"
+	Usage: contask -c <context> [tags...]
+	       task-<context> [task-args...]
+EOF
+	exit 1
+}
+
+exe="$(basename "$0")"
+if test "$exe" = "contask"
+then
+	if test $# -lt 2 -o x"$1" != x-c
+	then
+		usage
+	fi
+	context="$2"
+	shift
+	shift
+	if test $# -lt 1
+	then
+		set -- "$(printf '+%s' "$context" | awk '{
+		first = toupper(substr($0, 1, 1));
+		rest = substr($0, 2);
+		printf("%s%s", first, rest);
+	}')"
+	fi
+	for tag in "$@"
+	do
+		if expr "$tag" : '[-+].*' >/dev/null
+		then
+			set -- "$@" "$tag"
+		else
+			set -- "$@" "+$tag"
+		fi
+		shift
+	done
+	task rc.verbose=0 rc.confirmation=false context define "$context" "$@"
+	ln -s "$(command -v contask)" "$HOME/.local/bin/task-$context"
+	exit 0
+fi
+
+context="$(printf '%s' "$exe" | sed -n 's/^task-\(.*\)$/\1/p')"
+if test -z "$context"
+then
+	usage
+else
+	exec task "rc.context=$context" "$@"
+fi
