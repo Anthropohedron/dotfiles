@@ -3,14 +3,23 @@
 usage () {
 	cat >&2 <<"EOF"
 	Usage: contask -c <context> [tags...]
+	       contask -l <context>
 	       task-<context> [task-args...]
 EOF
 	exit 1
 }
 
+contasklink () {
+	ln -s "$(command -v contask)" "$HOME/.local/bin/task-$1"
+}
+
 exe="$(basename "$0")"
 if test "$exe" = "contask"
 then
+	if test $# -eq 2 -a x"$1" = x-l
+	then
+		contasklink "$2"
+	fi
 	if test $# -lt 2 -o x"$1" != x-c
 	then
 		usage
@@ -20,7 +29,7 @@ then
 	shift
 	if test $# -lt 1
 	then
-		set -- "$(printf '+%s' "$context" | awk '{
+		set -- "$(printf '%s' "$context" | awk '{
 		first = toupper(substr($0, 1, 1));
 		rest = substr($0, 2);
 		printf("%s%s", first, rest);
@@ -37,7 +46,7 @@ then
 		shift
 	done
 	task rc.verbose=0 rc.confirmation=false context define "$context" "$@"
-	ln -s "$(command -v contask)" "$HOME/.local/bin/task-$context"
+	contasklink "$context"
 	exit 0
 fi
 
