@@ -1,5 +1,10 @@
 # loaded regardless of interactive
 
+if test -n "$ZSH_SCRIPT"
+then
+	return
+fi
+
 setopt BSD_ECHO
 setopt UNSET
 setopt SH_WORD_SPLIT
