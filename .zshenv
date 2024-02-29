@@ -11,15 +11,17 @@ setopt SH_WORD_SPLIT
 unsetopt BG_NICE
 unsetopt HUP
 
-_SHELL_BASICS="uname cat grep sed awk tr find xargs"
-
 function _alias_basics () {
 	local add_alias=$(test $# -gt 0 && echo true || echo false)
-	for cmd in $_SHELL_BASICS
+	for cmd in uname cat grep sed awk tr find xargs
 	do
 		unalias "$cmd" 2>/dev/null
 		$add_alias && alias "$cmd"="$(PATH=/bin:/usr/bin command -v "$cmd")"
 	done
+	if ! $add_alias
+	then
+		unfunction _alias_basics
+	fi
 }
 
 _alias_basics -a
