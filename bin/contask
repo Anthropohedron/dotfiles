@@ -1,39 +1,46 @@
 #!/bin/sh
 
 usage () {
+	if test $# -gt 0
+	then
+		printf '%s\n' "$*" >&2
+	fi
 	cat >&2 <<"EOF"
-	Usage: contask -c <context> [tags...]
+	Usage: contask -A [taskrc]
+	       contask -c <context> [tags...]
 	       contask -l <context>
 	       task-<context> [task-args...]
 EOF
 	exit 1
 }
 
-contasklink () {
-	ln -s "$(command -v contask)" "$HOME/.local/bin/task-$1"
+CONTASK="$(command -v contask)"
+if test -z "$CONTASK"
+then
+	usage "Cannot find 'contask' in PATH"
+fi
+
+linkname () {
+	printf '%s/.local/bin/task-%s' "$HOME" "$1"
 }
 
-exe="$(basename "$0")"
-if test "$exe" = "contask"
-then
-	if test $# -eq 2 -a x"$1" = x-l
+contasklink () {
+	symlink="$HOME/.local/bin/task-$1"
+	if test ! -L "$symlink"
 	then
-		contasklink "$2"
+		echo "Linking task-$context"
+		ln -sf "$CONTASK" "$symlink"
 	fi
-	if test $# -lt 2 -o x"$1" != x-c
-	then
-		usage
-	fi
-	context="$2"
-	shift
-	shift
+}
+
+createcontext () {
 	if test $# -lt 1
 	then
 		set -- "$(printf '%s' "$context" | awk '{
-		first = toupper(substr($0, 1, 1));
-		rest = substr($0, 2);
-		printf("%s%s", first, rest);
-	}')"
+			first = toupper(substr($0, 1, 1));
+			rest = substr($0, 2);
+			printf("%s%s", first, rest);
+		}')"
 	fi
 	for tag in "$@"
 	do
@@ -46,7 +53,61 @@ then
 		shift
 	done
 	task rc.verbose=0 rc.confirmation=false context define "$context" "$@"
-	contasklink "$context"
+}
+
+exe="$(basename "$0")"
+if test "$exe" = "contask"
+then
+	CREATECONTEXT=false
+	case x"$1" in
+		x-A) test $# -le 2 || usage
+			TASKRC="${2:-"${TASKRC:-"$HOME/.taskrc"}"}"
+			test -r "$TASKRC" || usage "Cannot find taskrc"
+			set -- $(awk -F '[.]' '
+				$1 == "context" &&
+					$3 ~ /^(read|write)=.*$/ &&
+					seen[$2] == 0 {
+						seen[$2] = 1
+						print $2
+					}' "$TASKRC")
+			if test $# -eq 0
+			then
+				usage No contexts found
+			fi
+			for context in "$@"
+			do
+				if test ! -L "$(linkname "$context")"
+				then
+					set -- "$@" "$context"
+				fi
+				shift
+			done
+			if test $# -eq 0
+			then
+				echo "All contexts are already linked"
+				exit 0
+			fi
+			;;
+		x-c) test $# -ge 2 || usage
+			CREATECONTEXT=true
+			context="$2"
+			shift
+			shift
+			;;
+		x-l) test $# -eq 2 || usage
+			shift
+			;;
+		*) usage ;;
+	esac
+	if $CREATECONTEXT
+	then
+		createcontext "$@"
+		set -- "$context"
+	fi
+	for context in "$@"
+	do
+		contasklink "$context"
+	done
 	exit 0
 fi
 
