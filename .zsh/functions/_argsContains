@@ -1,0 +1,16 @@
+# vim: ft=zsh
+
+function _argsContains () {
+	local arg
+	local contains="$1"
+	shift
+	if ! printf '%s' "$*" | grep -q -F -e "$contains"
+	then
+		return 1
+	fi
+	for arg in "$@"
+	do
+		test x"$arg" = x"$contains" && return 0
+	done
+	return 1
+}

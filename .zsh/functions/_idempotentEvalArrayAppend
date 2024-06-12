@@ -1,0 +1,12 @@
+# vim: ft=zsh
+
+function _idempotentEvalArrayAppend () {
+	local name="$1"
+	local append="$2"
+	shift
+	shift
+	if ! _argsContains "$append" "$@"
+	then
+		printf '%s=("${%s[@]}" "%s")' "$name" "$name" "$append"
+	fi
+}
