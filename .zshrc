@@ -335,6 +335,17 @@ then
 		fi
 	}
 	add-zsh-hook initwd _initwd_task_context
+	# task annotate checklist
+	function tacl () {
+		if test $# -lt 2
+		then
+			echo "Usage: tacl <ids|uuids> <annotation...>" >&2
+			return 1
+		fi
+		local _ids="$1"
+		shift
+		task "$_ids" annotate '☐' "$@"
+	}
 fi
 
 alias ..='cd ..'
