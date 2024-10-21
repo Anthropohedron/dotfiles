@@ -1,0 +1,45 @@
+#!/bin/sh
+
+export PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/sbin:/usr/sbin
+
+if ! command -v dig >/dev/null
+then
+	echo "Cannot find the 'dig' command" >&2
+	exit 1
+fi
+if ! command -v sendmail >/dev/null
+then
+	echo "Cannot find the 'sendmail' command" >&2
+	exit 1
+fi
+if ! command -v curl >/dev/null
+then
+	echo "Cannot find the 'curl' command" >&2
+	exit 1
+fi
+if test $# -ne 3
+then
+	echo "Usage: $0 <hostname> <from address> <to address>" >&2
+	exit 1
+fi
+
+LOOKUP="$1"
+FROM="$2"
+TO="$3"
+
+DNS="$(dig +short "$LOOKUP" @1.1.1.1 2>/dev/null)"
+ACTUAL="$(curl https://ipinfo.io/ip 2>/dev/null)"
+
+if test x"$DNS" = x"$ACTUAL"
+then
+	exit 0
+fi
+
+sendmail -i -t << EOF
+From: $FROM
+To: $TO
+Subject: DNS mismatch
+
+DNS thinks '$LOOKUP' is '$DNS' but my IP is actually '$ACTUAL' so fix it!
+
+EOF
