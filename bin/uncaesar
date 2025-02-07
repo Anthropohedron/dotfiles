@@ -1,0 +1,81 @@
+#!/bin/sh
+
+usage () {
+	if test $# -gt 0
+	then
+		echo "!!! $*" >&2
+	fi
+	echo "Usage: $0 <cipherkey|@cipherkeyfile> <inputfile|->" >&2
+	exit 1
+}
+
+if test $# -ne 2
+then
+	usage
+fi
+if expr x"$1" : x@ >/dev/null
+then
+	MAPFILE="$(printf '%s' "$1" | cut -c2-)"
+	if test ! -r "$MAPFILE"
+	then
+		usage Cannot read mapfile "'$MAPFILE'"
+	fi
+	CIPHERKEY="$(head -1 "$MAPFILE" | tr '[A-Z]' '[a-z]')"
+else
+	CIPHERKEY="$(printf '%s' "$1" | tr '[A-Z]' '[a-z]')"
+fi
+
+if test $(printf '%s' "$CIPHERKEY" | wc -c) -ne 26
+then
+	usage Invalid cipher key "'$CIPHERKEY'"
+fi
+CAPSKEY="$(printf '%s' "$CIPHERKEY" | tr '[a-z]' '[A-Z]')"
+
+if test x"$2" != "x-"
+then
+	if test ! -r "$2"
+	then
+		usage Cannot read ciphertext file "'$2'"
+	fi
+	exec < "$2"
+fi
+
+if ! command -v tput > /dev/null
+then
+	tr '['"$CIPHERKEY$CAPSKEY"']' '[a-zA-Z]'
+	exit 0
+fi
+
+awk \
+	-v "HLPRE=$(tput smso)" \
+	-v "HLPOST=$(tput rmso)" \
+	-v "keyfrom=$CIPHERKEY$CAPSKEY" \
+	-v 'keyto=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' '
+BEGIN {
+	patsplit(keyfrom, keysfrom, ".");
+	patsplit(keyto, keysto, ".");
+	for (i=1; i<=52; ++i) {
+		keymap[keysfrom[i]] = keysto[i];
+	}
+}
+{
+	CHARCOUNT=length()
+	patsplit($0, chars, "[" keyto "]", seps);
+	if (length(seps[0])) {
+		printf("%s", seps[0]);
+	}
+	for (i=1; i<=CHARCOUNT; ++i) {
+		c = chars[i]
+		if (c in keymap) {
+			printf("%s", keymap[c]);
+		} else {
+			printf("%s%s%s", HLPRE, c, HLPOST);
+		}
+		if (length(seps[i])) {
+			printf("%s", seps[i]);
+		}
+	}
+	printf("\n");
+}
+'
+
