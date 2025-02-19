@@ -6,8 +6,10 @@ usage () {
 		printf '%s\n' "$*" >&2
 	fi
 	cat >&2 <<"EOF"
-	Usage: contask -A [taskrc]
+	Usage: contask -T
+	       contask -A [taskrc]
 	       contask -c <context> [tags...]
+	       contask -r <context> [taskrc]
 	       contask -l <context>
 	       task-<context> [task-args...]
 EOF
@@ -20,16 +22,52 @@ then
 	usage "Cannot find 'contask' in PATH"
 fi
 
+taskrc_includes () {
+	for rc in "$@"
+	do
+		test -r "$rc" && \
+			sed -n 's/^include[ 	][ 	]*\(..*\)/\1/p' "$rc" |\
+			sed 's,^~/,'"$HOME"'/,'
+	done
+}
+
+get_taskrc () {
+	rclist="${TASKRC:-"$HOME/.taskrc"}"
+	if test ! -r "$rclist"
+	then
+		usage Cannot find appropriate taskrc
+	fi
+	{
+	while ! grep -le '^context\.[^.]\+\.read=' $rclist
+	do
+		rclist="$(taskrc_includes "$rclist")"
+		if test -z "$rclist"
+		then
+			usage Cannot find appropriate taskrc
+		fi
+	done
+	} | head -1
+}
+
 linkname () {
 	printf '%s/.local/bin/task-%s' "$HOME" "$1"
 }
 
 contasklink () {
 	symlink="$HOME/.local/bin/task-$1"
-	if test ! -L "$symlink"
+	if "$REMOVECONTEXT"
 	then
-		echo "Linking task-$context"
-		ln -sf "$CONTASK" "$symlink"
+		if test -L "$symlink"
+		then
+			echo "Removing task-$context"
+			rm -f "$symlink"
+		fi
+	else
+		if test ! -L "$symlink"
+		then
+			echo "Linking task-$context"
+			ln -sf "$CONTASK" "$symlink"
+		fi
 	fi
 }
 
@@ -55,14 +93,20 @@ createcontext () {
 	task rc.verbose=0 rc.confirmation=false context define "$context" "$@"
 }
 
+removecontext () {
+	task rc.verbose=0 rc.confirmation=false context delete "$context"
+}
+
 exe="$(basename "$0")"
 if test "$exe" = "contask"
 then
 	CREATECONTEXT=false
+	REMOVECONTEXT=false
 	case x"$1" in
+		x-T) get_taskrc; exit 0 ;;
 		x-A) test $# -le 2 || usage
-			TASKRC="${2:-"${TASKRC:-"$HOME/.taskrc"}"}"
-			test -r "$TASKRC" || usage "Cannot find taskrc"
+			TASKRC="${2:-"$(get_taskrc)"}"
+			test -r "$TASKRC" || usage "Cannot find appropriate taskrc"
 			set -- $(awk -F '[.]' '
 				$1 == "context" &&
 					$3 ~ /^(read|write)=.*$/ &&
@@ -88,6 +132,15 @@ then
 				exit 0
 			fi
 			;;
+		x-r) test $# -ge 2 -a $# -le 3 || usage
+			context="$2"
+			TASKRC="${3:-"$(get_taskrc)"}"
+			shift
+			shift
+			test -r "$TASKRC" || usage "Cannot find taskrc"
+			export TASKRC
+			REMOVECONTEXT=true
+			;;
 		x-c) test $# -ge 2 || usage
 			CREATECONTEXT=true
 			context="$2"
@@ -102,6 +155,10 @@ then
 	if $CREATECONTEXT
 	then
 		createcontext "$@"
+		set -- "$context"
+	elif $REMOVECONTEXT
+	then
+		removecontext "$@"
 		set -- "$context"
 	fi
 	for context in "$@"
