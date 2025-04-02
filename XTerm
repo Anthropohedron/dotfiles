@@ -17,22 +17,22 @@ XTerm*SimpleMenu*menuLabel.font:	-adobe-helvetica-bold-r-normal--*-120-*-*-*-*-i
 XTerm*SimpleMenu*menuLabel.vertSpace:	100
 XTerm*termName: xterm-256color
 XTerm*VT100*boldColors:	on
-XTerm*VT100*color0:	#222222
-XTerm*VT100*color10:	green
-XTerm*VT100*color11:	yellow
-XTerm*VT100*color12:	blue
-XTerm*VT100*color13:	magenta
-XTerm*VT100*color14:	cyan
-XTerm*VT100*color15:	white
+XTerm*VT100*color0:	rgb:22/22/22
 XTerm*VT100*color1:	red3
 XTerm*VT100*color2:	green3
 XTerm*VT100*color3:	brown4
 XTerm*VT100*color4:	blue3
 XTerm*VT100*color5:	magenta3
 XTerm*VT100*color6:	cyan3
-XTerm*VT100*color7:	gray90
+XTerm*VT100*color7:	rgb:A0/A0/A0
 XTerm*VT100*color8:	gray30
 XTerm*VT100*color9:	red
+XTerm*VT100*color10:	green4
+XTerm*VT100*color11:	rgb:88/88/00
+XTerm*VT100*color12:	blue
+XTerm*VT100*color13:	magenta
+XTerm*VT100*color14:	cyan4
+XTerm*VT100*color15:	white
 XTerm*VT100*colorBD:	white
 XTerm*VT100*colorMode:	on
 XTerm*VT100*colorUL:	yellow
@@ -212,6 +212,22 @@ mutt.vt100.translations: #override \n\
         None<Btn4Down>:	string(<) \n\
         None<Btn5Down>:	string(>) \n\
         None<Key>End:	string($) \n
+mutt*VT100*color0:	rgb:22/22/22
+mutt*VT100*color1:	red2
+mutt*VT100*color2:	green3
+mutt*VT100*color3:	rgb:CD/53/53
+mutt*VT100*color4:	rgb:22/22/FF
+mutt*VT100*color5:	magenta2
+mutt*VT100*color6:	cyan2
+mutt*VT100*color7:	gray90
+mutt*VT100*color8:	gray30
+mutt*VT100*color9:	red
+mutt*VT100*color10:	green
+mutt*VT100*color11:	yellow
+mutt*VT100*color12:	rgb:42/42/FF
+mutt*VT100*color13:	magenta
+mutt*VT100*color14:	cyan
+mutt*VT100*color15:	white
 XTerm*tek4014.Translations:	#override               @Num_Lock<Key>KP_0: string(0)\n\
         @Num_Lock<Key>KP_1: string(1)\n\
         @Num_Lock<Key>KP_2: string(2)\n\
