@@ -1,0 +1,13 @@
+[Unit]
+Description=Manage dropboxd, the proprietary DropBox daemon
+After=network.target
+ConditionPathExists=/usr/bin/dropbox
+
+[Service]
+ExecStart=/usr/bin/dropbox start
+ExecStop=/usr/bin/dropbox stop
+Type=forking
+PIDFile=%h/.dropbox/dropbox.pid
+
+[Install]
+WantedBy=multi-user.target
