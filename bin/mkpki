@@ -1,0 +1,669 @@
+#!/bin/sh
+
+############ Helper Functions ############
+
+usage () {
+	if test $# -gt 0
+	then
+		printf '%s\n' "$*" >&2
+	fi
+	cat >&2 <<EOF
+Usage: $0 --example
+       $0 <all|intermediate|certs> <config file> [
+		-c <client subject DN> <days> |
+		-s <server subject DN> <days> <comma-separated alt names|""> |
+		-cr <client CSR file> <days> |
+		-sr <server CSR file> <days>
+		]...
+EOF
+	exit 1
+}
+
+fail () {
+	printf '%s\n' "$*" >&2
+	exit 2
+}
+
+key_prompt () {
+	# args: <certname> ["Create"]
+	if test $# -eq 2
+	then
+		echo "Create the pass phrase for $3 private key" >&2
+	else
+		echo "Enter the pass phrase for $3 private key" >&2
+	fi
+}
+
+testDN () {
+	printf '%s' "$1" | awk 'BEGIN { RS="/"; FS="=" }
+		NR == 1 && /./ { err = 1; exit 1 }
+		NR == 1 { next }
+		NF != 2 { err = 1; exit 2 }
+		$1 !~ /^[A-Z][A-Z]*$/ { err = 1; exit 3 }
+		{
+			if (found[$1]) {
+				err = 1; exit 4
+			}
+			found[$1] = 1
+		}
+		END { if (!err && !(found["C"] && found["CN"])) { exit 5 } }
+	'
+}
+
+CSRtoCN () {
+	openssl req -noout -text -in "$1" |\
+		sed -n 's/^[ 	]*Subject:.* CN[ 	]*=[ 	]*\([^,]*\).*$/\1/p'
+}
+
+DNtoCN () {
+	printf '%s\n' "$1" |\
+		sed -n 's,^.*/CN=\([^/][^/]*\)\(/.*\)\?$,\1,p'
+}
+
+DNtoCSRfilename () {
+	# args: <DN>
+	printf '%s/%s.csr' $CSRDIR "$(DNtoCN "$1")"
+}
+
+DNtoCSR () {
+	# args: <DN> <alt names|"">
+	CN="$(DNtoCN "$1")"
+	CERTKEY="$CertificateOutputDir"/"$CN".key.pem
+	CSR=$CSRDIR/"$CN".csr
+	if test -f "$CSR"
+	then
+		usage "Duplicate CN: '$CN'"
+	fi
+	make_key "$CERTKEY" 2048 "'$1'"
+	make_csr "$1" "$CERTKEY" "$CSR" "'$1'" "$2"
+}
+
+make_key () {
+	# args: <keyfile> <bits> <certname>
+	key_prompt "$3" Create
+	openssl genrsa $KeyEncryption \
+		-out "$1" $2 \
+		|| fail Failed to create "$3" private key
+}
+
+fmt_alt_names () {
+	# args: <alt names> <CN>
+	_ALT="$1"','"$2"
+	if test -z "$1"
+	then
+		_ALT="$2"
+	fi
+	printf '%s' "$_ALT" | awk 'BEGIN { RS=","; FS="." }
+		/^[1-9][0-9]*\.[1-9][0-9]*\.[1-9][0-9]*\.[1-9][0-9]*$/ {
+			if ($1 > 255 || $2 > 255 || $3 > 255 || $4 > 255) {
+				exit 1
+			}
+			if (seen[$0]) { next }
+			seen[$0] = 1
+			if (output != "") {
+				output = output ","
+			}
+			output = output "IP:" $0
+			next
+		}
+		/^([0-9A-Fa-f]{4}:){7}[0-9A-Fa-f]{4}$/ {
+			if (seen[$0]) { next }
+			seen[$0] = 1
+			if (output != "") {
+				output = output ","
+			}
+			output = output "IP:" $0
+			next
+		}
+		/^([A-Za-z0-9][-A-Za-z0-9]*\.?)+$/ {
+			if (seen[$0]) { next }
+			seen[$0] = 1
+			if (output != "") {
+				output = output ","
+			}
+			output = output "DNS:" $0
+			next
+		}
+		/^.+@([A-Za-z0-9][-A-Za-z0-9]*\.?)+$/ {
+			if (seen[$0]) { next }
+			seen[$0] = 1
+			if (output != "") {
+				output = output ","
+			}
+			output = output "EMAIL:" $0
+			next
+		}
+		NR > 1 { exit 2 }
+		END { print output }
+	'
+}
+
+make_csr () {
+	# args: <DN> <keyfile> <outfile> <certname> <alt names|"">
+	_CERTNAME="$4"
+	_ALTNAMES="$(fmt_alt_names "$5" "$(DNtoCN "$1")")"
+	set -- req -config $IMCNF -new -sha256 \
+		-subj "$1" -key "$2" -out "$3"
+	if test -n "$_ALTNAMES"
+	then
+		set -- "$@" -addext "subjectAltName = $_ALTNAMES"
+	fi
+	key_prompt "$_CERTNAME"
+	openssl "$@" || fail Failed to create "$_CERTNAME" CSR
+}
+
+sign_csr () {
+	# args: <CN> <csr> <days> <usr_cert|server_cert>
+	_CERT="$CertificateOutputDir"/"$1".cert.pem
+	if test -f "$_CERT"
+	then
+		usage "Duplicate CN: '$1"
+	fi
+	key_prompt "the intermediate authority"
+	openssl ca -config $IMCNF -notext -batch \
+		-key "$IMDIR"/private/intermediate.key.pem \
+		-out "$_CERT" \
+		-in "$2" -days $3 -extensions $4 \
+		|| fail Failed to sign "'$1'"
+}
+
+setup_dir () {
+	find "$1" -type f -print0 | xargs -r -0 rm -f
+	chmod 700 "$1"/private
+	touch "$1"/index.txt
+	echo 1000 > "$1"/serial
+}
+
+example () {
+	cat >&2 <<"EOF"
+KeyEncryption=
+CertificateAuthorityDays=36500
+IntermediateAuthorityDays=3650
+MaxCertDays=365
+AuthorityRootDir=/mnt/SECURE
+CertificateOutputDir=/tmp/certs
+CertificateAuthoritySubjectDN="/C=US/ST=Ohio/L=Toledo/O=Foo Inc./OU=Security Division/CN=Foo Inc. Certificate Authority 01"
+IntermediateAuthoritySubjectDN="/C=US/ST=Ohio/L=Toledo/O=Foo Inc./OU=Deployment Division/CN=Foo Inc. Intermediate Certificate Authority 01"
+EOF
+exit 0
+}
+
+############ Environment Setup ############
+
+CACNF=`mktemp`
+IMCNF=`mktemp`
+CSRDIR=`mktemp -d`
+trap "rm -rf $CACNF $IMCNF $CSRDIR" EXIT
+
+cat > $CACNF <<"EOF"
+# OpenSSL root CA configuration file.
+
+[ ca ]
+# `man ca`
+default_ca = CA_default
+
+[ CA_default ]
+# Directory and file locations.
+certs             = $dir/certs
+crl_dir           = $dir/crl
+new_certs_dir     = $dir/newcerts
+database          = $dir/index.txt
+serial            = $dir/serial
+RANDFILE          = $dir/private/.rand
+
+# The root key and root certificate.
+private_key       = $dir/private/ca.key.pem
+certificate       = $dir/certs/ca.cert.pem
+
+# For certificate revocation lists.
+crlnumber         = $dir/crlnumber
+crl               = $dir/crl/ca.crl.pem
+crl_extensions    = crl_ext
+default_crl_days  = 30
+
+# SHA-1 is deprecated, so use SHA-2 instead.
+default_md        = sha256
+
+name_opt          = ca_default
+cert_opt          = ca_default
+default_days      = 375
+preserve          = no
+policy            = policy_strict
+
+[ policy_strict ]
+# The root CA should only sign intermediate certificates that match.
+# See the POLICY FORMAT section of `man ca`.
+countryName             = match
+stateOrProvinceName     = match
+organizationName        = match
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ policy_loose ]
+# Allow the intermediate CA to sign a more diverse range of certificates.
+# See the POLICY FORMAT section of the `ca` man page.
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+# Options for the `req` tool (`man req`).
+default_bits        = 2048
+distinguished_name  = req_distinguished_name
+string_mask         = utf8only
+
+# SHA-1 is deprecated, so use SHA-2 instead.
+default_md          = sha256
+
+# Extension to add when the -x509 option is used.
+x509_extensions     = v3_ca
+
+[ req_distinguished_name ]
+# See <https://en.wikipedia.org/wiki/Certificate_signing_request>.
+commonName                      = Common Name
+countryName                     = Country Name (2 letter code)
+stateOrProvinceName             = State or Province Name
+localityName                    = Locality Name
+0.organizationName              = Organization Name
+organizationalUnitName          = Organizational Unit Name
+emailAddress                    = Email Address
+
+# Optionally, specify some defaults.
+countryName_default             = XX
+stateOrProvinceName_default     = MyState
+localityName_default            =
+0.organizationName_default      = MyOrg
+organizationalUnitName_default  =
+emailAddress_default            =
+
+[ v3_ca ]
+# Extensions for a typical CA (`man x509v3_config`).
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+
+[ v3_intermediate_ca ]
+# Extensions for a typical intermediate CA (`man x509v3_config`).
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true, pathlen:0
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+
+[ usr_cert ]
+# Extensions for client certificates (`man x509v3_config`).
+basicConstraints = CA:FALSE
+nsCertType = client, email
+nsComment = "OpenSSL Generated Client Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth, emailProtection
+
+[ server_cert ]
+# Extensions for server certificates (`man x509v3_config`).
+basicConstraints = CA:FALSE
+nsCertType = server
+nsComment = "OpenSSL Generated Server Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer:always
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+
+[ crl_ext ]
+# Extension for CRLs (`man x509v3_config`).
+authorityKeyIdentifier=keyid:always
+
+[ ocsp ]
+# Extension for OCSP signing certificates (`man ocsp`).
+basicConstraints = CA:FALSE
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+keyUsage = critical, digitalSignature
+extendedKeyUsage = critical, OCSPSigning
+EOF
+
+cat > $IMCNF <<"EOF"
+# OpenSSL intermediate CA configuration file.
+# Copy to `/root/ca/intermediate/openssl.cnf`.
+
+[ ca ]
+# `man ca`
+default_ca = CA_default
+
+[ CA_default ]
+# Directory and file locations.
+certs             = $dir/certs
+crl_dir           = $dir/crl
+new_certs_dir     = $dir/newcerts
+database          = $dir/index.txt
+serial            = $dir/serial
+RANDFILE          = $dir/private/.rand
+
+# The root key and root certificate.
+private_key       = $dir/private/intermediate.key.pem
+certificate       = $dir/certs/intermediate.cert.pem
+
+# For certificate revocation lists.
+crlnumber         = $dir/crlnumber
+crl               = $dir/crl/intermediate.crl.pem
+crl_extensions    = crl_ext
+default_crl_days  = 30
+
+# SHA-1 is deprecated, so use SHA-2 instead.
+default_md        = sha256
+
+name_opt          = ca_default
+cert_opt          = ca_default
+default_days      = 375
+preserve          = no
+policy            = policy_loose
+
+copy_extensions   = copy
+
+[ policy_strict ]
+# The root CA should only sign intermediate certificates that match.
+# See the POLICY FORMAT section of `man ca`.
+countryName             = match
+stateOrProvinceName     = match
+organizationName        = match
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ policy_loose ]
+# Allow the intermediate CA to sign a more diverse range of certificates.
+# See the POLICY FORMAT section of the `ca` man page.
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+# Options for the `req` tool (`man req`).
+default_bits        = 2048
+distinguished_name  = req_distinguished_name
+string_mask         = utf8only
+
+# SHA-1 is deprecated, so use SHA-2 instead.
+default_md          = sha256
+
+# Extension to add when the -x509 option is used.
+x509_extensions     = v3_ca
+
+[ req_distinguished_name ]
+# See <https://en.wikipedia.org/wiki/Certificate_signing_request>.
+commonName                      = Common Name
+countryName                     = Country Name (2 letter code)
+stateOrProvinceName             = State or Province Name
+localityName                    = Locality Name
+0.organizationName              = Organization Name
+organizationalUnitName          = Organizational Unit Name
+emailAddress                    = Email Address
+
+# Optionally, specify some defaults.
+countryName_default             = XX
+stateOrProvinceName_default     = MyState
+localityName_default            =
+0.organizationName_default      = MyOrg
+organizationalUnitName_default  =
+emailAddress_default            =
+
+[ v3_ca ]
+# Extensions for a typical CA (`man x509v3_config`).
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+
+[ v3_intermediate_ca ]
+# Extensions for a typical intermediate CA (`man x509v3_config`).
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true, pathlen:0
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+
+[ usr_cert ]
+# Extensions for client certificates (`man x509v3_config`).
+basicConstraints = CA:FALSE
+nsCertType = client, email
+nsComment = "OpenSSL Generated Client Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth, emailProtection
+
+[ server_cert ]
+# Extensions for server certificates (`man x509v3_config`).
+basicConstraints = CA:FALSE
+nsCertType = server
+nsComment = "OpenSSL Generated Server Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer:always
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+authorityInfoAccess = OCSP;URI:http://ocsp2.example.com
+
+[ crl_ext ]
+# Extension for CRLs (`man x509v3_config`).
+authorityKeyIdentifier=keyid:always
+
+[ ocsp ]
+# Extension for OCSP signing certificates (`man ocsp`).
+basicConstraints = CA:FALSE
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+keyUsage = critical, digitalSignature
+extendedKeyUsage = critical, OCSPSigning
+EOF
+
+############ Input/Environment Validation ############
+
+MAKECA=true
+MAKEIM=true
+SIGNCERTS=true
+case x"$1" in
+	x--example) example ;;
+	xall) ;;
+	xintermediate) MAKECA=false; SIGNCERTS=false ;;
+	xcerts) MAKECA=false; MAKEIM=false ;;
+	*) usage ;;
+esac
+shift
+
+if test ! -r "$1"
+then
+	usage "Cannot read config file: '$1'"
+fi
+
+if ! command -v openssl >/dev/null 2>/dev/null
+then
+	usage Cannot find openssl
+fi
+
+# Default triple DES key encryption
+KeyEncryption="-des3"
+# 100 years
+CertificateAuthorityDays=36525
+# 10 years
+IntermediateAuthorityDays=3652
+# 1 year
+MaxCertDays=365
+# Insecure default
+AuthorityRootDir=/tmp
+# Default to writing certs to the current directory
+CertificateOutputDir=.
+
+eval "$(cat "$1")"
+shift
+
+if test -z "$KeyEncryption"
+then
+	key_prompt () {
+		echo > /dev/null
+	}
+fi
+
+if ! mkdir -p "$CertificateOutputDir"
+then
+	usage Cannot find or create "'$CertificateOutputDir"
+fi
+
+if test -z "$AuthorityRootDir"
+then
+	usage Cannot find or create "'$AuthorityRootDir'"
+fi
+
+for P1 in ca intermediate
+do
+	for P2 in certs csr crl newcerts private
+	do
+		if ! mkdir -p "$AuthorityRootDir"/$P1/$P2
+		then
+			usage Cannot find or create "'$AuthorityRootDir'"
+		fi
+	done
+done
+
+AuthorityRootDir="$(cd "$AuthorityRootDir" >/dev/null 2>&1; pwd)"
+CADIR="$AuthorityRootDir"/ca
+IMDIR="$AuthorityRootDir"/intermediate
+
+ed -s $CACNF <<EOF
+/^\[ CA_default \]$/a
+dir = $AuthorityRootDir/ca
+.
+w
+q
+EOF
+
+ed -s $IMCNF <<EOF
+/^\[ CA_default \]$/a
+dir = $AuthorityRootDir/intermediate
+.
+w
+q
+EOF
+
+if ! testDN "$CertificateAuthoritySubjectDN"
+then
+	usage "Invalid CertificateAuthoritySubjectDN: '$CertificateAuthoritySubjectDN'"
+fi
+
+if ! testDN "$CertificateAuthoritySubjectDN"
+then
+	usage "Invalid IntermediateAuthoritySubjectDN: '$IntermediateAuthoritySubjectDN'"
+fi
+
+if ! test $CertificateAuthorityDays -ge $IntermediateAuthorityDays
+then
+	usage IntermediateAuthorityDays "($IntermediateAuthorityDays)" cannot be greater than CertificateAuthorityDays "($CertificateAuthorityDays)"
+fi
+
+if ! test $IntermediateAuthorityDays -ge $MaxCertDays
+then
+	usage MaxCertDays "($MaxCertDays)" cannot be greater than IntermediateAuthorityDays "($IntermediateAuthorityDays)"
+fi
+
+if test $# -eq 0
+then
+	SIGNCERTS=false
+elif $SIGNCERTS
+then
+	COUNT=$#
+	while test $COUNT -gt 0
+	do
+		case x"$1" in
+			x-cr) # -cr <csr> <days>
+				CN="$(CSRtoCN "$2")"
+				test $? -eq 0 || usage "Bad CSR: '$2'"
+				test "$3" -le $MaxCertDays 2>/dev/null ||\
+					usage "Bad cert validity days: '$3'"
+				set -- "$@" "$CN" "$2" $3 usr_cert
+				COUNT=`expr $COUNT - 3`
+				shift 3 ;;
+			x-sr) # -sr <csr> <days>
+				CN="$(CSRtoCN "$2")"
+				test $? -eq 0 || usage "Bad CSR: '$2'"
+				test "$3" -le $MaxCertDays 2>/dev/null ||\
+					usage "Bad cert validity days: '$3'"
+				set -- "$@" "$CN" "$2" $3 server_cert
+				COUNT=`expr $COUNT - 3`
+				shift 3 ;;
+			x-c) # -c <DN> <days>
+				testDN "$2" || usage "Bad DN: '$2'"
+				test "$3" -le $MaxCertDays 2>/dev/null ||\
+					usage "Bad cert validity days: '$3'"
+				CSR="$(DNtoCSRfilename "$2")"
+				DNtoCSR "$2" ""
+				set -- "$@" "$(DNtoCN "$2")" "$CSR" $3 usr_cert
+				COUNT=`expr $COUNT - 3`
+				shift 3 ;;
+			x-s) # -s <DN> <days> <alt names|"">
+				testDN "$2" || usage "Bad DN: '$2'"
+				test "$3" -le $MaxCertDays 2>/dev/null ||\
+					usage "Bad cert validity days: '$3'"
+				CSR="$(DNtoCSRfilename "$2")"
+				DNtoCSR "$2" "$4"
+				set -- "$@" "$(DNtoCN "$2")" "$CSR" $3 server_cert
+				COUNT=`expr $COUNT - 4`
+				shift 4 ;;
+			*) usage ;;
+		esac
+	done
+fi
+
+############ Execute ############
+
+if $MAKECA
+then
+	setup_dir "$CADIR"
+	make_key "$CADIR"/private/ca.key.pem 4096 "the certificate authority"
+	chmod 400 "$CADIR"/private/ca.key.pem
+	key_prompt "the certificate authority"
+	openssl req -config $CACNF -new -sha256 -x509 \
+		-key "$CADIR"/private/ca.key.pem \
+		-days $CertificateAuthorityDays \
+		-extensions v3_ca \
+		-out "$CADIR"/certs/ca.cert.pem \
+		-subj "$CertificateAuthoritySubjectDN" \
+		|| fail Failed to create self-signed CA certificate
+	chmod 444 "$CADIR"/certs/ca.cert.pem
+fi
+
+if $MAKEIM
+then
+	setup_dir "$IMDIR"
+	make_key "$IMDIR"/private/intermediate.key.pem 4096 "the intermediate authority"
+	make_csr "$IntermediateAuthoritySubjectDN" \
+		"$IMDIR"/private/intermediate.key.pem \
+		"$IMDIR"/csr/intermediate.csr.pem \
+		"the intermediate authority" ""
+	key_prompt "the certificate authority"
+	openssl ca -config $CACNF -notext -batch \
+		-extensions v3_intermediate_ca \
+		-days $IntermediateAuthorityDays \
+		-key "$CADIR"/private/ca.key.pem \
+		-in "$IMDIR"/csr/intermediate.csr.pem \
+		-out "$IMDIR"/certs/intermediate.cert.pem \
+		|| fail Failed to sign intermediate authority
+	chmod 444 "$IMDIR"/certs/intermediate.cert.pem
+fi
+
+if $SIGNCERTS
+then
+	while test $# -gt 0
+	do
+		sign_csr "$1" "$2" "$3" "$4"
+		shift 4
+	done
+fi
+
