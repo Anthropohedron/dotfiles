@@ -94,44 +94,29 @@ fmt_alt_names () {
 		_ALT="$2"
 	fi
 	printf '%s' "$_ALT" | awk 'BEGIN { RS=","; FS="." }
+		function add_alt(alt, label) {
+			if (seen[alt]) { next }
+			seen[alt] = 1
+			if (output != "") {
+				output = output ","
+			}
+			output = output label alt
+			next
+		}
 		/^[1-9][0-9]*\.[1-9][0-9]*\.[1-9][0-9]*\.[1-9][0-9]*$/ {
 			if ($1 > 255 || $2 > 255 || $3 > 255 || $4 > 255) {
 				exit 1
 			}
-			if (seen[$0]) { next }
-			seen[$0] = 1
-			if (output != "") {
-				output = output ","
-			}
-			output = output "IP:" $0
-			next
+			add_alt($0, "IP:")
 		}
 		/^([0-9A-Fa-f]{4}:){7}[0-9A-Fa-f]{4}$/ {
-			if (seen[$0]) { next }
-			seen[$0] = 1
-			if (output != "") {
-				output = output ","
-			}
-			output = output "IP:" $0
-			next
+			add_alt($0, "IP:")
 		}
 		/^([A-Za-z0-9][-A-Za-z0-9]*\.?)+$/ {
-			if (seen[$0]) { next }
-			seen[$0] = 1
-			if (output != "") {
-				output = output ","
-			}
-			output = output "DNS:" $0
-			next
+			add_alt($0, "DNS:")
 		}
 		/^.+@([A-Za-z0-9][-A-Za-z0-9]*\.?)+$/ {
-			if (seen[$0]) { next }
-			seen[$0] = 1
-			if (output != "") {
-				output = output ","
-			}
-			output = output "EMAIL:" $0
-			next
+			add_alt($0, "EMAIL:")
 		}
 		NR > 1 { exit 2 }
 		END { print output }
