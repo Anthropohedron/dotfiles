@@ -9,7 +9,7 @@ usage () {
 	fi
 	cat >&2 <<EOF
 Usage: $0 --example
-       $0 <all|intermediate|certs> <config file> [
+       $0 <ca|intermediate|certs> <config file> [
 		-c <client subject DN> <days> |
 		-s <server subject DN> <days> <comma-separated alt names|""> |
 		-cr <client CSR file> <days> |
@@ -472,7 +472,7 @@ MAKEIM=true
 SIGNCERTS=true
 case x"$1" in
 	x--example) example ;;
-	xall) ;;
+	xca) MAKEIM=false; SIGNCERTS=false ;;
 	xintermediate) MAKECA=false; SIGNCERTS=false ;;
 	xcerts) MAKECA=false; MAKEIM=false ;;
 	*) usage ;;
