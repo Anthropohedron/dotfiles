@@ -56,7 +56,8 @@
 	default = matching
 #[url "ssh://git@github.com/"]
 #	insteadOf = github:
-[url "ssh://github443/"]
+#[url "ssh://github443/"]
+[url "ssh://git@github.com/"]
 	insteadOf = https://github.com/
 [include]
 	path = ~/.local/gitconfig
