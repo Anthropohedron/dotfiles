@@ -9,12 +9,14 @@ usage () {
 	fi
 	cat >&2 <<EOF
 Usage: $0 --example
-       $0 <ca|intermediate|certs> <config file> [
+       $0 ca <config file>
+       $0 intermediate <config file>
+       $0 certs <config file> <
 		-c <client subject DN> <days> |
 		-s <server subject DN> <days> <comma-separated alt names|""> |
 		-cr <client CSR file> <days> |
 		-sr <server CSR file> <days>
-		]...
+		>...
 EOF
 	exit 1
 }
@@ -159,9 +161,11 @@ setup_dir () {
 	echo 1000 > "$1"/serial
 }
 
+############ Command Functions ############
+
 example () {
 	cat >&2 <<"EOF"
-KeyEncryption=
+KeyEncryption=-aes256
 CertificateAuthorityDays=36500
 IntermediateAuthorityDays=3650
 MaxCertDays=365
@@ -171,6 +175,47 @@ CertificateAuthoritySubjectDN="/C=US/ST=Ohio/L=Toledo/O=Foo Inc./OU=Security Div
 IntermediateAuthoritySubjectDN="/C=US/ST=Ohio/L=Toledo/O=Foo Inc./OU=Deployment Division/CN=Foo Inc. Intermediate Certificate Authority 01"
 EOF
 exit 0
+}
+
+make_ca () {
+	setup_dir "$CADIR"
+	make_key "$CADIR"/private/ca.key.pem 4096 "the certificate authority"
+	chmod 400 "$CADIR"/private/ca.key.pem
+	key_prompt "the certificate authority"
+	openssl req -config $CACNF -new -sha256 -x509 \
+		-key "$CADIR"/private/ca.key.pem \
+		-days $CertificateAuthorityDays \
+		-extensions v3_ca \
+		-out "$CADIR"/certs/ca.cert.pem \
+		-subj "$CertificateAuthoritySubjectDN" \
+		|| fail Failed to create self-signed CA certificate
+	chmod 444 "$CADIR"/certs/ca.cert.pem
+}
+
+make_intermediate () {
+	setup_dir "$IMDIR"
+	make_key "$IMDIR"/private/intermediate.key.pem 4096 "the intermediate authority"
+	make_csr "$IntermediateAuthoritySubjectDN" \
+		"$IMDIR"/private/intermediate.key.pem \
+		"$IMDIR"/csr/intermediate.csr.pem \
+		"the intermediate authority" ""
+	key_prompt "the certificate authority"
+	openssl ca -config $CACNF -notext -batch \
+		-extensions v3_intermediate_ca \
+		-days $IntermediateAuthorityDays \
+		-key "$CADIR"/private/ca.key.pem \
+		-in "$IMDIR"/csr/intermediate.csr.pem \
+		-out "$IMDIR"/certs/intermediate.cert.pem \
+		|| fail Failed to sign intermediate authority
+	chmod 444 "$IMDIR"/certs/intermediate.cert.pem
+}
+
+sign_certs () {
+	while test $# -gt 0
+	do
+		sign_csr "$1" "$2" "$3" "$4"
+		shift 4
+	done
 }
 
 ############ Environment Setup ############
@@ -452,17 +497,25 @@ EOF
 
 ############ Input/Environment Validation ############
 
-MAKECA=true
-MAKEIM=true
-SIGNCERTS=true
 case x"$1" in
 	x--example) example ;;
-	xca) MAKEIM=false; SIGNCERTS=false ;;
-	xintermediate) MAKECA=false; SIGNCERTS=false ;;
-	xcerts) MAKECA=false; MAKEIM=false ;;
+	xca) COMMAND=make_ca ;;
+	xintermediate) COMMAND=make_intermediate ;;
+	xcerts) COMMAND=sign_certs ;;
 	*) usage ;;
 esac
 shift
+
+if test $COMMAND = sign_certs
+then
+	if test $# -le 1
+	then
+		usage No certificates to sign
+	fi
+elif test $# -gt 1
+then
+	usage
+fi
 
 if test ! -r "$1"
 then
@@ -502,41 +555,17 @@ then
 	usage Cannot find or create "'$CertificateOutputDir"
 fi
 
-if test -z "$AuthorityRootDir"
+if test -z "$AuthorityRootDir" || ! mkdir -p "$AuthorityRootDir"
 then
 	usage Cannot find or create "'$AuthorityRootDir'"
 fi
 
-for P1 in ca intermediate
-do
-	for P2 in certs csr crl newcerts private
-	do
-		if ! mkdir -p "$AuthorityRootDir"/$P1/$P2
-		then
-			usage Cannot find or create "'$AuthorityRootDir'"
-		fi
-	done
-done
+AuthorityRootDir="$(cd "$AuthorityRootDir" >/dev/null 2>&1 && pwd)"
 
-AuthorityRootDir="$(cd "$AuthorityRootDir" >/dev/null 2>&1; pwd)"
-CADIR="$AuthorityRootDir"/ca
-IMDIR="$AuthorityRootDir"/intermediate
-
-ed -s $CACNF <<EOF
-/^\[ CA_default \]$/a
-dir = $AuthorityRootDir/ca
-.
-w
-q
-EOF
-
-ed -s $IMCNF <<EOF
-/^\[ CA_default \]$/a
-dir = $AuthorityRootDir/intermediate
-.
-w
-q
-EOF
+if test -z "$AuthorityRootDir"
+then
+	usage Cannot find or create "'$AuthorityRootDir'"
+fi
 
 if ! testDN "$CertificateAuthoritySubjectDN"
 then
@@ -548,12 +577,42 @@ then
 	usage "Invalid IntermediateAuthoritySubjectDN: '$IntermediateAuthoritySubjectDN'"
 fi
 
-if ! test $CertificateAuthorityDays -ge $IntermediateAuthorityDays
+CADIR="$AuthorityRootDir"/ca
+IMDIR="$AuthorityRootDir"/intermediates/"$(DNtoCN "$IntermediateAuthoritySubjectDN")"
+
+for P1 in "$CADIR" "$IMDIR"
+do
+	for P2 in certs csr crl newcerts private
+	do
+		if ! mkdir -p "$P1"/$P2
+		then
+			usage Cannot write to "'$AuthorityRootDir'"
+		fi
+	done
+done
+
+ed -s $CACNF <<EOF
+/^\[ CA_default \]$/a
+dir = $CADIR
+.
+w
+q
+EOF
+
+ed -s $IMCNF <<EOF
+/^\[ CA_default \]$/a
+dir = $IMDIR
+.
+w
+q
+EOF
+
+if ! test $CertificateAuthorityDays -gt $IntermediateAuthorityDays
 then
 	usage IntermediateAuthorityDays "($IntermediateAuthorityDays)" cannot be greater than CertificateAuthorityDays "($CertificateAuthorityDays)"
 fi
 
-if ! test $IntermediateAuthorityDays -ge $MaxCertDays
+if ! test $IntermediateAuthorityDays -gt $MaxCertDays
 then
 	usage MaxCertDays "($MaxCertDays)" cannot be greater than IntermediateAuthorityDays "($IntermediateAuthorityDays)"
 fi
@@ -608,47 +667,4 @@ fi
 
 ############ Execute ############
 
-if $MAKECA
-then
-	setup_dir "$CADIR"
-	make_key "$CADIR"/private/ca.key.pem 4096 "the certificate authority"
-	chmod 400 "$CADIR"/private/ca.key.pem
-	key_prompt "the certificate authority"
-	openssl req -config $CACNF -new -sha256 -x509 \
-		-key "$CADIR"/private/ca.key.pem \
-		-days $CertificateAuthorityDays \
-		-extensions v3_ca \
-		-out "$CADIR"/certs/ca.cert.pem \
-		-subj "$CertificateAuthoritySubjectDN" \
-		|| fail Failed to create self-signed CA certificate
-	chmod 444 "$CADIR"/certs/ca.cert.pem
-fi
-
-if $MAKEIM
-then
-	setup_dir "$IMDIR"
-	make_key "$IMDIR"/private/intermediate.key.pem 4096 "the intermediate authority"
-	make_csr "$IntermediateAuthoritySubjectDN" \
-		"$IMDIR"/private/intermediate.key.pem \
-		"$IMDIR"/csr/intermediate.csr.pem \
-		"the intermediate authority" ""
-	key_prompt "the certificate authority"
-	openssl ca -config $CACNF -notext -batch \
-		-extensions v3_intermediate_ca \
-		-days $IntermediateAuthorityDays \
-		-key "$CADIR"/private/ca.key.pem \
-		-in "$IMDIR"/csr/intermediate.csr.pem \
-		-out "$IMDIR"/certs/intermediate.cert.pem \
-		|| fail Failed to sign intermediate authority
-	chmod 444 "$IMDIR"/certs/intermediate.cert.pem
-fi
-
-if $SIGNCERTS
-then
-	while test $# -gt 0
-	do
-		sign_csr "$1" "$2" "$3" "$4"
-		shift 4
-	done
-fi
-
+$COMMAND "$@"
