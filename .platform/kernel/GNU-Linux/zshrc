@@ -2,7 +2,12 @@
 alias vzt='telnet-ssl -l admin -z ssl 192.168.1.1 992'
 function zshsulogin () {
 	local allowed=$(printf "%s" "$*" | sed -e 's/=[^ 	]*//g' -e 's/[ 	]\+/,/g')
-	echo sudo "$@" su - -w "$allowed" -s $(whence -p zsh)
+	if test -z "$allowed"
+	then
+		echo sudo "$@" su - -s $(whence -p zsh)
+	else
+		echo sudo "$@" su - -w "$allowed" -s $(whence -p zsh)
+	fi
 }
 alias duplex="/usr/bin/lpr -o sides=two-sided-long-edge"
 alias burn="sudo cdrecord -dao -eject speed=12 fs=8m dev=0,0,0"
