@@ -1,0 +1,25 @@
+#!/bin/sh
+
+NOFGFMT='%8s \033[%s  gYw  '
+FGFMT=' \033[%s\033[4%dm  gYw  \033[0m'
+print_row () {
+	printf "$NOFGFMT" "$1" "$2"
+	for BG in 0 1 2 3 4 5 6 7
+	do
+		printf "$FGFMT" "$2" $BG 
+	done
+	printf '\n'
+}
+
+printf '\n      %8s%8s%8s%8s%8s%8s%8s%8s%8s\n' \
+	nobg bg0 bg1 bg2 bg3 bg4 bg5 bg6 bg7
+
+print_row 'norm  ' m
+print_row 'bold  ' 1m
+for FG in 0 1 2 3 4 5 6 7
+do
+	print_row norm\ $FG 3$FG'm'
+	print_row bold\ $FG '1;3'$FG'm'
+done
+printf '\n'
+read
