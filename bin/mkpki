@@ -208,6 +208,7 @@ make_intermediate () {
 		-out "$IMDIR"/certs/intermediate.cert.pem \
 		|| fail Failed to sign intermediate authority
 	chmod 444 "$IMDIR"/certs/intermediate.cert.pem
+	ln -sf "$IMDIR" "$CADIR"/intermediate
 }
 
 sign_certs () {
