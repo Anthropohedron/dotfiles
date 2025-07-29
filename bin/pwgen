@@ -1,52 +1,43 @@
-#!/usr/bin/env ruby
-# encoding: utf-8
+#!/bin/sh
 
-WordList = ENV['DICT'] || '/usr/dict/words'
-
-WordCount = 4
-MinWordLength = 5
-MaxWordLength = 8
-WordSel = /^[a-z]{#{MinWordLength},#{MaxWordLength}}$/
-
-StupidSeparators = [ '1', 'A', '.' ]
-
-def usage(msg = nil)
-  STDERR.puts msg if msg
-  STDERR.puts "Usage: #{$PROGRAM_NAME} [--stupid]"
-  exit 1
-end
-
-separator = nil
-
-usage if ARGV.size > 1
-
-if (ARGV.size == 1)
-  if (ARGV[0] == '--stupid')
-    separator = '%s'
-  else
-    usage
-  end
-end
-
-word_list = File.open(WordList, :encoding => "BINARY") { |f|
-  f.readlines
-}.select { |w|
-  w.chomp!
-  WordSel === w
+usage () {
+	if test $# -gt 0
+	then
+		echo " $*" >&2
+	fi
+	echo "Usage: $0" >&2
+	exit 1
 }
-len = word_list.size
 
-pw = (1..WordCount).map {
-  word_list[rand(len)]
-}.join(separator)
+if test $# -gt 0
+then
+	usage
+fi
 
-if separator
-  sep_len = StupidSeparators.size
-  while StupidSeparators.size < (WordCount - 1)
-    StupidSeparators << StupidSeparators[StupidSeparators.size % sep_len]
-  end
-  pw = sprintf pw, *StupidSeparators
-end
+for DICT in "$DICT" /usr/dict/words /usr/share/dict/words ""
+do
+	test -r "$DICT" && break
+done
+if test -z "$DICT"
+then
+	usage Could not find dictionary
+fi
 
-puts pw
+WORDCOUNT="${WORDCOUNT:-"4"}"
+MINWORDLENGTH="${MINWORDLENGTH:-"5"}"
+MAXWORDLENGTH="${MAXWORDLENGTH:-"8"}"
 
+WORDS=$(mktemp)
+trap "rm -f $WORDS" EXIT
+
+COUNT=$(grep -E '^[a-z]{'"$MINWORDLENGTH","$MAXWORDLENGTH"'}$' "$DICT" |
+	tee $WORDS | wc -l)
+
+LINES=""
+while test $WORDCOUNT -gt 0
+do
+	LINES="$LINES$(expr $(dd if=/dev/urandom bs=4 count=1 2>/dev/null| od -An -t u4 | tr -d ' \011') % $COUNT + 1)p,"
+	WORDCOUNT=$(expr $WORDCOUNT - 1)
+done
+echo $LINES | tr ',' '\012' | sed -n -f - $WORDS | tr -d '\012'
+printf '\n'
