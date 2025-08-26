@@ -1,0 +1,49 @@
+#!/bin/sh
+
+usage () {
+	test $# -gt 0 && printf '%s\n' "$*" >&2
+	echo "Usage: $0 [-c command] <files...>" >&2
+	exit 1
+}
+
+if test $# -lt 1
+then
+	usage
+fi
+COMMAND=display
+if test x"$1" = "x-c"
+then
+	if test $# -lt 3
+	then
+		usage
+	fi
+	COMMAND="$2"
+	shift
+	shift
+fi
+
+if ! command -v "$COMMAND" >/dev/null
+then
+	usage "Command not found: '$COMMAND'"
+fi
+
+if ! command -v xgeom >/dev/null
+then
+	xgeom () {:}
+fi
+GEOM="$(xgeom 2>/dev/null)"
+
+if ! command -v x11screens >/dev/null
+then
+	x11screens () {:}
+fi
+
+SCREENS="$(x11screens -m 2>/dev/null)"
+if test $? -ne 0 -o -z "$SCREENS"
+then
+	RESIZE=""
+else
+	RESIZE="$(echo "$SCREENS" | awk '{printf("-resize %dx%d>", $3, $4)}')"
+fi
+
+exec $COMMAND $GEOM $RESIZE "$@"
