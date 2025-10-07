@@ -1,0 +1,46 @@
+#!/bin/sh
+
+PATH=/usr/bin:/bin
+export PATH
+
+usage () {
+	echo "Usage: $0 [-a]" >&2
+	exit 1
+}
+
+ALL=false
+case $# in
+	0) ;;
+	1)
+		if test x"$1" = "x-a"
+		then
+			ALL=true
+		else
+			usage
+		fi
+		;;
+	*) usage ;;
+esac
+
+if $ALL
+then
+	filter () {
+		cat
+	}
+else
+	filter () {
+		grep '^name: [^_]'
+	}
+fi
+
+dscacheutil -q group |\
+	tr '\012' ' ' |\
+	sed  's/   */%/g' |\
+	tr '%' '\012' |\
+	filter |\
+	sort -u |\
+	sed \
+		-e 's/^name: //' \
+		-e 's/ [a-z][a-z]*: /:/g' \
+		-e 's/ /,/g' \
+		-e 's/^[^:]*:[^:]*:[^:]*$/&:/'
