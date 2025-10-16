@@ -705,11 +705,20 @@ function mani () {
 	info --subnodes --output - "$1" | $PAGER
 }
 function localip () {
-	ifconfig | grep '\<inet\>' |\
-		tr '\011' ' ' | tr -dc '[0-9]. \012' |\
-		sed	-e '/^ *127\./d' \
-			-e 's/^ *//' \
-			-e 's/ .*$//'
+	if command -v ifconfig >/dev/null
+	then
+		ifconfig | grep '\<inet\>' |\
+			tr '\011' ' ' | tr -dc '[0-9]. \012' |\
+			sed	-e '/^ *127\./d' \
+				-e 's/^ *//' \
+				-e 's/ .*$//'
+	else
+		ip addr | grep '\<inet\>' |\
+			tr '\011' ' ' | tr -dc '[0-9]/. \012' |\
+			sed	-e '/^ *127\./d' \
+				-e 's/^ *//' \
+				-e 's/ .*$//'
+	fi
 }
 #alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 alias myip='curl https://ipinfo.io/ip'
