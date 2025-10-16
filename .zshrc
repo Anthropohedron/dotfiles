@@ -752,6 +752,9 @@ then
 			alias xsu="echo Error: Define zshsulogin for this platform"
 		fi
 	}
+	function xgt () {
+		(xterm $(xgeom $1) &)
+	}
 	alias xcr="(xterm $(xgeom 80x55) -bg black -fg white -e "'"screen -D -R" &)'
 	alias ibg='ppmmake gray 50 50 > /tmp/g$$.ppm; xsetbg -onroot /tmp/g$$.ppm; rm -f /tmp/g$$.ppm'
 	alias vnc='vncviewer -PreferredEncoding ZRLE -LowColourLevel 2 -MenuKey F9'
