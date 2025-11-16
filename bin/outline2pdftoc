@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# Suitable for use with pdftk
+# See https://stackoverflow.com/a/30308964
+# TL,DR:
+# 	pdftk old.pdf dump_data_utf8 output metadata
+# 	$0 bookmarks.outline bookmarks
+# 	grep -v '^Bookmark' metadata |\
+# 		sed '/^NumberOfPages:/r bookmarks' |\
+# 		pdftk old.pdf update_info_utf8 - output new.pdf
+
+usage () {
+	echo "$0 <infile.outline> [outfile]" >&2
+	exit 1
+}
+
+if test $# -lt 1 -o $# -gt 2 -o ! -r "$1"
+then
+	usage
+fi
+
+if test $# -eq 2
+then
+	exec > "$2" || usage
+fi
+
+awk -F '	' '
+	BEGIN {
+		lastindent = 1;
+		page = 0;
+		fmt = "BookmarkBegin\nBookmarkTitle: %s\nBookmarkLevel: %d\nBookmarkPageNumber: %d\n";
+	}
+	{
+		indent = NF;
+		if (NF == 1) {
+			++page;
+			bookmark = $1;
+		} else if ($(NF-1) == "") {
+			if (indent <= lastindent) {
+				++page
+			}
+			bookmark = $NF;
+		} else {
+			page = $NF;
+			bookmark = $(NF-1);
+			--indent;
+		}
+		lastindent = indent;
+		printf(fmt, bookmark, indent, page);
+	}
+	' "$1"
+
