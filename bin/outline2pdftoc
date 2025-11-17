@@ -10,13 +10,23 @@
 # 		pdftk old.pdf update_info_utf8 - output new.pdf
 
 usage () {
-	echo "$0 <infile.outline> [outfile]" >&2
+	echo "$0 <infile.outline|-> [outfile]" >&2
 	exit 1
 }
 
-if test $# -lt 1 -o $# -gt 2 -o ! -r "$1"
+if test $# -lt 1 -o $# -gt 2
 then
 	usage
+fi
+
+if test x"$1" != "x-"
+then
+	if test -r "$1"
+	then
+		exec < "$1"
+	else
+		usage
+	fi
 fi
 
 if test $# -eq 2
@@ -48,5 +58,5 @@ awk -F '	' '
 		lastindent = indent;
 		printf(fmt, bookmark, indent, page);
 	}
-	' "$1"
+	'
 
