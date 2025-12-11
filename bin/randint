@@ -1,0 +1,28 @@
+#!/bin/sh
+
+for RAND in "$RAND" /dev/urandom /dev/random FAIL
+do
+	test -r "$RAND" && break
+done
+if test "$RAND" = FAIL
+then
+	echo "Could not find a source of randomness!" >&2
+	exit 1
+fi
+
+usage () {
+	echo "Usage: $0 <count> [start]" >&2
+	exit 1
+}
+
+if test $# -lt 1 -o $# -gt 2
+then
+	usage
+fi
+
+COUNT="$1"
+OFFSET="${2:-"1"}"
+
+expr $(dd if="$RAND" bs=4 count=1 2>/dev/null |
+	od -An -t u4 |
+	tr -d ' \011') % "$COUNT" + "$OFFSET"
