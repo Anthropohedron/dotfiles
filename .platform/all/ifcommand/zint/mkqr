@@ -1,0 +1,22 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 <data|-> <outfile.png>" >&2
+	exit 1
+}
+
+if test $# -ne 2
+then
+	usage
+fi
+DATA="$1"
+OUTFILE="$2"
+
+set -- -b 58 -i - --box --scale=2 --filetype=PNG -o "$OUTFILE"
+
+if test x"$DATA" = "x-"
+then
+	zint "$@"
+else
+	printf '%s' "$DATA" | zint "$@"
+fi
