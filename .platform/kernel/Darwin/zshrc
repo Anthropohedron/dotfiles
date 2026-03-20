@@ -3,6 +3,7 @@ function zshsulogin () {
 	echo sudo login -f root env "$@" zsh -l
 }
 
+alias scan='open -a "Image Capture"'
 alias strace=dtruss
 alias sudoedit='sudo -e'
 
