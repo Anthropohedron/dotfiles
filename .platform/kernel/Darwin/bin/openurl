@@ -26,18 +26,18 @@ fi
 
 if test $# -gt 10
 then
-	set "`echo $* | sed -e 's/[ 	]/%20/g' -e 's,^,http://www.google.com/search?q=,' `"
+	set -- "$(printf '%s' "$*" | sed -e 's/[ 	]/%20/g' -e 's,^,http://www.google.com/search?q=,')"
 fi
 
 {
 for url in "$@"
 do
-	trimurl="`echo \"$url\" | sed 's/^[ 	]*\([^ 	]*\)[ 	]*$/\1/'`"
+	trimurl="$(printf '%s\n' "$url" | sed 's/^[ 	]*\([^ 	]*\)[ 	]*$/\1/')"
 	if ! expr "$trimurl" : '[a-zA-Z][a-zA-Z]*:' >/dev/null
 	then
 		trimurl=http://"$trimurl"
 	fi
-	echo "$trimurl"
+	printf '%s\0' "$trimurl"
 done
-} | tr '\012' '\000' | xargs -0 open
+} | xargs -0 open
 
