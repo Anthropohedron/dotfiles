@@ -1,0 +1,26 @@
+#!/bin/sh
+
+usage () {
+	echo "Usage: $0 [-n]" >&2
+	exit 1
+}
+
+case $# in
+	0) CMD="/bin/sh" ;;
+	1)
+		if test x"$1" = "x-n"
+		then
+			CMD=/bin/cat
+		else
+			usage
+		fi
+		;;
+	*) usage ;;
+esac
+
+$CMD << 'EOF'
+/usr/bin/security delete-generic-password -a 'Microsoft Office Identities Cache 3'
+/usr/bin/security delete-generic-password -a 'Microsoft Office Identities Settings 3'
+/bin/rm -rf ~/Library/Group\ Containers/UBF8T346G9.{ms,Office,OfficeOsfWebHost}
+EOF
+
