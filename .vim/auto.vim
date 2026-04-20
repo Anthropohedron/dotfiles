@@ -13,6 +13,13 @@ augroup Binary
   au BufWritePost *.bin if &bin | %!xxd
   au BufWritePost *.bin set nomod | endif
 augroup END
+augroup JSON
+  autocmd!
+  autocmd BufReadPost *.json
+    \   execute "silent %!jq --sort-keys ."
+    \ | set filetype=json
+    \ | redraw
+augroup END
 """""questionable triggers, but hasn't hurt so far
 "autocmd BufLeave * :source ~/.vim/leave.vim
 autocmd BufEnter *.tex :let $TEXTARGET=b:fname
