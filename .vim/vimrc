@@ -170,6 +170,18 @@ syntax on
 filetype indent on
 filetype plugin on
 
+command!  -range=% -nargs=? PrependNumbers <line1>,<line2>call s:Prepend(<args>)
+
+function! s:ReplExpr(nb_digits, number)
+  return repeat('0', a:nb_digits - strlen(a:number)).a:number
+endfunction
+
+function! s:Prepend(...) range
+  let pattern = a:0 > 0 ? '\ze'. a:1 : '^'
+  let nb_values = (a:lastline - a:firstline) + 1
+  let nb_digits = strlen(nb_values)
+  exe ':'.a:firstline.','a:lastline.'s#'.pattern.'#\=s:ReplExpr(nb_digits, 1+ line(".")-'.a:firstline.')." "#'
+endfunction
 if filereadable(expand('$HOME/.local/vimrc'))
 	source $HOME/.local/vimrc
 endif
