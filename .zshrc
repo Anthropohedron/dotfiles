@@ -282,6 +282,12 @@ function cleanwd () {
 alias lwd='writewd > "$cdpipe"'
 alias wdl='readwd < "$cdpipe"'
 
+if test -n "$DIRSTACKINIT" -a -e "$dirstacks/stack_$DIRSTACKINIT"
+then
+	initwd "$DIRSTACKINIT"
+	unset DIRSTACKINIT
+fi
+
 if test -r "$INIT_NVM" && source "$INIT_NVM"
 then
 	function chpwd_nvm_use () {
